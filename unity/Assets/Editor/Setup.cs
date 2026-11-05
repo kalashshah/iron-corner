@@ -64,7 +64,7 @@ public static class Setup
         ReimportIfNeeded();
         Player();
         var ctrl = Controller();
-        var a = Bot("bot_a", "Brass Knuckle", ctrl, new Color(0.95f, 0.72f, 0.38f), new Color(0.45f, 0.3f, 0.12f), new Color(1f, 0.75f, 0.25f) * 6f);
+        var a = Bot("bot_a", "Brass Knuckle", ctrl, new Color(1.0f, 0.86f, 0.62f), new Color(0.45f, 0.3f, 0.12f), new Color(1f, 0.75f, 0.25f) * 6f);
         var b = Bot("bot_b", "Rustbucket", ctrl, new Color(1.0f, 1.0f, 1.05f), new Color(0.95f, 0.38f, 0.1f), new Color(1f, 0.15f, 0.05f) * 6f);
         Scene(a, b);
         AssetDatabase.SaveAssets();
@@ -218,7 +218,13 @@ public static class Setup
                 var path = $"{Out}/{id}_robot_{i}.mat";
                 var mat = new Material(m != null ? m : new Material(Shader.Find("Universal Render Pipeline/Lit")));
                 mat.shader = Shader.Find("Universal Render Pipeline/Lit");
-                if (m != null && m.HasProperty("_MainTex") && m.GetTexture("_MainTex") != null) mat.SetTexture("_BaseMap", m.GetTexture("_MainTex"));
+                var tex = m == null ? null : m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null ? m.GetTexture("_BaseMap") : m.HasProperty("_MainTex") ? m.GetTexture("_MainTex") : null;
+                var baseTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/ThirdParty/Robots/{id}_base.png");
+                var normTex = AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/ThirdParty/Robots/{id}_normal.png");
+                if (baseTex != null) tex = baseTex;
+                if (tex != null) mat.SetTexture("_BaseMap", tex);
+                if (normTex != null) { mat.SetTexture("_BumpMap", normTex); mat.EnableKeyword("_NORMALMAP"); }
+                Debug.Log($"[setup] {id} material {i}: {(m != null ? m.name : "none")} tex={(tex != null ? tex.name : "none")}");
                 mat.SetColor("_BaseColor", tint);
                 mat.SetFloat("_Metallic", 0.85f); mat.SetFloat("_Smoothness", 0.55f);
                 if (mat.IsKeywordEnabled("_EMISSION") == false) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Color.black); }

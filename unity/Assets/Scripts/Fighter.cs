@@ -37,7 +37,7 @@ public class Fighter : MonoBehaviour
     public static int Damage(string move) => move switch { "jab" => 1, "cross" => 2, "hook_l" or "hook_r" => 3, "uppercut" => 4, "body" => 2, _ => 0 };
     public static bool IsAttack(string move) => Damage(move) > 0;
 
-    public const float RingHalf = 2.35f, MinGap = 0.85f, Reach = 1.45f;
+    public const float RingHalf = 2.35f, MinGap = 1.1f, Reach = 1.7f; // sized for the heavyweight Golem
     const float ActiveFrom = 0.4f, ActiveTo = 0.6f;
 
     readonly Queue<string> queue = new();
