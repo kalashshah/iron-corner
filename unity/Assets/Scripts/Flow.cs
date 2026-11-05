@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public partial class Game
 {
     GameObject welcome, create, fund, find, camp, guide, findPick, findSearch;
+    Button findWorldBtn;
     Text cardLeague, createErr, fundBal, fundMsg, findMsg, findStatus, findSub, findLeague, campBody, guideBody;
     InputField createName;
     Button guideBtn, campBtn;
@@ -165,7 +166,11 @@ public partial class Game
         // Find a fight: stake picker, then the searching panel
         var q = Card(root, "Find", out find, 740);
         UI.Label(q, "FIND A FIGHT", 24, UI.Accent, TextAnchor.MiddleLeft, FontStyle.Bold).H(30);
-        findLeague = UI.Label(q, "", 24, UI.Ink).H(32);
+        var lr = UI.Rt(q, "leagueRow").H(40);
+        findLeague = UI.Label(lr, "", 24, UI.Ink).At(0, 0, 0.62f, 1);
+        // Players who skipped World ID at first run can connect it later from here (Verified league).
+        findWorldBtn = UI.Btn(lr, "CONNECT WORLD ID", UI.Steel, UI.Ink, () => { Show(Mode.Home); OpenWorld(); }, 20);
+        findWorldBtn.At(0.64f, 0, 1, 1);
         var body = UI.Rt(q, "body").H(560);
         findPick = UI.Go(body, "pick"); ((RectTransform)findPick.transform).At(0, 0, 1, 1);
         UI.Label(findPick.transform, "STAKE · YOUR FIGHT BUDGET", 20, UI.Dim, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 0, -30, 0, 0);
@@ -317,7 +322,8 @@ public partial class Game
         if (!trained) { Toast("Locked: spar one round and teach one line in Train first"); return; }
         ShowPanel(find); ShowFind(false); PickStake(stakeCents);
         findMsg.text = "";
-        findLeague.text = league == "verified" ? "<color=#5CDB85>◆ Verified league</color> <color=#9EA5B0>· verified humans only</color>" : "<color=#9EA5B0>◇ Open league · connect World ID for the Verified league</color>";
+        findLeague.text = league == "verified" ? "<color=#5CDB85>◆ Verified league</color> <color=#9EA5B0>· verified humans only</color>" : "<color=#9EA5B0>◇ Open league</color>";
+        findWorldBtn.gameObject.SetActive(league != "verified");
     }
 
     void PickStake(int cents)
