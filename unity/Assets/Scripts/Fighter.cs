@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Plays a queue of spec moves on a Mixamo humanoid. Never decides strategy: plans come from the backend
-// (or OfflineSim). Resolves its own hits during each attack's active window and reports them via OnHit.
+// (or OfflineSim). Resolves its own hits from the real fist bone during each attack's strike window and reports them via OnHit.
 public class Fighter : MonoBehaviour
 {
     public string botId = "bot_a";
     public string displayName = "Brass Knuckle";
     public Fighter opp;
     public Animator anim;
+    public Color flashColor = new(1f, 0.6f, 0.2f);
 
     [NonSerialized] public int budget, startBudget;
     [NonSerialized] public float guard = 1f;
@@ -19,55 +20,90 @@ public class Fighter : MonoBehaviour
     [NonSerialized] public string lastHitBy;
     public readonly List<string> lastMoves = new();
     public event Action<Fighter, string, string> OnHit; // attacker, move, result
+    public event Action<Fighter, string> OnSwing;       // attacker, move: every punch at its strike frame, landed or not
 
     public static readonly string[] Moves = { "jab", "cross", "hook_l", "hook_r", "uppercut", "body", "block", "dodge_l", "dodge_r", "step_in", "step_back" };
 
-    // spec move -> animator state (states are named after the clip files; dodge_left is a mirrored dodge_right)
+    // spec move -> animator state (states are named after the clip files; *_left/_m states are mirrors).
+    // circle_l/circle_r are local footwork, never sent to or expected from the backend.
     static readonly Dictionary<string, string> State = new()
     {
         ["jab"] = "jab", ["cross"] = "cross", ["hook_l"] = "hook_lead", ["hook_r"] = "hook_rear", ["uppercut"] = "upper_rear",
         ["body"] = "body_hook", ["block"] = "block_high", ["dodge_l"] = "dodge_left", ["dodge_r"] = "dodge_right",
-        ["step_in"] = "step_forward", ["step_back"] = "step_back",
+        ["step_in"] = "step_forward", ["step_back"] = "step_back", ["circle_l"] = "step_left", ["circle_r"] = "step_right",
     };
+    // A left hook lands on the defender's right cheek and turns the head to their left (mirrored clip), and so on.
     static readonly Dictionary<string, string> HitState = new()
     {
-        ["jab"] = "hit_head_straight", ["cross"] = "hit_head_straight", ["hook_l"] = "hit_head_left", ["hook_r"] = "hit_head_right",
+        ["jab"] = "hit_head_straight", ["cross"] = "hit_head_straight", ["hook_l"] = "hit_head_left_m", ["hook_r"] = "hit_head_right",
         ["uppercut"] = "hit_upper", ["body"] = "hit_body",
     };
     public static int Damage(string move) => move switch { "jab" => 1, "cross" => 2, "hook_l" or "hook_r" => 3, "uppercut" => 4, "body" => 2, _ => 0 };
     public static bool IsAttack(string move) => Damage(move) > 0;
 
-    public const float RingHalf = 2.35f, MinGap = 0.85f, Reach = 1.45f;
-    const float ActiveFrom = 0.4f, ActiveTo = 0.6f;
+    // Measured from the clips with Editor/Measure.cs (samples every clip, tracks both hands):
+    // which fist throws it, when it is fully out (normalized clip time), and the fighter distance at which that fist meets the target
+    // (ranges tuned from the capture-mode [strike] log: clean hits land at 0.95-1.1 m).
+    readonly struct Strike
+    {
+        public readonly HumanBodyBones fist; public readonly float peak, range; public readonly bool body;
+        public Strike(HumanBodyBones f, float p, float r, bool b = false) { fist = f; peak = p; range = r; body = b; }
+    }
+    static readonly Dictionary<string, Strike> Strikes = new()
+    {
+        ["jab"] = new(HumanBodyBones.LeftHand, 0.28f, 1.05f),
+        ["cross"] = new(HumanBodyBones.RightHand, 0.32f, 1.05f),
+        ["hook_l"] = new(HumanBodyBones.LeftHand, 0.27f, 0.98f),
+        ["hook_r"] = new(HumanBodyBones.RightHand, 0.35f, 0.98f),
+        ["uppercut"] = new(HumanBodyBones.RightHand, 0.33f, 1.0f),
+        ["body"] = new(HumanBodyBones.LeftHand, 0.42f, 1.05f, true),
+    };
+    public static float RangeOf(string move) => Strikes.TryGetValue(move, out var s) ? s.range : Reach;
+
+    // MinGap: chest-to-chest with the punch lean baked in, bodies never touch. Reach: longest punch plus a little slack.
+    public const float RingHalf = 2.35f, MinGap = 0.95f, Reach = 1.4f;
+    const float HitRadius = 0.56f; // hand bone (wrist) to face/chest point; fully extended jabs bottom out at 0.38-0.53 in the strike log
 
     readonly Queue<string> queue = new();
     readonly Dictionary<string, float> lengths = new();
     string current; float t, dur; bool hitDone, idle;
+    float stepTarget, minFist, nextFootwork;
+    Vector3 knock;
     float baseY;
+
+    // impact flash on the body (emission via property block)
+    Renderer[] rends; MaterialPropertyBlock mpb; float flash; Color flashTint;
+    static readonly int Emission = Shader.PropertyToID("_EmissionColor");
 
     static readonly int Spd = Animator.StringToHash("spd");
     void Play(string state, float speed, float fade) { anim.SetFloat(Spd, speed); anim.CrossFadeInFixedTime(state, fade); }
 
     public string Current => current;
     public bool Busy => current != null || queue.Count > 0;
+    public float Health01 => startBudget > 0 ? Mathf.Clamp01((float)budget / startBudget) : 1f;
 
     void Awake()
     {
         if (anim == null) anim = GetComponentInChildren<Animator>();
         baseY = transform.position.y;
-            foreach (var c in anim.runtimeAnimatorController.animationClips) lengths[c.name] = c.length;
+        foreach (var c in anim.runtimeAnimatorController.animationClips) lengths[c.name] = c.length;
+        anim.gameObject.AddComponent<RootRelay>().f = this;
+        rends = GetComponentsInChildren<Renderer>();
+        mpb = new MaterialPropertyBlock();
     }
 
     float Len(string state, float speed)
     {
-        var clip = state == "dodge_left" ? "dodge_right" : state;
+        var clip = state switch { "dodge_left" => "dodge_right", "hit_head_left_m" => "hit_head_left", _ => state };
         return (lengths.TryGetValue(clip, out var l) ? l : 0.8f) / speed;
     }
 
     static float Speed(string state) => state switch
     {
-        "jab" or "cross" or "hook_lead" or "hook_rear" or "upper_rear" or "body_hook" => 1.35f,
+        "jab" or "cross" => 1.45f,
+        "hook_lead" or "hook_rear" or "upper_rear" or "body_hook" => 1.3f,
         "step_forward" or "step_back" => 1.6f,
+        "step_left" or "step_right" => 1.3f,
         "dodge_left" or "dodge_right" or "block_high" => 1.4f,
         _ => 1f,
     };
@@ -75,7 +111,8 @@ public class Fighter : MonoBehaviour
     public void ResetFor(int cents)
     {
         budget = startBudget = cents; guard = 1f; down = won = holdBlock = false; lastHitBy = null;
-        queue.Clear(); lastMoves.Clear(); current = null; idle = false;
+        queue.Clear(); lastMoves.Clear(); current = null; idle = false; knock = Vector3.zero; flash = 0; ApplyFlash();
+        nextFootwork = Time.time + UnityEngine.Random.Range(0.6f, 1.6f);
         anim.SetFloat(Spd, 1f);
         anim.Play("idle_boxing_bounce", 0, UnityEngine.Random.value);
     }
@@ -91,18 +128,21 @@ public class Fighter : MonoBehaviour
 
     public float Distance => opp == null ? 0 : Vector3.Distance(Flat(transform.position), Flat(opp.transform.position));
     static Vector3 Flat(Vector3 v) => new(v.x, 0, v.z);
+    Vector3 ToOpp => Flat(opp.transform.position - transform.position).normalized;
+
+    public Transform Bone(HumanBodyBones b) => anim.GetBoneTransform(b);
+    public Vector3 Head => Bone(HumanBodyBones.Head)?.position ?? transform.position + Vector3.up * 1.6f;
+    public Vector3 Chest => (Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest) ?? Bone(HumanBodyBones.Spine))?.position ?? transform.position + Vector3.up * 1.25f;
+    public Vector3 Fist(string move) => Strikes.TryGetValue(move, out var s) && Bone(s.fist) != null ? Bone(s.fist).position : Head;
 
     void Update()
     {
-        if (opp == null) return;
-        if (down) return;
-        if (won) { Face(); return; }
-        if (!active) { Face(); return; }
+        UpdateFlash();
+        if (opp == null || down) return;
         Face();
-        // Hard spacing: both fighters can step in at once, so each pushes itself back half of any overlap.
-        float gap = Distance;
-        if (gap < MinGap && !opp.down)
-            Move(Flat(transform.position - opp.transform.position).normalized * Mathf.Min((MinGap - gap) * 0.5f, 2f * Time.deltaTime));
+        if (won || !active) return;
+
+        if (knock.sqrMagnitude > 1e-4f) { Move(knock * Time.deltaTime); knock *= Mathf.Exp(-9f * Time.deltaTime); }
         if (current != null) { Tick(); if (current != null) return; }
 
         if (holdBlock)
@@ -112,13 +152,30 @@ public class Fighter : MonoBehaviour
             return;
         }
         float d = Distance;
-        // Close the gap before throwing, otherwise punches queued at 1.45-1.7 m all whiff.
-        if (queue.Count > 0 && IsAttack(queue.Peek()) && d > Reach - 0.15f) { Begin("step_in"); return; }
-        if (queue.Count > 0) { Begin(queue.Dequeue()); return; }
-        if (d > Reach + 0.25f) { Begin("step_in"); return; }
-        if (d < MinGap) { Begin("step_back"); return; }
+        if (queue.Count > 0)
+        {
+            var next = queue.Peek();
+            // Close to this punch's range before throwing it, otherwise it whiffs in front of his face.
+            if (IsAttack(next) && d > RangeOf(next) + 0.12f) { BeginStep(RangeOf(next)); return; }
+            Begin(queue.Dequeue()); return;
+        }
+        if (d > Reach + 0.25f) { BeginStep(Reach); return; }
+        if (d < MinGap + 0.05f) { Begin("step_back"); return; }
+        if (Time.time >= nextFootwork) { Footwork(); return; }
         if (!idle) { Play("idle_boxing_bounce", 1f, 0.2f); idle = true; }
         guard = Mathf.Min(1f, guard + Time.deltaTime * 0.08f);
+    }
+
+    // Cosmetic: circle the other fighter between plans, and always circle away from the ropes.
+    void Footwork()
+    {
+        nextFootwork = Time.time + UnityEngine.Random.Range(0.9f, 2.2f);
+        var p = Flat(transform.position);
+        bool nearRope = Mathf.Max(Mathf.Abs(p.x), Mathf.Abs(p.z)) > RingHalf - 0.55f;
+        if (!nearRope && UnityEngine.Random.value < 0.35f) return;
+        // step_right moves along +transform.right; pick the side that heads for the centre when cornered
+        bool right = nearRope ? Vector3.Dot(transform.right, -p) > 0 : UnityEngine.Random.value < 0.5f;
+        Begin(right ? "circle_r" : "circle_l", record: false);
     }
 
     void Face()
@@ -128,12 +185,16 @@ public class Fighter : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 1f - Mathf.Exp(-10f * Time.deltaTime));
     }
 
-    void Begin(string move)
+    void BeginStep(float target) { Begin("step_in"); stepTarget = target; }
+
+    void Begin(string move, bool record = true)
     {
         var state = State[move];
         float speed = Speed(state);
-        Play(state, speed, 0.08f);
-        current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false;
+        Play(state, speed, IsAttack(move) ? 0.06f : 0.1f);
+        current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue;
+        stepTarget = MinGap + 0.1f;
+        if (!record) return;
         lastMoves.Add(move);
         if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
     }
@@ -142,58 +203,113 @@ public class Fighter : MonoBehaviour
     {
         t += Time.deltaTime;
         float n = t / dur;
-        if (current == "step_in" || current == "step_back")
+        // Reached the distance we stepped for: cut the step short and let the queued punch start from here.
+        if (current == "step_in" && Distance <= stepTarget && n > 0.25f) { current = null; return; }
+        if (Strikes.TryGetValue(current, out var s) && !hitDone)
         {
-            var toOpp = Flat(opp.transform.position - transform.position).normalized;
-            float sign = current == "step_in" ? 1f : -1f;
-            if (current == "step_in" && Distance <= MinGap + 0.15f) sign = 0;
-            Move(toOpp * sign * 0.75f * Time.deltaTime / dur);
+            // Wind-up: settle to this punch's range so the fist actually lands on the target instead of passing through it.
+            if (n < s.peak) Move(ToOpp * Mathf.Clamp(Distance - s.range, -1.6f * Time.deltaTime, 0.8f * Time.deltaTime));
+            if (n >= s.peak - 0.08f)
+            {
+                var target = s.body ? opp.Chest : opp.Head + Vector3.up * 0.08f; // head bone sits at the neck; aim at the face
+                minFist = Mathf.Min(minFist, Vector3.Distance(Fist(current), target));
+            }
+            if (n >= s.peak + 0.05f) { hitDone = true; OnSwing?.Invoke(this, current); Resolve(current); }
         }
-        if (IsAttack(current) && !hitDone && n >= ActiveFrom && n <= ActiveTo) { hitDone = true; Resolve(current); }
         if (n >= 1f) current = null;
     }
 
-    void Move(Vector3 delta)
+    // Every position change goes through here: ring bounds plus a hard minimum gap, so the bodies can never overlap
+    // whatever the animation, the knockback or the other fighter does.
+    public void Move(Vector3 delta)
     {
-        var p = transform.position + delta;
+        var p = transform.position + new Vector3(delta.x, 0, delta.z);
         p.x = Mathf.Clamp(p.x, -RingHalf, RingHalf);
         p.z = Mathf.Clamp(p.z, -RingHalf, RingHalf);
         p.y = baseY;
+        if (opp != null && !down && !opp.down)
+        {
+            var away = Flat(p - opp.transform.position);
+            if (away.magnitude < MinGap)
+            {
+                if (away.sqrMagnitude < 1e-6f) away = -transform.forward;
+                var fixedP = Flat(opp.transform.position) + away.normalized * MinGap;
+                p.x = fixedP.x; p.z = fixedP.z;
+            }
+        }
         transform.position = p;
     }
 
+    // Root motion from the clips that travel (steps, knockback, KO falls); the stepping fighter stops at its target distance.
+    public void ApplyRoot(Vector3 delta)
+    {
+        if (!active && !down) return;
+        if (current == "step_in" && Distance <= stepTarget) delta -= Vector3.Project(delta, ToOpp);
+        Move(delta);
+    }
+
+    public static bool logStrikes; // capture mode: log every punch to tune ranges against the clips
     public bool scripted; // replay: results come from the 0G episode log, not from local hit detection
 
     void Resolve(string move)
     {
         if (scripted) return;
         if (opp.down || opp.won) return;
-        float reach = move == "body" ? Reach - 0.1f : Reach;
-        if (Distance > reach) return; // whiff
         var toMe = Flat(transform.position - opp.transform.position).normalized;
         if (Vector3.Angle(opp.transform.forward, toMe) > 75f) return; // defender turned away: miss
-        string result = opp.IsBlocking ? "blocked" : opp.IsDodging ? "dodged" : "clean";
+        // Block and dodge win whenever the punch was in range; a clean hit needs the fist to have reached the target.
+        bool inRange = minFist < HitRadius + 0.2f;
+        string result = opp.IsBlocking && inRange ? "blocked" : opp.IsDodging && inRange ? "dodged" : minFist < HitRadius ? "clean" : null;
+        if (logStrikes) Debug.Log($"[strike] {botId} {move} d={Distance:F2} fist={minFist:F2} -> {result ?? "whiff"}");
+        if (result == null) return; // whiff
         if (result == "clean") opp.TakeHit(move);
-        else if (result == "blocked") opp.guard = Mathf.Max(0f, opp.guard - 0.08f * Damage(move));
+        else if (result == "blocked") { opp.guard = Mathf.Max(0f, opp.guard - 0.08f * Damage(move)); opp.Flash(new Color(0.4f, 0.65f, 1f), 0.5f); opp.knock = -opp.ToOpp * 0.5f; }
         OnHit?.Invoke(this, move, result);
     }
 
-    public bool IsBlocking => holdBlock || current == "block";
-    public bool IsDodging => current == "dodge_l" || current == "dodge_r";
+    // Only while the guard is actually up / the head is actually off the line (dodge_right's head shift peaks at 25-60% of the clip).
+    float N => dur > 0 ? t / dur : 0;
+    public bool IsBlocking => holdBlock || (current == "block" && N > 0.12f && N < 0.85f);
+    public bool IsDodging => (current == "dodge_l" || current == "dodge_r") && N > 0.12f && N < 0.7f;
 
     public void TakeHit(string move)
     {
         lastHitBy = move;
         var state = HitState.TryGetValue(move, out var s) ? s : "hit_body";
-        Play(state, 1.3f, 0.05f);
+        Play(state, 1.3f, 0.04f);
         current = "_hit"; t = 0; dur = Len(state, 1.3f) * 0.8f; idle = false;
-        Move(Flat(transform.position - opp.transform.position).normalized * 0.12f);
+        // hit_upper carries its own 1.1 m root-motion knockback; the rest get a short shove that bleeds off
+        if (move != "uppercut" && opp != null) knock = -ToOpp * (0.7f + 0.25f * Damage(move));
+        Flash(flashColor, 1f);
+    }
+
+    public void Flash(Color c, float k) { flashTint = c; flash = Mathf.Max(flash, k); }
+
+    void UpdateFlash()
+    {
+        if (flash <= 0f) return;
+        flash = Mathf.Max(0f, flash - Time.unscaledDeltaTime * 5f);
+        ApplyFlash();
+    }
+
+    void ApplyFlash()
+    {
+        if (rends == null) return;
+        var c = flashTint * (flash * flash * 3f);
+        foreach (var r in rends)
+        {
+            if (r == null) continue;
+            r.GetPropertyBlock(mpb);
+            mpb.SetColor(Emission, c);
+            r.SetPropertyBlock(mpb);
+        }
     }
 
     public void KnockOut()
     {
-        down = true; queue.Clear(); current = null;
+        down = true; queue.Clear(); current = null; knock = Vector3.zero;
         Play("ko_back", 1f, 0.05f);
+        Flash(Color.white, 1f);
     }
 
     public void Victory()
@@ -203,4 +319,13 @@ public class Fighter : MonoBehaviour
     }
 
     public void PlayIdle() { queue.Clear(); current = null; holdBlock = false; idle = false; Play("idle_boxing_bounce", 1f, 0.2f); idle = true; }
+}
+
+// OnAnimatorMove must live next to the Animator; it hands the clip's root motion to the Fighter instead of applying it raw.
+public class RootRelay : MonoBehaviour
+{
+    public Fighter f;
+    Animator anim;
+    void Awake() => anim = GetComponent<Animator>();
+    void OnAnimatorMove() { if (f != null) f.ApplyRoot(anim.deltaPosition); }
 }

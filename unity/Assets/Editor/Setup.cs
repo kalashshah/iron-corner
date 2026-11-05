@@ -9,10 +9,13 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-// Mixamo FBX import rules: humanoid everywhere, clips renamed from "mixamo.com" to the file name,
-// root motion baked into the pose (the Fighter script moves the transform itself).
+// Mixamo FBX import rules: humanoid everywhere, clips renamed from "mixamo.com" to the file name.
+// XZ root motion is extracted (not baked into the pose) for everything but the idles: Fighter.OnAnimatorMove applies it
+// through the ring/spacing constraint, so a lunge or knockback moves the fighter instead of sliding the mesh into the other one.
 public class MixamoImport : AssetPostprocessor
 {
+    public override uint GetVersion() => 2; // bump to force a reimport when these rules change
+
     bool Ours => assetPath.Contains("ThirdParty/Mixamo/") || assetPath.Contains("ThirdParty/Robots/");
     bool IsClip => assetPath.Contains("/Clips/");
 
@@ -39,7 +42,10 @@ public class MixamoImport : AssetPostprocessor
         c.loopTime = name.StartsWith("idle");
         c.lockRootRotation = c.keepOriginalOrientation = true;
         c.lockRootHeightY = c.keepOriginalPositionY = true;
-        c.lockRootPositionXZ = c.keepOriginalPositionXZ = true;
+        // Only clips that end somewhere else (measured: steps 0.6-0.9 m, hit_upper 1.1 m back, KO falls, advance/retreat).
+        // Punches lean ~0.7 m and come back, so they stay baked and keep the arm geometry Fighter.Strikes was measured on.
+        c.lockRootPositionXZ = !(name.StartsWith("step_") || name.StartsWith("ko_") || name is "hit_upper" or "dodge_advance" or "dodge_retreat");
+        c.keepOriginalPositionXZ = true;
         mi.clipAnimations = new[] { c };
     }
 
@@ -129,6 +135,7 @@ public static class Setup
         var names = Directory.GetFiles($"{Mixamo}/Clips", "*.fbx").Select(p => Path.GetFileNameWithoutExtension(p)).OrderBy(n => n).ToList();
         foreach (var n in names) Add(n, n);
         Add("dodge_left", "dodge_right", mirror: true);
+        Add("hit_head_left_m", "hit_head_left", mirror: true); // head snaps to the defender's left: what a left hook does
         Add("block_hold", "block_high");
         sm.defaultState = sm.states.First(s => s.state.name == "idle_boxing_bounce").state;
         // spd defaults to 0 otherwise; idle must play before any script sets it.
@@ -145,11 +152,9 @@ public static class Setup
         m.SetFloat("_Metallic", metal);
         m.SetFloat("_Smoothness", smooth);
         if (normal != null) { m.SetTexture("_BumpMap", normal); m.EnableKeyword("_NORMALMAP"); }
-        if (emission.HasValue)
-        {
-            m.SetColor("_EmissionColor", emission.Value); m.EnableKeyword("_EMISSION");
-            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-        }
+        // Emission is always on (black by default) so Fighter can flash a bot on impact with a property block.
+        m.SetColor("_EmissionColor", emission ?? Color.black); m.EnableKeyword("_EMISSION");
+        m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
         var path = $"{Out}/Materials/{name}.mat";
         AssetDatabase.DeleteAsset(path);
         AssetDatabase.CreateAsset(m, path);
@@ -280,6 +285,21 @@ public static class Setup
 
     const float Top = 1.0f; // canvas height
 
+    // URP particle material: additive for sparks/glow/flashes, alpha-blended for smoke/debris/confetti.
+    static Material Particle(string name, bool additive)
+    {
+        var m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+        m.SetFloat("_Surface", 1); m.SetFloat("_Blend", additive ? 2 : 0);
+        m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha); m.SetFloat("_DstBlend", (float)(additive ? BlendMode.One : BlendMode.OneMinusSrcAlpha));
+        m.SetFloat("_ZWrite", 0); m.SetOverrideTag("RenderType", "Transparent");
+        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        m.renderQueue = (int)RenderQueue.Transparent;
+        var path = $"{Out}/Materials/{name}.mat";
+        AssetDatabase.DeleteAsset(path);
+        AssetDatabase.CreateAsset(m, path);
+        return m;
+    }
+
     static void Scene(GameObject botA, GameObject botB)
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -329,6 +349,25 @@ public static class Setup
             }
         }
 
+        // LED ribbons along the front of each stand and an overhead truss with glowing panels (bloom picks them up).
+        var ledA = Lit("led_brass", Color.black, 0f, 0.5f, null, null, new Color(1f, 0.5f, 0.12f) * 3.5f);
+        var ledB = Lit("led_steel", Color.black, 0f, 0.5f, null, null, new Color(0.35f, 0.55f, 1f) * 3.5f);
+        var panel = Lit("light_panel", Color.black, 0f, 0.5f, null, null, new Color(1f, 0.95f, 0.85f) * 6f);
+        var truss = Lit("truss", new Color(0.12f, 0.12f, 0.14f), 0.8f, 0.4f);
+        for (int s = 0; s < 4; s++)
+        {
+            var rot = Quaternion.Euler(0, s * 90, 0);
+            var g = Cube("led", rot * new Vector3(0, 1.02f, 10.18f), new Vector3(24f, 0.08f, 0.04f), s % 2 == 0 ? ledA : ledB, arena);
+            g.transform.localRotation = rot;
+            var t = Cube("truss", rot * new Vector3(0, Top + 6.2f, 2.6f), new Vector3(5.6f, 0.18f, 0.18f), truss, arena);
+            t.transform.localRotation = rot;
+            for (int k = -1; k <= 1; k++)
+            {
+                var pn = Cube("panel", rot * new Vector3(k * 1.6f, Top + 6.05f, 2.6f), new Vector3(0.9f, 0.04f, 0.5f), panel, arena);
+                pn.transform.localRotation = rot;
+            }
+        }
+
         // Lights: warm key with shadows, brass and steel rims, low cool fill.
         Spot("Key", new Vector3(0, 9f, -4f), new Vector3(0, Top, 0), new Color(1f, 0.95f, 0.86f), 140f, 62f, true);
         Spot("RimBrass", new Vector3(-7f, 7f, 5f), new Vector3(0, Top + 1f, 0), new Color(1f, 0.62f, 0.25f), 90f, 40f, false);
@@ -366,6 +405,7 @@ public static class Setup
         var tone = profile.Add<Tonemapping>(true); tone.mode.Override(TonemappingMode.ACES);
         var vig = profile.Add<Vignette>(true); vig.intensity.Override(0.32f);
         var ca = profile.Add<ColorAdjustments>(true); ca.postExposure.Override(0.35f); ca.contrast.Override(12f);
+        profile.Add<ChromaticAberration>(true).intensity.Override(0f); // Game pulses it on heavy hits
         foreach (var comp in profile.components) AssetDatabase.AddObjectToAsset(comp, profile);
         EditorUtility.SetDirty(profile);
         vol.sharedProfile = profile;
@@ -388,7 +428,11 @@ public static class Setup
 
         new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
-        var game = new GameObject("Game").AddComponent<Game>();
+        var gameGo = new GameObject("Game");
+        var fx = gameGo.AddComponent<Fx>();
+        fx.add = Particle("fx_add", true); fx.alpha = Particle("fx_alpha", false); fx.ringTop = Top;
+        fx.crowdMat = Lit("crowd", Color.gray, 0f, 0.25f); fx.crowdMat.enableInstancing = true;
+        var game = gameGo.AddComponent<Game>();
         game.a = fa.GetComponent<Fighter>(); game.b = fb.GetComponent<Fighter>(); game.cam = cam;
 
         var scenePath = "Assets/Scenes/Main.unity";
