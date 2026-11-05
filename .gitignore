@@ -13,3 +13,7 @@ unity/Assets/ThirdParty/Mixamo.meta
 backend/data/
 unity/Captures/
 unity/Captures.meta
+contracts/out/
+camp/adapters/
+camp/training.json
+camp/last-task.json

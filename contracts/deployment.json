@@ -1,0 +1,9 @@
+{
+ "network": "0g-galileo",
+ "chainId": 16602,
+ "address": "0x4Ed79445a389C9442657773138e2ffFabb25d170",
+ "trainer": "0x8C9eadc0829679Cc7a7b6Cafaecd9Ce55FCDF968",
+ "deployTx": "0x7a7e8ac06dcf559fd3f93749eb1cce83c073c732db91fb573732d068bc974bee",
+ "block": 64045886,
+ "at": "2026-11-05T20:05:46.352Z"
+}
