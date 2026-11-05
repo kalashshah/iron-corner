@@ -10,7 +10,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 // One scene, four modes. Owns the camera, the decision/poll loops, and all screens.
-public class Game : MonoBehaviour
+public partial class Game : MonoBehaviour
 {
     public Fighter a, b;   // a = your bot (bot_a), b = opponent / sparring dummy (bot_b)
     public Camera cam;
@@ -37,7 +37,7 @@ public class Game : MonoBehaviour
     RectTransform[] barFill = new RectTransform[2];
     Transform ticker;
     Bubble bubA, bubB;
-    Text modalAction, modalCode, modalStatus; RawImage modalQr; Button modalBtn; string approvalId; bool approvalOpen;
+    Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn; string approvalId; bool approvalOpen;
     Text koTitle, koSub, koLessons; Button koLedger;
     readonly List<(Text t, float born, Vector3 world)> popups = new();
     float toastUntil;
@@ -109,36 +109,31 @@ public class Game : MonoBehaviour
         serverStatus.text = Api.Offline ? $"<color=#F2A33A>Can't reach {Api.BaseUrl} — running the local OFFLINE sim</color>" : $"<color=#5CDB85>Connected</color> · {Api.BaseUrl}";
         badge.text = Api.Offline ? "OFFLINE · local sim, no real payments" : "LIVE · " + Api.BaseUrl.Replace("http://", "").Replace("https://", "");
         badge.color = Api.Offline ? UI.Accent : UI.Green;
-        yield return RefreshHome();
+        yield return Enter(); // Flow.cs: first run → Welcome, returning player → Home
     }
 
     IEnumerator RefreshHome()
     {
-        yield return Api.Call("GET", "/bots", null, r =>
+        yield return Api.Call("GET", $"/bots/{a.botId}", null, bot =>
         {
-            foreach (var bot in r)
-            {
-                var f = (string)bot["botId"] == a.botId ? a : (string)bot["botId"] == b.botId ? b : null;
-                if (f != null) f.displayName = (string)bot["name"] ?? f.displayName;
-                if (f != a) continue;
-                cardName.text = a.displayName.ToUpperInvariant();
-                cardMoney.text = (string)bot["payAsset"] == "hbar"
-                    ? $"{(double?)bot["hbar"] ?? 0:0.00} <size=26><color=#9EA5B0>HBAR · Hedera testnet</color></size>"
-                    : $"${(double?)bot["usdc"] ?? 0:0.00} <size=26><color=#9EA5B0>USDC · Hedera testnet</color></size>";
-                cardBrain.text = $"Brain v{bot["brainVersion"]}  <color=#9EA5B0>root {UI.Short((string)bot["brainRoot"])}</color>";
-                ShowDaily(bot["daily"]);
-                ShowProgress(bot["progress"]);
-                aAlive = (bool?)bot["alive"] != false;
-                aNeedsRevive = (bool?)bot["needsRevive"] == true;
-                int repair = (int?)bot["repairIn"] ?? 0;
-                cardAcct.text = $"{bot["accountId"]}" + (aAlive ? "" : aNeedsRevive
-                    ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
-                    : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
-                fightBtn.SetLabel(aAlive ? "FIGHT" : aNeedsRevive ? "REVIVE  <size=24><color=#9EA5B0>World ID</color></size>" : $"REPAIRING · {repair} s");
-                highBtn.gameObject.SetActive(aAlive);
-                if (!aAlive && !aNeedsRevive) StartCoroutine(RefreshSoon(Mathf.Clamp(repair, 1, 5)));
-            }
-        }, e => cardAcct.text = "<color=#F2523F>" + e + "</color>");
+            a.displayName = (string)bot["name"] ?? a.displayName;
+            ShowCorner(bot); // Flow.cs: paint, league, rating, record, training lock
+            cardMoney.text = Money(bot);
+            cardBrain.text = $"Brain v{bot["brainVersion"]}  <color=#9EA5B0>root {UI.Short((string)bot["brainRoot"])}</color>";
+            ShowDaily(bot["daily"]);
+            ShowProgress(bot["progress"]);
+            aAlive = (bool?)bot["alive"] != false;
+            aNeedsRevive = (bool?)bot["needsRevive"] == true;
+            int repair = (int?)bot["repairIn"] ?? 0;
+            cardAcct.text = $"{bot["accountId"]}" + (bot["agentId"]?["tokenId"] != null ? $"  ·  Agentic ID #{bot["agentId"]["tokenId"]}" : "") + (aAlive ? "" : aNeedsRevive
+                ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
+                : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
+            fightBtn.SetLabel(!aAlive ? (aNeedsRevive ? "REVIVE  <size=24><color=#9EA5B0>World ID</color></size>" : $"REPAIRING · {repair} s")
+                : trained ? "FIND A FIGHT" : "FIND A FIGHT  <size=20><color=#9EA5B0>locked · train first</color></size>");
+            fightBtn.GetComponent<Image>().color = aAlive && !trained ? new Color(0.14f, 0.15f, 0.17f, 0.95f) : UI.Steel;
+            highBtn.interactable = aAlive;
+            if (!aAlive && !aNeedsRevive) StartCoroutine(RefreshSoon(Mathf.Clamp(repair, 1, 5)));
+        }, e => { cardAcct.text = "<color=#F2523F>" + e + "</color>"; IdentityError(e); });
     }
 
     void ShowDaily(JToken d)
@@ -170,6 +165,7 @@ public class Game : MonoBehaviour
         fight.SetActive(m == Mode.Fight);
         brain.SetActive(m == Mode.Brain);
         koPanel.SetActive(false);
+        HideFlow();
         bubA.root.gameObject.SetActive(false); bubB.root.gameObject.SetActive(false);
         if (m == Mode.Home || m == Mode.Brain) { ResetFighters(); }
         if (m == Mode.Home) StartCoroutine(RefreshHome());
@@ -186,7 +182,7 @@ public class Game : MonoBehaviour
     {
         if (mode == Mode.Train && roundOn) EndRound();
         if (mode == Mode.Train && unsavedRounds > 0) StartCoroutine(AutoSave());
-        session++; replaying = false; a.scripted = b.scripted = false; Show(Mode.Home);
+        session++; replaying = false; live = false; a.scripted = b.scripted = false; RestoreOpponent(); Show(Mode.Home);
     }
 
     // Leaving training uploads the brain (rules + demos + stats) to 0G Storage as a new version, after the last demos land.
@@ -321,6 +317,13 @@ public class Game : MonoBehaviour
         if (plan["combo"] is JArray combo) moves.AddRange(combo.Select(x => (string)x));
         f.SetQueue(moves);
         if (quiet) return;
+        ShowPlan(f, plan, moves);
+    }
+
+    // Thought bubble for a plan: say line, "Using: …" / "Like your coach: …", stance, moves, 0G request id.
+    void ShowPlan(Fighter f, JToken plan, IEnumerable<string> moves)
+    {
+        var stance = (string)plan["stance"];
         string req = (string)plan["requestId"];
         bool tee = (bool?)plan["teeVerified"] == true;
         string meta = (string.IsNullOrEmpty(req) ? "" : "0G " + UI.Short(req, 8)) + (tee ? "  <color=#5CDB85>TEE verified</color>" : (bool?)plan["mock"] == true ? "  <color=#F2A33A>offline</color>" : "");
@@ -377,7 +380,7 @@ public class Game : MonoBehaviour
             if (combo[side] == 4) fx.Cheer(0.55f);
         }
         else if (result == "blocked") hitStopUntil = Time.unscaledTime + 0.02f;
-        if (mode != Mode.Fight || over || replaying) return;
+        if (mode != Mode.Fight || over || replaying || live) return;
         int s = session;
         StartCoroutine(Api.Call("POST", $"/fights/{fightId}/hit", new JObject { ["attacker"] = att.botId, ["defender"] = def.botId, ["move"] = move, ["result"] = result }, r =>
         {
@@ -411,6 +414,7 @@ public class Game : MonoBehaviour
         koLessons.text = "Saving lessons to 0G…";
         koLedger.gameObject.SetActive(!Api.Offline && !string.IsNullOrEmpty(ledgerTopic) && ledgerTopic != "offline");
         koPanel.SetActive(true);
+        if (live) { yield return LiveEnd(s); yield break; }
         yield return Api.Call("POST", $"/fights/{fightId}/end", new JObject(), r =>
         {
             var l = r["lessons"]?[a.botId] as JArray;
@@ -545,6 +549,7 @@ public class Game : MonoBehaviour
     {
         summary.SetActive(true);
         var rd = r?["round"];
+        if (rd != null) { guideRound = true; GuideCheck(); }
         if (rd == null) { summaryTitle.text = "ROUND OVER"; summaryBody.text = "<color=#F2523F>Couldn't send the round: " + err + "</color>"; return; }
         int xp = (int?)rd["xpGained"] ?? 0;
         summaryTitle.text = xp > 0 ? $"ROUND OVER   <color=#5CDB85>+{xp} XP</color>" : "ROUND OVER";
@@ -613,6 +618,7 @@ public class Game : MonoBehaviour
     void OnCoach(JToken r, Text transcript)
     {
         string req = (string)r["requestId"], diff = (string)r["diff"];
+        guideCoach = true; GuideCheck();
         transcript.text = $"“{r["text"]}”" + (req != null ? $"  <size=20><color=#9EA5B0>0G {UI.Short(req, 8)}</color></size>" : "");
         ShowDaily(r["daily"]);
         if ((bool?)r["daily"]?["justDone"] == true) StartCoroutine(ToastLater($"Daily training done · {r["daily"]["streak"]}-day streak", 3.4f));
@@ -648,21 +654,29 @@ public class Game : MonoBehaviour
     void Revive() => Approve("revive", "Revive " + a.displayName, id =>
         StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/revive", new JObject { ["approvalId"] = id }, _ => { Toast(a.displayName + " is back on its feet"); StartCoroutine(RefreshHome()); }, e => Toast("Revive failed: " + e))));
 
-    void Approve(string action, string label, Action<string> onApproved)
+    void Approve(string action, string label, Action<string> onApproved) =>
+        Approve("/approvals", new JObject { ["botId"] = a.botId, ["action"] = action }, label,
+            "Scan with World App on your phone. A human must OK every high-stakes action; each approval works once.", "CANCEL", onApproved, null);
+
+    // Any World ID device-flow approval (high stakes, revive, sign-in). onClosed runs when the player closes it without approving.
+    Action modalClosed;
+    void Approve(string path, JObject body, string label, string explain, string closeLabel, Action<string> onApproved, Action onClosed)
     {
-        StartCoroutine(Api.Call("POST", "/approvals", new JObject { ["botId"] = a.botId, ["action"] = action }, r =>
+        StartCoroutine(Api.Call("POST", path, body, r =>
         {
             approvalId = (string)r["approvalId"];
             approvalOpen = true;
+            modalClosed = onClosed;
             modal.SetActive(true);
             modalAction.text = label;
+            modalExplain.text = explain;
             modalCode.text = $"Code  <b>{r["userCode"]}</b>";
             modalStatus.text = "<color=#F2A33A>Waiting for World ID approval…</color>" + (Api.Offline ? "\n<size=20>OFFLINE: placeholder code, auto-approves in a few seconds</size>" : "");
-            modalBtn.SetLabel("CANCEL");
+            modalBtn.SetLabel(closeLabel);
             modalQr.texture = null;
             StartCoroutine(Api.Texture($"/approvals/{approvalId}/qr.png", t => { if (modalQr != null) modalQr.texture = t; }));
             StartCoroutine(PollApproval(approvalId, onApproved));
-        }, e => Toast("Approval failed: " + e)));
+        }, e => { Toast("Approval failed: " + e); onClosed?.Invoke(); }));
     }
 
     IEnumerator PollApproval(string id, Action<string> onApproved)
@@ -677,6 +691,7 @@ public class Game : MonoBehaviour
             {
                 modalStatus.text = "<color=#5CDB85>Approved ✓</color>";
                 yield return new WaitForSecondsRealtime(0.8f);
+                modalClosed = null;
                 CloseModal(false);
                 onApproved(id);
                 yield break;
@@ -696,6 +711,8 @@ public class Game : MonoBehaviour
         if (cancel && approvalOpen && approvalId != null) StartCoroutine(Api.Call("POST", $"/approvals/{approvalId}/cancel", new JObject(), null));
         approvalOpen = false;
         modal.SetActive(false);
+        var closed = modalClosed; modalClosed = null;
+        if (cancel) closed?.Invoke();
     }
 
     // ---------------------------------------------------------------- brain screen
@@ -846,7 +863,7 @@ public class Game : MonoBehaviour
         {
             var mid = (pa + pb) * 0.5f;
             var axis = new Vector3(pb.x - pa.x, 0, pb.z - pa.z).normalized;
-            var side = Vector3.Cross(axis, Vector3.up); // camera on this side sees a on the left
+            var side = Vector3.Cross(Vector3.up, axis); // camera on this side sees a on the left (under its health bar)
             float sep = Vector3.Distance(pa, pb);
             float hfov = 2f * Mathf.Atan(Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * cam.aspect);
             float dist = Mathf.Max(4.4f, (sep * 0.5f + 1.5f) / Mathf.Tan(hfov * 0.5f));
@@ -908,7 +925,7 @@ public class Game : MonoBehaviour
         canvas = cgo.transform;
         var root = UI.Go(canvas, "safe").AddComponent<SafeArea>().transform;
 
-        BuildHome(root); BuildTrain(root); BuildFight(root); BuildBrain(root);
+        BuildHome(root); BuildTrain(root); BuildFight(root); BuildBrain(root); BuildFlow(root);
         bubA = BuildBubble(root, a); bubB = BuildBubble(root, b);
         BuildModal(root); BuildKO(root);
 
@@ -929,7 +946,7 @@ public class Game : MonoBehaviour
 
         var card = UI.Box(home.transform, UI.Card, true, "card").At(1, 0.5f, 1, 0.5f, -720, -410, -60, 480);
         var col = UI.Column(card.transform, 10).At(0, 0, 1, 1, 44, 32, -44, -30);
-        UI.Label(col.transform, "YOUR CORNER", 24, UI.Accent, TextAnchor.MiddleLeft, FontStyle.Bold).H(28);
+        cardLeague = UI.Label(col.transform, "YOUR CORNER", 24, UI.Accent, TextAnchor.MiddleLeft, FontStyle.Bold).H(28);
         cardName = UI.Label(col.transform, "BRASS KNUCKLE", 64, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).H(68);
         cardMoney = UI.Label(col.transform, "—", 40, UI.Brass, TextAnchor.MiddleLeft, FontStyle.Bold).H(46);
         cardBrain = UI.Label(col.transform, "Brain —", 26, UI.Ink).H(30);
@@ -953,13 +970,16 @@ public class Game : MonoBehaviour
         cardEnergy = UI.Label(col.transform, "", 22, UI.Ink).H(28);
         cardDaily = UI.Label(col.transform, "", 22, UI.Ink).H(28);
         UI.Box(col.transform, UI.Line, false, "rule").H(2);
-        UI.Btn(col.transform, "TRAIN", UI.Accent, Color.black, StartTrain, 40).H(84);
+        UI.Btn(col.transform, "TRAIN", UI.Accent, Color.black, StartTrainGuided, 40).H(84);
         var fr = UI.Rt(col.transform, "fightRow").H(76);
-        fightBtn = UI.Btn(fr, "FIGHT", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; if (aAlive) StartFight("normal", null); else if (aNeedsRevive) Revive(); else Toast("Still repairing — a few seconds"); }, 34);
-        fightBtn.At(0, 0, 0.49f, 1);
-        highBtn = UI.Btn(fr, "HIGH STAKES  <size=20><color=#9EA5B0>World ID</color></size>", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 28);
-        highBtn.At(0.51f, 0, 1, 1);
-        UI.Btn(col.transform, "BRAIN", UI.Steel, UI.Ink, OpenBrain, 30).H(64);
+        fightBtn = UI.Btn(fr, "FIND A FIGHT", UI.Steel, UI.Ink, FindClicked, 32);
+        fightBtn.At(0, 0, 0.66f, 1);
+        UI.Btn(fr, "FUND", UI.Steel, UI.Ink, OpenFund, 30).At(0.68f, 0, 1, 1);
+        var br = UI.Rt(col.transform, "moreRow").H(64);
+        UI.Btn(br, "BRAIN", UI.Steel, UI.Ink, OpenBrain, 28).At(0, 0, 0.32f, 1);
+        UI.Btn(br, "CAMP", UI.Steel, UI.Ink, OpenCamp, 28).At(0.34f, 0, 0.66f, 1);
+        highBtn = UI.Btn(br, "HIGH STAKES  <size=18><color=#9EA5B0>World ID</color></size>", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 24);
+        highBtn.At(0.68f, 0, 1, 1);
 
         var srv = UI.Rt(home.transform, "server").At(0, 0, 0, 0, 56, 40, 1000, 170);
         UI.Label(srv, "SERVER", 22, UI.Dim, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 0, -30, 0, 0);
@@ -1108,7 +1128,7 @@ public class Game : MonoBehaviour
         modalAction = UI.Label(card.transform, "", 54, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 50, -160, -50, -84);
         var qrBg = UI.Box(card.transform, Color.white, true, "qrBg").At(0, 0, 0, 0, 50, 120, 470, 540);
         modalQr = UI.Go(qrBg.transform, "qr").AddComponent<RawImage>().At(0, 0, 1, 1, 20, 20, -20, -20);
-        UI.Label(card.transform, "Scan with World App on your phone. A human must OK every high-stakes action; each approval works once.", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 380, -50, 540);
+        modalExplain = UI.Label(card.transform, "", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 380, -50, 540);
         modalCode = UI.Label(card.transform, "", 40, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 300, -50, 370);
         modalStatus = UI.Label(card.transform, "", 30, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 140, -50, 290);
         modalBtn = UI.Btn(card.transform, "CANCEL", UI.Steel, UI.Ink, () => CloseModal(true), 30);
@@ -1154,16 +1174,11 @@ public class Game : MonoBehaviour
             float gap = prev.HasValue && at.HasValue ? Mathf.Clamp((float)(at.Value - prev.Value).TotalSeconds, 0.5f, 1.6f) : 0.6f;
             prev = at;
             yield return new WaitForSecondsRealtime(gap);
-            var att = (string)h["attacker"] == a.botId ? a : b; var def = att.opp;
+            var att = (string)h["attacker"] == a.botId ? a : b;
             string move = (string)h["move"], result = (string)h["result"];
             var plan = decisions.LastOrDefault(d => (string)d["botId"] == att.botId && (DateTime?)d["at"] <= at);
             if (plan != null) Say(att, $"{(string)plan["stance"]} · {move}", "0G " + UI.Short((string)plan["requestId"] ?? "—", 8), UI.Ink);
-            if (result == "blocked") def.SetQueue(new[] { "block" }); else if (result == "dodged") def.SetQueue(new[] { "dodge_r" });
-            att.SetQueue(new[] { move });
-            yield return new WaitForSecondsRealtime(0.35f);
-            if (result == "clean") { def.TakeHit(move); def.budget = Mathf.Max(0, def.budget - ((int?)h["cents"] ?? 0)); }
-            OnHit(att, move, result);
-            UpdateBars();
+            yield return PlayHit(att, move, result, (int?)h["cents"] ?? 0);
         }
         yield return new WaitForSecondsRealtime(1f);
         if (s != session) yield break;
@@ -1207,6 +1222,7 @@ public class Game : MonoBehaviour
         }
         IEnumerator Wait(float s) { yield return new WaitForSecondsRealtime(s); }
 
+        if (Array.IndexOf(args, "-flow") >= 0) { yield return CaptureFlow(Shot); Debug.Log("[capture] done"); Application.Quit(); yield break; }
         yield return Connect();
         yield return Wait(2.5f);
         yield return Shot("01_home");

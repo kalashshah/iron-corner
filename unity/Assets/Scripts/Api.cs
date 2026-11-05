@@ -12,6 +12,9 @@ public static class Api
 {
     public const string DefaultUrl = "https://iron-corner.fly.dev";
     public static bool Offline = true;
+    // Owner token from POST /users (PlayerPrefs). Sent as a bearer header on every call; demo bots ignore it.
+    public static string Token;
+    static void Auth(UnityWebRequest req) { if (!string.IsNullOrEmpty(Token)) req.SetRequestHeader("Authorization", "Bearer " + Token); }
 
     // `-server <url>` on the command line wins for this run only (captures against a local backend); never saved.
     static readonly string ArgUrl = ArgAfter("-server");
@@ -55,6 +58,7 @@ public static class Api
             req.SetRequestHeader("Content-Type", "application/json");
         }
         req.downloadHandler = new DownloadHandlerBuffer();
+        Auth(req);
         req.timeout = path.EndsWith("/save") ? 60 : 15; // a 0G Storage upload with the demo library takes ~15-30 s
         yield return req.SendWebRequest();
         Finish(req, ok, fail);
@@ -74,6 +78,7 @@ public static class Api
         var form = new List<IMultipartFormSection> { new MultipartFormFileSection("audio", wav, "coach.wav", "audio/wav") };
         if (fields != null) foreach (var kv in fields) form.Add(new MultipartFormDataSection(kv.Key, kv.Value));
         using var req = UnityWebRequest.Post(BaseUrl + path, form);
+        Auth(req);
         req.timeout = 30;
         yield return req.SendWebRequest();
         Finish(req, ok, fail);
@@ -83,6 +88,7 @@ public static class Api
     {
         if (Offline) { ok?.Invoke(OfflineSim.FakeQr(path)); yield break; }
         using var req = UnityWebRequestTexture.GetTexture(BaseUrl + path);
+        Auth(req);
         req.timeout = 10;
         yield return req.SendWebRequest();
         if (req.result == UnityWebRequest.Result.Success)
@@ -99,7 +105,7 @@ public static class Api
         if (req.result != UnityWebRequest.Result.Success)
         {
             string msg = req.error;
-            try { if (!string.IsNullOrEmpty(text)) msg = (string)JObject.Parse(text)["error"] ?? msg; } catch { }
+            try { if (!string.IsNullOrEmpty(text)) { var j = JObject.Parse(text); msg = (string)j["error"] ?? (string)j["reason"] ?? msg; } } catch { }
             Debug.LogWarning($"[api] {req.method} {req.url} -> {msg}");
             fail?.Invoke(msg);
             return;

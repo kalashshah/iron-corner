@@ -40,7 +40,13 @@ Builds/IronCorner.app/Contents/MacOS/Iron\ Corner -screen-width 1920 -screen-hei
 Builds/IronCorner.app/Contents/MacOS/Iron\ Corner -screen-width 2340 -screen-height 1080 -screen-fullscreen 0 -capture "$PWD/Captures" -captureTag wide
 ```
 
-The player goes through home, brain, training (plus a learned phrase and a brain save), the approval modal, a short fight and the KO, saving `NN_<screen>.png` at each step before it quits. It uses the server if one answers on the saved URL. `Captures/` and `Builds/` are gitignored.
+First-run flow (welcome → create → World ID → first round → fund → queue → live fight → end → returning Home → camp), offline sim:
+
+```
+Builds/IronCorner.app/Contents/MacOS/Iron\ Corner -screen-width 1920 -screen-height 1080 -screen-fullscreen 0 -capture "$PWD/Captures/onboarding" -flow -offline
+```
+
+Without `-flow`, the player goes through home, brain, training (plus a learned phrase and a brain save), the approval modal, a short fight and the KO, saving `NN_<screen>.png` at each step before it quits. It uses the server if one answers on the saved URL. `Captures/` and `Builds/` are gitignored.
 
 ## Notes
 
