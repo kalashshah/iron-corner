@@ -11,8 +11,10 @@ let cfg: Promise<any> | null = null;
 async function config() {
   cfg ??= (async () => {
     const oc = await import("openid-client");
-    const c = await oc.discovery(new URL(ISSUER), env.WORLD_CLIENT_ID!, env.WORLD_CLIENT_SECRET || undefined,
-      env.WORLD_CLIENT_SECRET ? undefined : oc.None());
+    // The app is registered for client_secret_basic; openid-client defaults to client_secret_post when only a
+    // secret string is passed, which World rejects with invalid_client. So name the method explicitly.
+    const c = await oc.discovery(new URL(ISSUER), env.WORLD_CLIENT_ID!, undefined,
+      env.WORLD_CLIENT_SECRET ? oc.ClientSecretBasic(env.WORLD_CLIENT_SECRET) : oc.None());
     return { oc, c };
   })();
   cfg.catch(() => (cfg = null));

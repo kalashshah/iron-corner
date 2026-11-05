@@ -8,7 +8,7 @@ Iron Corner asks the bot's owner for a fresh World ID approval at two moments: e
 
 ## Time to first success
 
-TBD: we have not yet completed a live approval. Backend code was ready about 2 hours into the hackathon; the mock path has passed end to end since then.
+First real device code from `auth.world.org`: about 2 h 10 min after hacking started (backend code was ready at about 2 h; the rest was portal access and the auth-method issue below). Full approval in World App: TBD.
 
 ## Friction so far
 
@@ -16,7 +16,9 @@ TBD: we have not yet completed a live approval. Backend code was ready about 2 h
 2. Sandbox or production: the docs point to `sandbox.auth.world.org` and a TestFlight sandbox app, while the prize page says proofs are mocked and the sandbox app is no longer needed. We switched to production `auth.world.org` after reading the prize page.
 3. A confidential client must register an exact HTTPS callback even when it only uses the device flow, so we had to deploy the backend before we could register.
 4. World App does not show what is being approved (no `binding_message` or action text). The game has to display "Enter high-stakes match" itself, and the user has to trust that the code on screen belongs to that action.
-5. There is no nullifier in the OIDC flow, so making each approval single-use is entirely the app's job.
+5. `invalid_client` on the first real request, although the client ID and secret were right. The app is registered for `client_secret_basic`, and `openid-client` v6 sends `client_secret_post` when you pass the secret as a plain string. Passing `ClientSecretBasic(secret)` fixed it. The error text ("check the environment, registered authentication method, and credentials") lists three causes without saying which one.
+6. Creating the app showed "We could not create the client. The service may be temporarily unavailable", but the app had been created. Its first secret was never displayed, so we added a second one.
+7. There is no nullifier in the OIDC flow, so making each approval single-use is entirely the app's job.
 
 ## Missing capability or documentation
 
