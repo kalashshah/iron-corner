@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 // marked "mock": true and the UI shows an OFFLINE badge. No money moves, nothing reaches 0G/Hedera/World.
 public static class OfflineSim
 {
-    class Fight { public string a, b; public Dictionary<string, int> budgets = new(); public JArray payments = new(); public JArray decisions = new(); public string winner; public int hitNo; }
+    class Fight { public string a, b; public Dictionary<string, int> budgets = new(); public JArray payments = new(); public JArray decisions = new(); public string winner; public int hitNo; public bool ended; }
     class Approval { public float at; public string status = "pending"; public string action; }
 
     static readonly Dictionary<string, JObject> bots = new()
@@ -26,6 +26,11 @@ public static class OfflineSim
     static string dailyDay, goalDay; static int drills, streak;
     static readonly Dictionary<string, JArray> history = new() { ["bot_a"] = new JArray(), ["bot_b"] = new JArray() };
     static readonly Dictionary<string, Fight> fights = new();
+    // Shadow-sparring mirror of backend/src/demos.ts: same shapes, simpler recall (match on the opponent's last move).
+    class Demo { public string a, outcome, o1, m1, round; }
+    static readonly List<Demo> demos = new();
+    const int EnergyMax = 5;
+    static int xpTotal, roundsToday, roundCount; static string energyDay, roundId; static float roundStart;
     static readonly Dictionary<string, Approval> approvals = new();
     static int ids;
 
@@ -51,7 +56,7 @@ public static class OfflineSim
         switch (seg[0])
         {
             case "bots":
-                if (seg.Length == 1) return new JArray(bots.Values.Select(b => { var c = (JObject)b.DeepClone(); if ((string)b["botId"] == "bot_a") c["daily"] = Daily(false); return c; }));
+                if (seg.Length == 1) return new JArray(bots.Values.Select(b => { var c = (JObject)b.DeepClone(); if ((string)b["botId"] == "bot_a") c["daily"] = Daily(false); c["progress"] = Progress((string)b["botId"]); return c; }));
                 if (seg.Length == 3 && seg[2] == "revive") { Get(bots, seg[1])["alive"] = true; return new JObject { ["botId"] = seg[1], ["alive"] = true, ["mock"] = true }; }
                 var bot = (JObject)Get(bots, seg[1]).DeepClone();
                 bot["brain"] = new JObject
@@ -60,6 +65,7 @@ public static class OfflineSim
                     ["combos"] = combos[seg[1]].DeepClone(), ["lessons"] = new JArray("offline: no lessons yet"), ["style"] = styles[seg[1]].DeepClone(),
                 };
                 if (seg[1] == "bot_a") bot["daily"] = Daily(false);
+                bot["progress"] = Progress(seg[1]);
                 bot["brainHistory"] = history[seg[1]].DeepClone();
                 return bot;
 
@@ -70,13 +76,16 @@ public static class OfflineSim
                     case "coach": return Coach(botId, (string)body["text"] ?? "when he throws a left hook, slip right and uppercut");
                     case "coach-text": return Coach(botId, (string)body["text"] ?? "");
                     case "spar": return PlanFor(botId, body["state"], 0.7f);
+                    case "demos": return Demos(botId, body);
                     case "save":
                         var b = Get(bots, botId);
                         b["brainVersion"] = (int)b["brainVersion"] + 1;
                         b["brainRoot"] = Hex(64);
-                        var row = new JObject { ["version"] = b["brainVersion"], ["root"] = b["brainRoot"], ["txHash"] = Hex(64), ["at"] = DateTime.UtcNow.ToString("o") };
-                        history[botId].Insert(0, row);
-                        return new JObject { ["version"] = row["version"], ["root"] = row["root"], ["txHash"] = row["txHash"], ["mock"] = true };
+                        var pg = Progress(botId);
+                        var row = new JObject { ["version"] = b["brainVersion"], ["root"] = b["brainRoot"], ["txHash"] = Hex(64), ["at"] = DateTime.UtcNow.ToString("o"),
+                            ["level"] = pg["level"], ["stats"] = pg["stats"], ["demos"] = pg["demos"] };
+                        history[botId].Add(row); // oldest first, like the backend
+                        return new JObject { ["version"] = row["version"], ["root"] = row["root"], ["txHash"] = row["txHash"], ["level"] = row["level"], ["stats"] = row["stats"], ["demos"] = row["demos"], ["mock"] = true };
                 }
                 break;
 
@@ -110,6 +119,7 @@ public static class OfflineSim
                     case "coach-text":
                         throw new Exception("fights are autonomous; coach in training");
                     case "end":
+                        if (!fight.ended) { fight.ended = true; xpTotal += fight.winner == "bot_a" ? 25 : 12; }
                         return new JObject { ["winner"] = fight.winner, ["lessons"] = new JObject { [fight.a] = new JArray("offline: lessons need the 0G backend"), [fight.b] = new JArray() }, ["mock"] = true };
                 }
                 break;
@@ -288,7 +298,86 @@ public static class OfflineSim
             if ((use == "finisher" && opp <= 12) || (use == "opener" && t < 4))
                 return Rule($"combo#{i + 1}", $"{use}: {Ms(co[i]["moves"])}", "aggressive", co[i]["moves"], use == "finisher" ? "Finish it like we practised." : "Opener from training.");
         }
+        if (botId == "bot_a" && last != null)
+        {
+            var best = demos.Where(d => d.o1 == last && Worked(d.a, d.outcome)).GroupBy(d => d.a).OrderByDescending(g => g.Count()).FirstOrDefault();
+            if (best != null)
+            {
+                int n = demos.Count(d => d.o1 == last && d.a == best.Key);
+                string follow = Fighter.IsAttack(best.Key) ? null : demos.Where(d => d.m1 == best.Key && d.outcome == "landed").GroupBy(d => d.a).OrderByDescending(g => g.Count()).FirstOrDefault()?.Key;
+                var mv = follow != null ? new JArray(best.Key, follow) : new JArray(best.Key);
+                return Rule("demo", $"Like your coach: {UI.Nice(best.Key)}{(follow != null ? " then " + UI.Nice(follow) : "")} (worked {best.Count()}/{n})", "counter", mv, "Doing what coach showed me.");
+            }
+        }
         return Plan(state, aggression);
+    }
+
+    static bool Worked(string a, string o) => Fighter.IsAttack(a) ? o == "landed" : o is "blocked" or "dodged";
+    static int Pct(double v) => (int)Math.Round(Math.Clamp(v, 0, 1) * 100);
+
+    static JObject Stats(string botId)
+    {
+        var mine = botId == "bot_a" ? demos : new List<Demo>();
+        var atk = mine.Where(d => Fighter.IsAttack(d.a)).ToList();
+        var def = mine.Where(d => !Fighter.IsAttack(d.a) && Fighter.IsAttack(d.o1)).ToList();
+        var cs = counters.TryGetValue(botId, out var cl) ? cl : new JArray();
+        double reflex = Fighter.Moves.Where(Fighter.IsAttack).Average(x => cs.Any(c => (string)c["when"] == x) ? 1 : Math.Min(1, def.Count(d => d.o1 == x && Worked(d.a, d.outcome)) / 3.0));
+        var decs = fights.Values.SelectMany(f => f.decisions).Where(d => (string)d["botId"] == botId).ToList();
+        return new JObject
+        {
+            ["reflexes"] = Pct(reflex), ["accuracy"] = Pct(atk.Count(d => d.outcome == "landed") / (atk.Count + 5.0)),
+            ["defense"] = Pct(def.Count(d => Worked(d.a, d.outcome)) / (def.Count + 5.0)),
+            ["ring_iq"] = Pct(decs.Count(d => d["used"] != null && d["used"].Type == JTokenType.String) / (decs.Count + 5.0) * 0.5),
+            ["experience"] = Pct(Math.Log(1 + mine.Count) / Math.Log(2001)),
+        };
+    }
+
+    static JObject Progress(string botId)
+    {
+        if (energyDay != Today) { energyDay = Today; roundsToday = 0; }
+        int xp = botId == "bot_a" ? xpTotal : 0, L = (int)Math.Floor((1 + Math.Sqrt(1 + 8 * xp / 100.0)) / 2), start = 100 * L * (L - 1) / 2;
+        return new JObject
+        {
+            ["level"] = L, ["xp"] = xp, ["into"] = xp - start, ["next"] = 100 * L,
+            ["energy"] = new JObject { ["left"] = Math.Max(0, EnergyMax - roundsToday), ["max"] = EnergyMax, ["resetsAt"] = DateTime.UtcNow.Date.AddDays(1).ToString("o") },
+            ["stats"] = Stats(botId), ["demos"] = botId == "bot_a" ? demos.Count : 0, ["mock"] = true,
+        };
+    }
+
+    // POST /train/:id/demos: same rules as the backend (15 s + 3 moves for XP, 5 rounds of energy a UTC day).
+    static JObject Demos(string botId, JToken body)
+    {
+        string round = (string)body["round"];
+        if (round != null && round != roundId) { roundId = round; roundStart = Time.realtimeSinceStartup; roundCount = 0; }
+        int stored = 0;
+        foreach (var d in body["demos"] as JArray ?? new JArray())
+        {
+            string a = (string)d["action"], o = (string)d["outcome"];
+            if (!Fighter.Moves.Contains(a) || o == null) continue;
+            demos.Add(new Demo { a = a, outcome = o, round = round,
+                o1 = (string)(d["state"]?["oppLastMoves"] as JArray)?.LastOrDefault(), m1 = (string)(d["state"]?["selfLastMoves"] as JArray)?.LastOrDefault() });
+            stored++;
+        }
+        if (demos.Count > 2000) demos.RemoveRange(0, demos.Count - 2000);
+        roundCount += stored;
+        var res = new JObject { ["stored"] = stored, ["total"] = demos.Count, ["mock"] = true };
+        Progress(botId); // rolls the energy day
+        if ((bool?)body["roundEnd"] == true && round != null && round == roundId)
+        {
+            float secs = Time.realtimeSinceStartup - roundStart; int xp = 0; string reason = null;
+            if (roundCount < 3 || secs < 15) reason = "round too short for XP (15 s and 3 moves minimum)";
+            else if (roundsToday >= EnergyMax) reason = "out of energy: still learning, XP is back at 00:00 UTC";
+            else { xp = (int)Math.Round((10 + Math.Min(20, roundCount)) * new[] { 1, 0.85, 0.7, 0.6, 0.5 }[roundsToday]); roundsToday++; xpTotal += xp; AddDrill(); }
+            var mine = demos.Where(d => d.round == round && !Fighter.IsAttack(d.a) && Fighter.IsAttack(d.o1)).ToList();
+            string top = mine.GroupBy(d => d.o1).OrderByDescending(g => g.Count()).FirstOrDefault()?.Key, hl = null;
+            if (top != null) { var all = demos.Where(d => d.o1 == top && !Fighter.IsAttack(d.a)).ToList(); hl = $"{UI.Nice(top)} defense {Pct(all.Count(d => Worked(d.a, d.outcome)) / (double)all.Count)}%"; }
+            res["round"] = new JObject { ["moves"] = roundCount, ["seconds"] = (int)secs, ["xpGained"] = xp, ["reason"] = reason, ["highlight"] = hl };
+            roundId = null;
+        }
+        var p = Progress(botId);
+        res["energy"] = p["energy"]; res["stats"] = p["stats"];
+        res["xp"] = new JObject { ["level"] = p["level"], ["xp"] = p["xp"], ["into"] = p["into"], ["next"] = p["next"] };
+        return res;
     }
 
     // Heuristic plan with the same shape as the 0G decision. Also drives the sparring dummy.

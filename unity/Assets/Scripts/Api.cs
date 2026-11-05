@@ -13,9 +13,18 @@ public static class Api
     public const string DefaultUrl = "https://iron-corner.fly.dev";
     public static bool Offline = true;
 
+    // `-server <url>` on the command line wins for this run only (captures against a local backend); never saved.
+    static readonly string ArgUrl = ArgAfter("-server");
+    static string ArgAfter(string flag)
+    {
+        var a = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(a, flag);
+        return i >= 0 && i + 1 < a.Length ? a[i + 1] : null;
+    }
+
     public static string BaseUrl
     {
-        get => PlayerPrefs.GetString("server", DefaultUrl).TrimEnd('/');
+        get => (ArgUrl ?? PlayerPrefs.GetString("server", DefaultUrl)).TrimEnd('/');
         set { PlayerPrefs.SetString("server", value.Trim()); PlayerPrefs.Save(); }
     }
 
@@ -46,7 +55,7 @@ public static class Api
             req.SetRequestHeader("Content-Type", "application/json");
         }
         req.downloadHandler = new DownloadHandlerBuffer();
-        req.timeout = 15;
+        req.timeout = path.EndsWith("/save") ? 60 : 15; // a 0G Storage upload with the demo library takes ~15-30 s
         yield return req.SendWebRequest();
         Finish(req, ok, fail);
     }

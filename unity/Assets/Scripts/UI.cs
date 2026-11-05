@@ -109,6 +109,13 @@ public static class UI
         return c;
     }
 
+    // Move id → what a coach would say ("dodge_r" → "slip right").
+    public static string Nice(string m) => m switch
+    {
+        "hook_l" => "left hook", "hook_r" => "right hook", "body" => "body shot", "dodge_l" => "slip left", "dodge_r" => "slip right",
+        "step_in" => "step in", "step_back" => "step back", null => "", _ => m,
+    };
+
     public static string Usd(double cents) => (cents < 0 ? "-$" : "$") + Math.Abs(cents / 100.0).ToString("0.00");
     public static string Short(string h, int keep = 6) => string.IsNullOrEmpty(h) || h.Length <= keep * 2 + 1 ? h : h.Substring(0, keep) + "…" + h.Substring(h.Length - 4);
 }
