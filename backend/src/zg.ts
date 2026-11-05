@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { env, modes, type Bot } from "./state.ts";
 import { MOVES, DAMAGE, SAFE_STOP, validatePlan, validateLearn, mockPlan, mockLearn, mockLessons, ruleSheet, ruleHints, resolveUsed,
   type Plan, type FightState, type Learned } from "./game.ts";
+import { recall, demoUsed } from "./demos.ts";
 
 const BASE = env.ZG_BASE_URL ?? "https://router-api.0g.ai/v1";
 const CHAT_MODEL = env.ZG_CHAT_MODEL ?? "qwen-flash";
@@ -44,17 +45,25 @@ const brainSheet = (bot: Bot, opp?: string) => {
 };
 
 export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Plan> {
-  if (!ai) return mockPlan(bot.brain, s);
-  const system = `${brainSheet(bot, opp)}${moveSheet()}\nBudgets are health in cents. Follow a taught rule when one fits.\n` +
-    `Reply with ONLY JSON like {"stance":"aggressive","combo":["jab","cross"],"trigger":"when_close","used":"<rule id or none>","say":"Testing his guard"}\n` +
+  const rc = recall(bot, s); // the k nearest shadow-sparring demos for this moment
+  if (!ai) {
+    const p = mockPlan(bot.brain, s);
+    if (!rc?.top || /^(counter|combo)/.test(p.used ?? "")) return p; // a rule that fits the moment beats a demo
+    return { ...p, stance: rc.top.moves.some((m) => DAMAGE[m]) ? "counter" : "defensive", combo: rc.top.moves, trigger: "now", say: "Doing what coach showed me.", ...demoUsed(rc, rc.top.moves)! };
+  }
+  const system = `${brainSheet(bot, opp)}${moveSheet()}\nBudgets are health in cents. Follow a taught rule when one fits; otherwise copy what worked for your coach.\n` +
+    `Reply with ONLY JSON like {"stance":"aggressive","combo":["jab","cross"],"trigger":"when_close","used":"<rule id, demo or none>","say":"Testing his guard"}\n` +
     `stance: aggressive|defensive|counter. combo: 1-4 move NAMES. trigger: now|after_block|when_close. ` +
-    `used: the rule id you follow (e.g. counter#1) or "none". say: your own thought, max 8 words.`;
+    `used: the rule id you follow (e.g. counter#1), "demo" if you copy your coach's moves, or "none". say: your own thought, max 8 words.`;
   const hints = ruleHints(bot.brain, s);
+  const user = `Fight state: ${JSON.stringify(s)}${hints.length ? `\nNote: ${hints.join("; ")}` : ""}${rc ? `\n${rc.block}` : ""}`;
+  if (env.LOG_PROMPTS) console.log(`[decide prompt] ${bot.botId}\n${user}`);
   try {
-    const { json, trace: tr } = await chatJson(system, `Fight state: ${JSON.stringify(s)}${hints.length ? `\nNote: ${hints.join("; ")}` : ""}`, DECIDE_MS, 110);
+    const { json, trace: tr } = await chatJson(system, user, DECIDE_MS, 110);
     const plan = validatePlan(json);
     if (!plan) return { ...SAFE_STOP(`invalid plan from model: ${JSON.stringify(json).slice(0, 160)}`), requestId: tr.requestId };
-    return { ...plan, ...resolveUsed(bot.brain, (json as any).used, plan.combo!), ...tr };
+    // A taught rule wins attribution; else the coach's demo if the combo plays it.
+    return { ...plan, ...(resolveUsed(bot.brain, (json as any).used, plan.combo!) ?? demoUsed(rc, plan.combo!)), ...tr };
   } catch (e: any) {
     return SAFE_STOP(e?.name === "AbortError" || /timed? ?out|abort/i.test(String(e?.message)) ? "timeout" : `0G error: ${e?.message ?? e}`);
   }

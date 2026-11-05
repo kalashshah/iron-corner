@@ -15,7 +15,7 @@ export const SAFE_STOP = (reason: string): Plan => ({ stance: "safe_stop", reaso
 
 export type FightState = {
   t?: number; selfBudget?: number; oppBudget?: number; distance?: number; selfGuard?: number; oppGuard?: number;
-  oppLastMoves?: string[]; selfLastMoves?: string[]; lastHitBy?: string | null;
+  oppLastMoves?: string[]; selfLastMoves?: string[]; lastHitBy?: string | null; sinceOppAttack?: number;
 };
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();

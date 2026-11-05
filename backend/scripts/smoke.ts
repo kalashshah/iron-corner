@@ -28,10 +28,26 @@ function wav(seconds = 0.5) { // 16 kHz mono 16-bit silence
 }
 
 let health: any, fightId = "", rootA = "", approvalId = "";
+const ROUND = `smoke_${Date.now()}`;
+let roundStart = 0, energy0 = -1;
+// Shadow-sparring demos: the owner's moves on the pad with what happened. hook_r → slip left → cross worked; jab at range whiffed.
+const st = (o1: string, self: string[] = [], dist = 1.1) => ({ t: 5, selfBudget: 50, oppBudget: 50, distance: dist, selfGuard: 1, oppGuard: 1, oppLastMoves: ["step_in", o1], selfLastMoves: self, lastHitBy: null, sinceOppAttack: 0.2 });
+const DEMOS = [
+  ...Array.from({ length: 5 }, () => ({ t: 1, state: st("hook_r"), action: "dodge_l", outcome: "dodged" })),
+  ...Array.from({ length: 4 }, () => ({ t: 2, state: st("hook_r", ["dodge_l"]), action: "cross", outcome: "landed" })),
+  { t: 3, state: st("hook_r"), action: "block", outcome: "got_hit" },
+  ...Array.from({ length: 3 }, () => ({ t: 4, state: st("jab", [], 2.6), action: "jab", outcome: "whiff" })),
+];
 
 await step("health", async () => {
   const r = await call("GET", "/health"); check(r.status === 200, `status ${r.status}`); health = r.body;
   return JSON.stringify(r.body.modes) + ` pay=${r.body.payAsset} ledger=${r.body.ledgerTopic}`;
+});
+await step("start sparring round", async () => {
+  const r = await call("POST", "/train/bot_a/demos", { round: ROUND, demos: [] });
+  check(r.status === 200 && r.body.energy?.max === 5 && r.body.xp?.level >= 1 && r.body.stats, JSON.stringify(r.body));
+  roundStart = Date.now(); energy0 = r.body.energy.left;
+  return `energy ${r.body.energy.left}/${r.body.energy.max} level ${r.body.xp.level} stats ${JSON.stringify(r.body.stats)}`;
 });
 await step("list bots", async () => {
   const r = await call("GET", "/bots");
@@ -82,16 +98,39 @@ await step("spar plan", async () => {
   check(["aggressive", "defensive", "counter", "safe_stop"].includes(r.body.stance), JSON.stringify(r.body));
   return JSON.stringify(r.body);
 });
+await step("post shadow-sparring demos", async () => {
+  const r = await call("POST", "/train/bot_a/demos", { round: ROUND, demos: [...DEMOS, { state: {}, action: "laser", outcome: "landed" }] });
+  check(r.status === 200 && r.body.stored === DEMOS.length && r.body.total >= DEMOS.length, JSON.stringify(r.body));
+  check(r.body.stats.defense > 0 && r.body.stats.experience > 0, JSON.stringify(r.body.stats));
+  return `stored ${r.body.stored} total ${r.body.total} stats ${JSON.stringify(r.body.stats)}`;
+});
+await step("spar recalls the coach's demos", async () => {
+  const r = await call("POST", "/train/bot_a/spar", { state: st("hook_r") });
+  check(r.body.stance, JSON.stringify(r.body));
+  if (health.modes.zg === "mock") check(r.body.used === "demo" && /coach/i.test(r.body.usedText) && r.body.combo[0] === "dodge_l", JSON.stringify(r.body));
+  else check(r.body.stance === "safe_stop" || r.body.used === undefined || r.body.usedText, JSON.stringify(r.body));
+  return `${r.body.stance} ${JSON.stringify(r.body.combo)} used=${r.body.used} (${r.body.usedText}) req=${r.body.requestId}`;
+});
+await step("end round: energy + XP", async () => {
+  await sleep(Math.max(0, 15500 - (Date.now() - roundStart))); // a round needs 15 s for XP
+  const r = await call("POST", "/train/bot_a/demos", { round: ROUND, roundEnd: true, demos: [] });
+  const rd = r.body.round;
+  check(rd && rd.moves === DEMOS.length, JSON.stringify(r.body));
+  if (energy0 > 0) check(rd.xpGained > 0 && r.body.energy.left === energy0 - 1, JSON.stringify(r.body));
+  else check(rd.xpGained === 0 && /energy/.test(rd.reason), JSON.stringify(r.body));
+  return `+${rd.xpGained} XP, energy ${r.body.energy.left}/5, level ${r.body.xp.level} (${r.body.xp.into}/${r.body.xp.next}), ${rd.highlight}`;
+});
 await step("save brain to 0G Storage", async () => {
   const r = await call("POST", "/train/bot_a/save");
-  check(r.status === 200 && r.body.root, JSON.stringify(r.body)); rootA = r.body.root;
+  check(r.status === 200 && r.body.root && r.body.level >= 1 && r.body.stats && r.body.demos >= DEMOS.length, JSON.stringify(r.body)); rootA = r.body.root;
   proofs.push(`0G storage bot_a v${r.body.version}: root ${r.body.root} tx ${r.body.txHash}`);
   return `v${r.body.version} root=${r.body.root} tx=${r.body.txHash}`;
 });
 await step("read brain back (download + decrypt)", async () => {
   const r = await call("GET", `/bots/bot_a/brain?root=${rootA}`);
   check(r.status === 200 && r.body.brain.botId === "bot_a", JSON.stringify(r.body).slice(0, 200));
-  return `version ${r.body.brain.version}, ${r.body.brain.phrases.length} phrases`;
+  check(r.body.brain.demos?.length >= DEMOS.length && r.body.brain.growth?.level >= 1, "brain blob is missing demos/growth");
+  return `version ${r.body.brain.version}, ${r.body.brain.phrases.length} phrases, ${r.body.brain.demos.length} demos, level ${r.body.brain.growth.level}`;
 });
 await step("create fight", async () => {
   const r = await call("POST", "/fights", { a: "bot_a", b: "bot_b", stakes: "normal", budgetUsd: 0.1 });
@@ -138,8 +177,10 @@ await step("payments settle", async () => {
 });
 await step("end fight (lessons + brain save queued)", async () => {
   const r = await call("POST", `/fights/${fightId}/end`);
-  check(r.status === 200 && r.body.lessons?.bot_a, JSON.stringify(r.body));
-  return `winner=${r.body.winner} lessons=${JSON.stringify(r.body.lessons)}`;
+  check(r.status === 200 && r.body.lessons?.bot_a && r.body.xp?.bot_a > 0, JSON.stringify(r.body));
+  const f = await call("GET", `/fights/${fightId}`);
+  check(f.body.decisions.every((d: any) => d.outcome || d.stance === "safe_stop"), "decisions not settled into fight experience");
+  return `winner=${r.body.winner} xp=${JSON.stringify(r.body.xp)} lessons=${JSON.stringify(r.body.lessons)}`;
 });
 await step("approval create", async () => {
   const r = await call("POST", "/approvals", { botId: "bot_a", action: "high_stakes" });
@@ -174,6 +215,12 @@ await step("approval cancel", async () => {
   const c = await call("POST", "/approvals", { botId: "bot_a", action: "revive" });
   const r = await call("POST", `/approvals/${c.body.approvalId}/cancel`);
   check(r.body.status === "cancelled", r.body.status);
+});
+await step("home shows growth", async () => {
+  const r = await call("GET", "/bots");
+  const p = r.body[0].progress;
+  check(p && p.level >= 1 && p.energy && Object.keys(p.stats).length === 5 && p.demos >= DEMOS.length, JSON.stringify(p));
+  return JSON.stringify(p);
 });
 await step("bad input gives 4xx JSON error", async () => {
   const r = await call("POST", `/fights/${fightId}/hit`, { attacker: "bot_a", defender: "bot_b", move: "laser", result: "clean" });

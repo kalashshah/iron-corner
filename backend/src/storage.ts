@@ -1,6 +1,7 @@
 // Brain persistence on 0G Storage, AES-256 encrypted with a per-bot key derived from a server secret.
 import crypto from "node:crypto";
 import { env, modes, state, save, type Bot, type Brain } from "./state.ts";
+import { progressView } from "./demos.ts";
 
 const RPC = env.ZG_RPC ?? "https://evmrpc-testnet.0g.ai";
 const INDEXER = env.ZG_INDEXER ?? "https://indexer-storage-testnet-turbo.0g.ai";
@@ -33,7 +34,10 @@ function mockDecrypt(botId: string, blob: Buffer) {
 
 export async function saveBrain(bot: Bot) {
   const brain: Brain = { ...bot.brain, botId: bot.botId, version: bot.brain.version + 1, savedAt: new Date().toISOString() };
-  const bytes = Buffer.from(JSON.stringify(brain)); // version + timestamp make every save unique (0G skips identical bytes)
+  // The encrypted blob is the whole learned mind: rules + the shadow-sparring demo library + a growth snapshot,
+  // so each version proves what the bot knew and how good it was at that point.
+  const g = progressView(bot), growth = { level: g.level, xp: g.xp, stats: g.stats, demos: g.demos };
+  const bytes = Buffer.from(JSON.stringify({ ...brain, demos: bot.demos ?? [], growth })); // version + timestamp make every save unique (0G skips identical bytes)
   let root: string, txHash: string, mock: boolean | undefined;
   if (modes.storage === "live") {
     const { idx, signer, MemData } = await live();
@@ -50,7 +54,7 @@ export async function saveBrain(bot: Bot) {
     state.mockBlobs[root] = blob.toString("base64");
   }
   bot.brain.version = brain.version; bot.brain.savedAt = brain.savedAt;
-  const entry = { version: brain.version, root, txHash, at: brain.savedAt!, ...(mock ? { mock } : {}) };
+  const entry = { version: brain.version, root, txHash, at: brain.savedAt!, level: growth.level, stats: growth.stats, demos: growth.demos, ...(mock ? { mock } : {}) };
   bot.brainHistory.push(entry);
   save();
   return entry;

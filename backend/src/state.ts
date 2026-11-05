@@ -38,13 +38,18 @@ export type Brain = {
 };
 // Daily training goal: `drills` coaching calls on `day` (UTC); `goalDay` = last day the goal was hit.
 export type Daily = { day: string; drills: number; streak: number; goalDay: string | null };
+// One shadow-sparring demonstration (or a fight decision, src "fight"): features of the moment, the move, how it went.
+// f = [distance/3, lead, selfGuard, oppGuard, sinceOppAttack/5]; o1/o2 = opponent's last moves; m1 = own last move.
+export type Demo = { at: number; f: number[]; o1: string | null; o2: string | null; m1: string | null; a: string; out: string; w: number; src: "train" | "fight"; r?: string };
+// XP total + today's counters (energy = 5 - rounds); `round` = the sparring round in progress.
+export type Progress = { xp: number; day: string; rounds: number; fights: number; round?: { id: string; startedAt: number; demos: number } };
 export type Bot = {
   botId: string; name: string; house: boolean;
   accountId: string | null; evmAddress: string | null;
   alive: boolean; ownerSub: string | null;
   koStakes?: "normal" | "high"; koAt?: number;
-  brain: Brain; daily?: Daily;
-  brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean }[];
+  brain: Brain; daily?: Daily; demos?: Demo[]; progress?: Progress;
+  brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean; level?: number; stats?: Record<string, number>; demos?: number }[];
 };
 export type Payment = {
   hitNo: number; from: string; to: string; cents: number;
@@ -55,7 +60,7 @@ export type Fight = {
   fightId: string; a: string; b: string; stakes: "normal" | "high";
   status: "live" | "over"; budgets: Record<string, number>; startBudget: number;
   winner: string | null; payments: Payment[];
-  decisions: { botId: string; requestId: string | null; stance: string; used?: string; at: string; mock?: boolean }[];
+  decisions: { botId: string; requestId: string | null; stance: string; used?: string; at: string; mock?: boolean; outcome?: string }[];
   hits: { hitNo: number; attacker: string; defender: string; move: string; result: string; cents: number; at: string }[];
   ledgerTopic: string | null; lessons?: Record<string, string[]>; createdAt: string;
   episode?: { root: string; txHash: string; mock?: boolean };

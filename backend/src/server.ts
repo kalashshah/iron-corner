@@ -8,6 +8,7 @@ import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
 import * as hedera from "./hedera.ts";
 import * as world from "./world.ts";
+import * as demos from "./demos.ts";
 
 const app = express();
 app.use((req, res, next) => {
@@ -70,7 +71,8 @@ async function botView(b: Bot) {
   const last = b.brainHistory.at(-1);
   return { botId: b.botId, name: b.name, house: b.house, accountId: b.accountId, evmAddress: b.evmAddress, ...bal,
     payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, daily: dailyView(b), brainRoot: last?.root ?? null, alive: b.alive,
-    koStakes: b.alive ? null : b.koStakes ?? null, repairIn: repairIn(b), needsRevive: !b.alive && b.koStakes === "high" };
+    koStakes: b.alive ? null : b.koStakes ?? null, repairIn: repairIn(b), needsRevive: !b.alive && b.koStakes === "high",
+    progress: demos.progressView(b) };
 }
 
 // ---- health / bots ----
@@ -106,6 +108,8 @@ app.post("/train/:botId/coach-text", async (req, res) => {
   res.json({ text, ...(await teach(b, text)) });
 });
 app.post("/train/:botId/spar", async (req, res) => void res.json(await zg.decide(bot(req.params.botId), (req.body?.state ?? {}) as FightState, "dummy")));
+// Shadow sparring: batches of demonstrations from the move pad; `roundEnd` closes a round (energy + XP).
+app.post("/train/:botId/demos", (req, res) => void res.json(demos.addDemos(bot(req.params.botId), req.body)));
 app.post("/train/:botId/save", async (req, res) => void res.json(await saveBrain(bot(req.params.botId))));
 
 // ---- fights ----
@@ -148,6 +152,7 @@ app.post("/fights/:id/decide", async (req, res) => {
   const plan = await zg.decide(bot(botId), (req.body?.state ?? {}) as FightState, opponent(f, botId));
   if (plan.stance === "safe_stop") console.warn(`[decide] ${f.fightId} ${botId} safe_stop: ${plan.reason}`);
   f.decisions.push({ botId, requestId: plan.requestId ?? null, stance: plan.stance, ...(plan.used ? { used: plan.used } : {}), at: new Date().toISOString(), ...(plan.mock ? { mock: true } : {}) });
+  demos.onDecide(bot(botId), f, (req.body?.state ?? {}) as FightState, plan); // self-experience from its own fights
   save();
   res.json(plan);
 });
@@ -201,6 +206,7 @@ app.post("/fights/:id/end", async (req, res) => {
     hedera.ledger({ t: "end", fight: f.fightId, winner: f.winner, budgets: f.budgets });
   }
   const bots = [bot(f.a), bot(f.b)];
+  const xp = demos.onFightEnd(f);
   const out = await zg.lessons(bots, f.hits, f.decisions);
   for (const b of bots) {
     addLessons(b.brain, out.lessons[b.botId] ?? []);
@@ -217,7 +223,7 @@ app.post("/fights/:id/end", async (req, res) => {
       .catch((e) => console.warn(`[0g-storage] episode ${f.fightId} failed:`, e.message));
     for (const b of bots) await saveBrain(b).catch((e) => console.warn(`[0g-storage] ${b.botId} save failed:`, e.message));
   })();
-  res.json({ winner: f.winner, lessons: f.lessons, brainSave: "queued", ...(out.mock ? { mock: true } : {}) });
+  res.json({ winner: f.winner, lessons: f.lessons, xp, brainSave: "queued", ...(out.mock ? { mock: true } : {}) });
 });
 
 // ---- approvals ----
