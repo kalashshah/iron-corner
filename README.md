@@ -14,7 +14,7 @@ Built at ETHGlobal Mumbai 2026. Everything runs on testnets with test tokens.
 flowchart LR
   U[Unity game] -- push-to-talk audio --> B[Backend]
   U -- fight state every 1.5 s --> B
-  B -- whisper-large-v3 --> Z[0G Private Computer]
+  B -- qwen3-omni-flash speech-to-text --> Z[0G Private Computer]
   B -- qwen-flash plan --> Z
   B -- encrypted brain + episode log --> S[0G Storage]
   U -- clean hit --> B
@@ -24,10 +24,10 @@ flowchart LR
   B -- high stakes / revive --> W[World ID Agent Pass]
 ```
 
-1. Train: you hold the mic and coach ("light him up when he drops his left"). 0G's `whisper-large-v3` transcribes it, and a 0G model turns the phrase into moves. The bot remembers the phrase.
+1. Train: you hold the mic and coach ("when he throws a left hook, slip right and uppercut"). 0G's `qwen3-omni-flash` transcribes it, and `qwen-flash` on 0G turns it into one brain rule: a counter, an opener or finisher combo, a style nudge, or a catchphrase. The game shows what it learned ("Learned counter: hook_l → dodge_r, uppercut") with the 0G request id. The sparring dummy then throws that left hook so you can watch the counter land. Three drills a day keeps a streak going.
 2. Remember: saving the brain encrypts it with a per-bot AES-256 key and stores it on 0G Storage. Each save is a new version with its own root hash.
 3. Approve: entering a high-stakes fight or reviving a knocked-out bot needs a fresh World ID approval from the owner. A denied, expired or cancelled request means the action does not happen.
-4. Fight: every 1.5 s each bot sends the fight state to the backend, and 0G picks a stance and a combo using that bot's brain. Unity plays the moves and detects hits. Each clean hit makes the defender's agent pay the attacker through an x402-protected endpoint that settles on Hedera.
+4. Fight: you can't coach during a fight. Every 1.5 s each bot sends the fight state to the backend, and 0G picks a stance and a combo from that bot's brain, naming the rule it followed. The bubble shows "Using: counter: hook_l → dodge_r, uppercut (learned in training)". Unity plays the moves and detects hits. Each clean hit makes the defender's agent pay the attacker through an x402-protected endpoint that settles on Hedera.
 5. Learn: after the fight, 0G writes 1 to 3 lessons per bot into its brain. The whole fight (every decision with its 0G request id, every hit and payment) is uploaded to 0G Storage as an episode log, and the game can replay the fight from that log.
 
 If 0G fails or is slow (over 4 s), the bot covers up and holds still until a real plan arrives. It never makes up a move.
@@ -38,7 +38,7 @@ Without 0G the bot can't hear you, can't decide, and forgets everything it learn
 
 ### 0G: Private Computer and Storage
 
-- Inference through the 0G router (`https://router-api.0g.ai/v1`, OpenAI-compatible): `whisper-large-v3` for coaching audio, `qwen-flash` for fight plans (1.1 to 1.5 s measured), lessons after each fight. Every response's `x_0g_trace.request_id` is shown in the game next to the bot's plan.
+- Inference through the 0G router (`https://router-api.0g.ai/v1`, OpenAI-compatible): `qwen3-omni-flash` for coaching audio (speech-to-text), `qwen-flash` for turning coaching into rules and for fight plans (about 1.2 s median measured), lessons after each fight. Every response's `x_0g_trace.request_id` is shown in the game next to the bot's plan.
 - Brains: AES-256 encrypted on 0G Storage (Galileo testnet), keyed per bot with HKDF from a server secret, so only that bot's server side can read them.
 - Episode logs: one public upload per fight with a request id per decision. `GET /fights/:id/episode` reads it back from 0G Storage, and the game's "Replay from 0G" button replays it.
 

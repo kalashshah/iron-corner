@@ -3,7 +3,7 @@ import express from "express";
 import { Readable } from "node:stream";
 import QRCode from "qrcode";
 import { modes, state, save, id, fail, HttpError, PORT, type Bot, type Fight, type Payment } from "./state.ts";
-import { MOVES, DAMAGE, commandFor, phraseFor, learnPhrase, addLessons, type FightState } from "./game.ts";
+import { MOVES, DAMAGE, commandFor, phraseFor, applyLearn, addLessons, addDrill, dailyView, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
 import * as hedera from "./hedera.ts";
@@ -35,15 +35,26 @@ async function heard(fd: FormData) {
   return zg.transcribe(audio as Blob, (fd.get("text") as string) || undefined);
 }
 
-// Coach text → instant command word, a known phrase, or (via 0G) a newly learned phrase.
-async function interpret(b: Bot, text: string, learn: boolean) {
-  const command = commandFor(text);
-  if (command) return { command, moves: [command], learned: null, requestId: null };
-  const known = phraseFor(b.brain, text);
-  if (known) return { command: known.moves[0], moves: known.moves, learned: known, requestId: null };
-  const { learned, requestId, mock } = await zg.mapPhrase(b, text);
-  if (learned && learn) { learnPhrase(b.brain, learned); save(); }
-  return { command: learn ? null : learned?.moves[0] ?? null, moves: learned?.moves ?? [], learned, requestId, ...(mock ? { mock } : {}) };
+// Training coach line → instant command word (sparring drill), a known phrase, or (via 0G) a structured brain update:
+// counter / combo / style / phrase. Response carries a one-line diff and the 0G request id.
+async function teach(b: Bot, text: string) {
+  let out: { command: string | null; learned: Record<string, unknown> | null; diff: string | null; requestId: string | null; mock?: boolean; error?: string };
+  const command = commandFor(text), known = command ? null : phraseFor(b.brain, text);
+  if (command) out = { command, learned: null, diff: null, requestId: null };
+  else if (known) out = { command: known.moves[0], learned: { kind: "phrase", id: `phrase#${b.brain.phrases.indexOf(known) + 1}`, ...known },
+    diff: `Drilled phrase: “${known.say}” = ${known.moves.join(", ")}`, requestId: null };
+  else {
+    const r = await zg.learn(text);
+    out = { command: null, learned: null, diff: null, requestId: r.requestId, ...(r.mock ? { mock: true } : {}), ...(r.error ? { error: r.error } : {}) };
+    if (r.learned) {
+      const { id, diff } = applyLearn(b.brain, r.learned, text);
+      out.learned = { ...r.learned, id, say: text.slice(0, 60), means: diff, moves: "moves" in r.learned ? r.learned.moves : [] };
+      out.diff = diff;
+    }
+  }
+  const goalHit = out.command || out.learned ? addDrill(b) : false;
+  save();
+  return { ...out, daily: { ...dailyView(b), justDone: goalHit } };
 }
 
 // A normal-fight KO repairs itself after REPAIR_MS; a high-stakes KO needs a World ID revive.
@@ -58,7 +69,7 @@ async function botView(b: Bot) {
   const bal = b.accountId ? await hedera.balance(b.accountId).catch(() => ({ hbar: null, usdc: null })) : { hbar: null, usdc: null };
   const last = b.brainHistory.at(-1);
   return { botId: b.botId, name: b.name, house: b.house, accountId: b.accountId, evmAddress: b.evmAddress, ...bal,
-    payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, brainRoot: last?.root ?? null, alive: b.alive,
+    payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, daily: dailyView(b), brainRoot: last?.root ?? null, alive: b.alive,
     koStakes: b.alive ? null : b.koStakes ?? null, repairIn: repairIn(b), needsRevive: !b.alive && b.koStakes === "high" };
 }
 
@@ -86,14 +97,13 @@ app.post("/bots/:id/revive", (req, res) => {
 app.post("/train/:botId/coach", async (req, res) => {
   const b = bot(req.params.botId);
   const t = await heard(await form(req));
-  const r = await interpret(b, t.text, true);
-  res.json({ text: t.text, requestId: t.requestId, learned: r.learned, command: r.command, ...(t.mock ? { mock: true } : {}) });
+  const r = await teach(b, t.text);
+  res.json({ text: t.text, ...r, requestId: r.requestId ?? t.requestId, sttRequestId: t.requestId, ...(t.mock ? { mock: true } : {}) });
 });
 app.post("/train/:botId/coach-text", async (req, res) => {
   const b = bot(req.params.botId);
   const text = String(req.body?.text ?? "").trim().slice(0, 200) || fail(400, "text required");
-  const r = await interpret(b, text, true);
-  res.json({ text, requestId: r.requestId, learned: r.learned, command: r.command, ...(r.mock ? { mock: true } : {}) });
+  res.json({ text, ...(await teach(b, text)) });
 });
 app.post("/train/:botId/spar", async (req, res) => void res.json(await zg.decide(bot(req.params.botId), (req.body?.state ?? {}) as FightState, "dummy")));
 app.post("/train/:botId/save", async (req, res) => void res.json(await saveBrain(bot(req.params.botId))));
@@ -112,7 +122,7 @@ app.post("/fights", async (req, res) => {
   }
   if (stakes === "high") world.consume(approvalId, owned({ a, b }), "high_stakes"); // marks it used in this same step
   const f: Fight = { fightId: id("f"), a, b, stakes, status: "live", budgets: { [a]: cents, [b]: cents }, startBudget: cents,
-    winner: null, payments: [], decisions: [], hits: [], overrides: {}, ledgerTopic: hedera.ledgerTopic(), createdAt: new Date().toISOString() };
+    winner: null, payments: [], decisions: [], hits: [], ledgerTopic: hedera.ledgerTopic(), createdAt: new Date().toISOString() };
   state.fights[f.fightId] = f; save();
   hedera.ledger({ t: "start", fight: f.fightId, a, b, stakes, budget: cents });
   res.json({ fightId: f.fightId, a, b, budgets: f.budgets, ledgerTopic: f.ledgerTopic });
@@ -135,14 +145,9 @@ function knockout(f: Fight, loser: string) {
 app.post("/fights/:id/decide", async (req, res) => {
   const f = fightOf(req.params.id), botId = inFight(f, req.body?.botId);
   if (f.status !== "live") return void res.json({ stance: "safe_stop", reason: "fight over" });
-  const ov = f.overrides[botId];
-  let plan;
-  if (ov?.length) {
-    delete f.overrides[botId];
-    plan = { stance: "aggressive", combo: ov.slice(0, 4), trigger: "now", say: "Coach says go!", requestId: null, teeVerified: null, override: true };
-  } else plan = await zg.decide(bot(botId), (req.body?.state ?? {}) as FightState, opponent(f, botId));
-  if (plan.stance === "safe_stop") console.warn(`[decide] ${f.fightId} ${botId} safe_stop: ${(plan as any).reason}`);
-  f.decisions.push({ botId, requestId: plan.requestId ?? null, stance: plan.stance, at: new Date().toISOString(), ...((plan as any).mock ? { mock: true } : {}) });
+  const plan = await zg.decide(bot(botId), (req.body?.state ?? {}) as FightState, opponent(f, botId));
+  if (plan.stance === "safe_stop") console.warn(`[decide] ${f.fightId} ${botId} safe_stop: ${plan.reason}`);
+  f.decisions.push({ botId, requestId: plan.requestId ?? null, stance: plan.stance, ...(plan.used ? { used: plan.used } : {}), at: new Date().toISOString(), ...(plan.mock ? { mock: true } : {}) });
   save();
   res.json(plan);
 });
@@ -171,23 +176,8 @@ app.post("/fights/:id/hit", (req, res) => {
   res.json({ budgets: f.budgets, ko: f.status === "over" ? opponent(f, f.winner!) : null });
 });
 
-app.post("/fights/:id/coach", async (req, res) => {
-  const f = fightOf(req.params.id);
-  const fd = await form(req);
-  const botId = inFight(f, fd.get("botId"));
-  const t = await heard(fd);
-  const r = await interpret(bot(botId), t.text, false);
-  if (r.moves.length) f.overrides[botId] = r.moves;
-  res.json({ text: t.text, command: r.command, moves: r.moves, requestId: r.requestId ?? t.requestId, ...(t.mock ? { mock: true } : {}) });
-});
-app.post("/fights/:id/coach-text", async (req, res) => {
-  const f = fightOf(req.params.id);
-  const botId = inFight(f, req.body?.botId);
-  const text = String(req.body?.text ?? "").trim().slice(0, 200) || fail(400, "text required");
-  const r = await interpret(bot(botId), text, false);
-  if (r.moves.length) f.overrides[botId] = r.moves;
-  res.json({ text, command: r.command, moves: r.moves, requestId: r.requestId, ...(r.mock ? { mock: true } : {}) });
-});
+// Fights are autonomous: the bot fights on what it learned in training. No mid-fight coaching.
+app.post(["/fights/:id/coach", "/fights/:id/coach-text"], (req) => { fightOf(req.params.id as string); fail(409, "fights are autonomous; coach in training"); });
 
 app.get("/fights/:id", (req, res) => {
   const f = fightOf(req.params.id);

@@ -18,6 +18,12 @@ public static class OfflineSim
         ["bot_b"] = Bot("bot_b", "Rustbucket", "0.0.5001002", 5.00, 1),
     };
     static readonly Dictionary<string, JArray> phrases = new() { ["bot_a"] = new JArray(), ["bot_b"] = new JArray() };
+    static readonly Dictionary<string, JArray> counters = new() { ["bot_a"] = new JArray(), ["bot_b"] = new JArray() };
+    static readonly Dictionary<string, JArray> combos = new() { ["bot_a"] = new JArray(), ["bot_b"] = new JArray() };
+    static readonly Dictionary<string, JObject> styles = new() { ["bot_a"] = new JObject { ["aggression"] = 0.6, ["guard"] = 0.5 }, ["bot_b"] = new JObject { ["aggression"] = 0.4, ["guard"] = 0.6 } };
+    // Daily goal, same rules as the backend: 3 drills a UTC day, consecutive days grow the streak.
+    const int DailyGoal = 3;
+    static string dailyDay, goalDay; static int drills, streak;
     static readonly Dictionary<string, JArray> history = new() { ["bot_a"] = new JArray(), ["bot_b"] = new JArray() };
     static readonly Dictionary<string, Fight> fights = new();
     static readonly Dictionary<string, Approval> approvals = new();
@@ -45,10 +51,15 @@ public static class OfflineSim
         switch (seg[0])
         {
             case "bots":
-                if (seg.Length == 1) return new JArray(bots.Values.Select(b => b.DeepClone()));
+                if (seg.Length == 1) return new JArray(bots.Values.Select(b => { var c = (JObject)b.DeepClone(); if ((string)b["botId"] == "bot_a") c["daily"] = Daily(false); return c; }));
                 if (seg.Length == 3 && seg[2] == "revive") { Get(bots, seg[1])["alive"] = true; return new JObject { ["botId"] = seg[1], ["alive"] = true, ["mock"] = true }; }
                 var bot = (JObject)Get(bots, seg[1]).DeepClone();
-                bot["brain"] = new JObject { ["botId"] = seg[1], ["version"] = bot["brainVersion"], ["phrases"] = phrases[seg[1]].DeepClone(), ["lessons"] = new JArray("offline: no lessons yet"), ["style"] = new JObject { ["aggression"] = 0.6, ["guard"] = 0.5 } };
+                bot["brain"] = new JObject
+                {
+                    ["botId"] = seg[1], ["version"] = bot["brainVersion"], ["phrases"] = phrases[seg[1]].DeepClone(), ["counters"] = counters[seg[1]].DeepClone(),
+                    ["combos"] = combos[seg[1]].DeepClone(), ["lessons"] = new JArray("offline: no lessons yet"), ["style"] = styles[seg[1]].DeepClone(),
+                };
+                if (seg[1] == "bot_a") bot["daily"] = Daily(false);
                 bot["brainHistory"] = history[seg[1]].DeepClone();
                 return bot;
 
@@ -56,9 +67,9 @@ public static class OfflineSim
                 var botId = seg[1];
                 switch (seg[2])
                 {
-                    case "coach": return Coach(botId, "light him up", true);
-                    case "coach-text": return Coach(botId, (string)body["text"] ?? "", true);
-                    case "spar": return Plan(body["state"], 0.7f);
+                    case "coach": return Coach(botId, (string)body["text"] ?? "when he throws a left hook, slip right and uppercut");
+                    case "coach-text": return Coach(botId, (string)body["text"] ?? "");
+                    case "spar": return PlanFor(botId, body["state"], 0.7f);
                     case "save":
                         var b = Get(bots, botId);
                         b["brainVersion"] = (int)b["brainVersion"] + 1;
@@ -91,14 +102,13 @@ public static class OfflineSim
                 switch (seg[2])
                 {
                     case "decide":
-                        var plan = Plan(body["state"], (string)body["botId"] == "bot_a" ? 0.7f : 0.55f);
-                        fight.decisions.Add(new JObject { ["botId"] = body["botId"], ["requestId"] = plan["requestId"], ["stance"] = plan["stance"], ["at"] = DateTime.UtcNow.ToString("o") });
+                        var plan = PlanFor((string)body["botId"], body["state"], (string)body["botId"] == "bot_a" ? 0.7f : 0.55f);
+                        fight.decisions.Add(new JObject { ["botId"] = body["botId"], ["requestId"] = plan["requestId"], ["stance"] = plan["stance"], ["used"] = plan["used"], ["at"] = DateTime.UtcNow.ToString("o") });
                         return plan;
                     case "hit": return Hit(fight, body);
                     case "coach":
                     case "coach-text":
-                        var c = Coach((string)body["botId"] ?? "bot_a", (string)body["text"] ?? "light him up", false);
-                        return new JObject { ["text"] = c["text"], ["command"] = c["command"], ["requestId"] = c["requestId"], ["mock"] = true };
+                        throw new Exception("fights are autonomous; coach in training");
                     case "end":
                         return new JObject { ["winner"] = fight.winner, ["lessons"] = new JObject { [fight.a] = new JArray("offline: lessons need the 0G backend"), [fight.b] = new JArray() }, ["mock"] = true };
                 }
@@ -170,23 +180,115 @@ public static class OfflineSim
         ("back", "reset distance", new[] { "step_back" }),
     };
 
-    static JObject Coach(string botId, string text, bool learn)
+    // Move words in the order they're said ("left hook" before "hook").
+    static readonly (string word, string move)[] Words = new (string, string)[]
     {
-        var low = text.ToLowerInvariant();
-        var t = Tactics.FirstOrDefault(x => low.Contains(x.key));
-        JObject learned = null; string command = null;
-        if (t.moves != null)
-        {
-            command = t.moves[0];
-            bool known = phrases[botId].Any(p => (string)p["say"] == low);
-            if (learn && !known)
+        ("left hook", "hook_l"), ("right hook", "hook_r"), ("hook", "hook_l"), ("uppercut", "uppercut"), ("upper", "uppercut"), ("jab", "jab"),
+        ("cross", "cross"), ("straight right", "cross"), ("body", "body"), ("block", "block"), ("guard up", "block"), ("cover", "block"),
+        ("slip left", "dodge_l"), ("dodge left", "dodge_l"), ("slip right", "dodge_r"), ("dodge right", "dodge_r"), ("slip", "dodge_r"), ("dodge", "dodge_l"),
+        ("step in", "step_in"), ("step back", "step_back"), ("back off", "step_back"),
+    }.Concat(Fighter.Moves.Select(m => (m.Replace('_', ' '), m))).OrderByDescending(w => w.Item1.Length).ToArray();
+
+    static List<string> MovesIn(string text)
+    {
+        var s = " " + new string(text.ToLowerInvariant().Select(ch => char.IsLetterOrDigit(ch) ? ch : ' ').ToArray()) + " ";
+        var found = new List<(int at, string move)>();
+        foreach (var (w, m) in Words)
+            for (int i; (i = s.IndexOf(" " + w + " ", StringComparison.Ordinal)) >= 0;)
             {
-                learned = new JObject { ["say"] = low, ["means"] = t.means, ["moves"] = new JArray(t.moves) };
-                phrases[botId].Add(learned.DeepClone());
+                found.Add((i, m));
+                s = s.Substring(0, i + 1) + new string('#', w.Length) + s.Substring(i + 1 + w.Length);
             }
+        return found.OrderBy(f => f.at).Select(f => f.move).ToList();
+    }
+
+    static string Today => DateTime.UtcNow.ToString("yyyy-MM-dd");
+    static JObject Daily(bool justDone)
+    {
+        string yest = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd");
+        int d = dailyDay == Today ? drills : 0;
+        return new JObject { ["goal"] = DailyGoal, ["drills"] = Math.Min(d, DailyGoal), ["done"] = d >= DailyGoal, ["streak"] = goalDay == Today || goalDay == yest ? streak : 0, ["justDone"] = justDone };
+    }
+    static bool AddDrill()
+    {
+        if (dailyDay != Today) { dailyDay = Today; drills = 0; }
+        if (++drills != DailyGoal) return false;
+        streak = goalDay == DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd") ? streak + 1 : 1; goalDay = Today;
+        return true;
+    }
+
+    // Same response shape as POST /train/:id/coach-text: command word, or one learned rule with a readable diff.
+    static JObject Coach(string botId, string text)
+    {
+        var low = text.ToLowerInvariant().Trim();
+        var ms = MovesIn(low);
+        bool has(params string[] k) => k.Any(x => low.Contains(x));
+        JObject learned = null; string command = null, diff = null;
+        string L(IEnumerable<string> m) => string.Join(", ", m);
+        if ((has("when ", "if ", "every time")) && ms.Count >= 2 && Fighter.IsAttack(ms[0]))
+        {
+            var list = counters[botId];
+            var old = list.FirstOrDefault(c => (string)c["when"] == ms[0]);
+            var c = new JObject { ["when"] = ms[0], ["moves"] = new JArray(ms.Skip(1).Take(4)), ["said"] = text };
+            if (old != null) old.Replace(c); else list.Add(c);
+            int idx = list.ToList().FindIndex(x => (string)x["when"] == ms[0]) + 1;
+            diff = $"Learned counter: {ms[0]} → {L(ms.Skip(1).Take(4))}";
+            learned = new JObject { ["kind"] = "counter", ["id"] = $"counter#{idx}", ["when"] = ms[0], ["moves"] = c["moves"].DeepClone() };
         }
-        else command = Fighter.Moves.FirstOrDefault(m => low.Contains(m.Replace('_', ' ')) || low.Contains(m));
-        return new JObject { ["text"] = text, ["requestId"] = "offline-" + Hex(8).Substring(2), ["learned"] = learned, ["command"] = command, ["mock"] = true };
+        else if (has("open", "start", "finish", "put him away") && ms.Count > 0)
+        {
+            string use = has("finish", "put him away") ? "finisher" : "opener";
+            combos[botId].Add(new JObject { ["use"] = use, ["name"] = string.Join(" ", ms), ["moves"] = new JArray(ms.Take(4)), ["said"] = text });
+            diff = $"Learned {use}: {L(ms.Take(4))}";
+            learned = new JObject { ["kind"] = "combo", ["id"] = $"combo#{combos[botId].Count}", ["use"] = use, ["moves"] = new JArray(ms.Take(4)) };
+        }
+        else if (has("aggress", "brave", "attack more", "careful", "patient", "defen"))
+        {
+            var st = styles[botId];
+            bool calm = has("careful", "patient", "defen");
+            double a0 = (double)st["aggression"], g0 = (double)st["guard"];
+            st["aggression"] = Math.Round(Mathf.Clamp01((float)(a0 + (calm ? -0.1 : 0.15))), 2);
+            st["guard"] = Math.Round(Mathf.Clamp01((float)(g0 + (calm ? 0.15 : -0.05))), 2);
+            diff = $"Style: aggression {a0:0.00} → {(double)st["aggression"]:0.00}, guard {g0:0.00} → {(double)st["guard"]:0.00}";
+            learned = new JObject { ["kind"] = "style", ["id"] = "style", ["moves"] = new JArray() };
+        }
+        else if (Tactics.FirstOrDefault(x => low.Contains(x.key)) is var t && t.moves != null && !(ms.Count == 1 && Words.Any(w => w.word == low)))
+        {
+            var list = phrases[botId];
+            var known = list.FirstOrDefault(p => (string)p["say"] == low);
+            if (known == null) list.Add(new JObject { ["say"] = low, ["means"] = t.means, ["moves"] = new JArray(t.moves) });
+            diff = (known == null ? "Learned phrase" : "Drilled phrase") + $": “{low}” = {L(t.moves)}";
+            learned = new JObject { ["kind"] = "phrase", ["id"] = $"phrase#{list.ToList().FindIndex(p => (string)p["say"] == low) + 1}", ["moves"] = new JArray(t.moves) };
+        }
+        else command = ms.FirstOrDefault();
+        if (learned != null) { learned["say"] = text; learned["means"] = diff; }
+        bool goal = (command != null || learned != null) && AddDrill();
+        return new JObject { ["text"] = text, ["requestId"] = "offline-" + Hex(8).Substring(2), ["learned"] = learned, ["command"] = command, ["diff"] = diff, ["daily"] = Daily(goal), ["mock"] = true };
+    }
+
+    // Taught rules first (counter → finisher → opener), else the heuristic. Mirrors the backend mock planner.
+    static JObject PlanFor(string botId, JToken state, float aggression)
+    {
+        string last = (state?["oppLastMoves"] as JArray)?.LastOrDefault()?.ToString(), hitBy = (string)state?["lastHitBy"];
+        float t = (float?)state?["t"] ?? 99f; int opp = (int?)state?["oppBudget"] ?? 50;
+        JObject Rule(string id, string text, string stance, JToken moves, string say) => new()
+        {
+            ["stance"] = stance, ["combo"] = moves.DeepClone(), ["trigger"] = "now", ["say"] = say, ["used"] = id, ["usedText"] = text,
+            ["requestId"] = "offline-" + Hex(8).Substring(2), ["teeVerified"] = false, ["mock"] = true,
+        };
+        string Ms(JToken m) => string.Join(", ", m.Select(x => (string)x));
+        var cs = counters.TryGetValue(botId ?? "", out var cl) ? cl : new JArray();
+        for (int i = 0; i < cs.Count; i++)
+            if ((string)cs[i]["when"] == last || (string)cs[i]["when"] == hitBy)
+                return Rule($"counter#{i + 1}", $"counter: {cs[i]["when"]} → {Ms(cs[i]["moves"])}", "counter", cs[i]["moves"], $"Saw the {cs[i]["when"]}. Drilled this.");
+        var co = combos.TryGetValue(botId ?? "", out var col) ? col : new JArray();
+        for (int i = 0; i < co.Count; i++)
+        {
+            string use = (string)co[i]["use"];
+            if ((use == "finisher" && opp <= 12) || (use == "opener" && t < 4))
+                return Rule($"combo#{i + 1}", $"{use}: {Ms(co[i]["moves"])}", "aggressive", co[i]["moves"], use == "finisher" ? "Finish it like we practised." : "Opener from training.");
+        }
+        return Plan(state, aggression);
     }
 
     // Heuristic plan with the same shape as the 0G decision. Also drives the sparring dummy.

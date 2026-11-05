@@ -26,8 +26,9 @@ public class Game : MonoBehaviour
     // UI
     Transform canvas;
     GameObject home, train, fight, brain, modal, koPanel;
-    Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, serverStatus, brainList;
-    InputField serverField, trainField, fightField;
+    Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
+    InputField serverField, trainField;
+    readonly List<string> counterAttacks = new(); // attacks your bot has a taught counter for; the sparring dummy throws these
     Button fightBtn, highBtn; bool aAlive = true, aNeedsRevive;
     Text trainTranscript, trainSaved, fightTranscript, fightTitle;
     Text[] barName = new Text[2], barMoney = new Text[2];
@@ -86,6 +87,7 @@ public class Game : MonoBehaviour
                     ? $"{(double?)bot["hbar"] ?? 0:0.00} <size=26><color=#9EA5B0>HBAR · Hedera testnet</color></size>"
                     : $"${(double?)bot["usdc"] ?? 0:0.00} <size=26><color=#9EA5B0>USDC · Hedera testnet</color></size>";
                 cardBrain.text = $"Brain v{bot["brainVersion"]}  <color=#9EA5B0>root {UI.Short((string)bot["brainRoot"])}</color>";
+                ShowDaily(bot["daily"]);
                 aAlive = (bool?)bot["alive"] != false;
                 aNeedsRevive = (bool?)bot["needsRevive"] == true;
                 int repair = (int?)bot["repairIn"] ?? 0;
@@ -97,6 +99,15 @@ public class Game : MonoBehaviour
                 if (!aAlive && !aNeedsRevive) StartCoroutine(RefreshSoon(Mathf.Clamp(repair, 1, 5)));
             }
         }, e => cardAcct.text = "<color=#F2523F>" + e + "</color>");
+    }
+
+    void ShowDaily(JToken d)
+    {
+        if (d == null || d.Type != JTokenType.Object) return;
+        int streak = (int?)d["streak"] ?? 0;
+        string txt = ((bool?)d["done"] == true ? "<color=#5CDB85>✓ Daily training done</color>" : $"Daily goal: <b>{d["drills"]}/{d["goal"]}</b> drills")
+            + $"  <color=#9EA5B0>·  {(streak > 0 ? $"{streak}-day streak" : "start a streak today")}</color>";
+        cardDaily.text = txt; trainDaily.text = txt;
     }
 
     IEnumerator RefreshSoon(float s)
@@ -136,10 +147,22 @@ public class Game : MonoBehaviour
         Show(Mode.Train);
         ResetFighters();
         a.active = b.active = true;
-        trainTranscript.text = "Hold the mic and coach: try “light him up”.";
+        trainTranscript.text = "Teach a rule: try “when he throws a left hook, slip right and uppercut”.";
         trainSaved.text = "";
+        StartCoroutine(LoadBrainRules());
         StartCoroutine(SparLoop(session));
         StartCoroutine(DummyLoop(session));
+    }
+
+    // Which attacks have a counter, so the dummy can throw them, plus today's goal.
+    IEnumerator LoadBrainRules()
+    {
+        yield return Api.Call("GET", $"/bots/{a.botId}", null, r =>
+        {
+            counterAttacks.Clear();
+            if (r["brain"]?["counters"] is JArray cs) counterAttacks.AddRange(cs.Select(c => (string)c["when"]).Where(w => !string.IsNullOrEmpty(w)));
+            ShowDaily(r["daily"]);
+        });
     }
 
     void StartFight(string stakesKind, string approval)
@@ -155,7 +178,7 @@ public class Game : MonoBehaviour
             b.ResetFor((int?)r["budgets"]?[b.botId] ?? 50);
             a.active = b.active = true;
             fightTitle.text = (stakesKind == "high" ? "<color=#FF9421>HIGH STAKES</color>  ·  " : "") + $"<color=#9EA5B0>{fightId}</color>";
-            fightTranscript.text = "Hold to coach live — your call overrides the next plan.";
+            fightTranscript.text = "AUTONOMOUS  ·  no coaching mid-fight — your bot uses what it learned in training";
             foreach (Transform c in ticker) Destroy(c.gameObject);
             UpdateBars();
             StartCoroutine(DecideLoop(session, a));
@@ -201,12 +224,15 @@ public class Game : MonoBehaviour
         }
     }
 
-    // The dummy is local on purpose: a low-aggression punching bag, not a second 0G client.
+    // The dummy is local on purpose: a low-aggression punching bag, not a second 0G client. Most of the time it
+    // throws an attack you've taught a counter for, so the next 0G sparring plan can show that counter firing.
     IEnumerator DummyLoop(int s)
     {
         while (s == session)
         {
-            if (!b.Busy) ApplyPlan(b, OfflineSim.Plan(State(b), 0.25f), quiet: true);
+            if (!b.Busy && counterAttacks.Count > 0 && UnityEngine.Random.value < 0.65f)
+                ApplyPlan(b, new JObject { ["stance"] = "aggressive", ["combo"] = new JArray(counterAttacks[UnityEngine.Random.Range(0, counterAttacks.Count)]), ["trigger"] = "when_close" }, quiet: true);
+            else if (!b.Busy) ApplyPlan(b, OfflineSim.Plan(State(b), 0.25f), quiet: true);
             yield return new WaitForSecondsRealtime(1.8f);
         }
     }
@@ -231,7 +257,10 @@ public class Game : MonoBehaviour
         string req = (string)plan["requestId"];
         bool tee = (bool?)plan["teeVerified"] == true;
         string meta = (string.IsNullOrEmpty(req) ? "" : "0G " + UI.Short(req, 8)) + (tee ? "  <color=#5CDB85>TEE verified</color>" : (bool?)plan["mock"] == true ? "  <color=#F2A33A>offline</color>" : "");
-        Say(f, (string)plan["say"] ?? stance, $"{stance} · {string.Join(" ", moves)}\n{meta}", UI.Ink);
+        string used = (string)plan["usedText"];
+        string usedLine = string.IsNullOrEmpty(used) ? "" : $"<color=#FF9421><b>Using: {used}</b></color> <color=#9EA5B0>(learned in training)</color>\n";
+        Say(f, (string)plan["say"] ?? stance, $"{usedLine}{stance} · {string.Join(" ", moves)}   {meta}", UI.Ink);
+        if (mode == Mode.Train && f == a && ((string)plan["used"] ?? "").StartsWith("counter")) Toast("Counter fired: " + used.Replace("counter: ", ""));
     }
 
     IEnumerator PollLoop(int s)
@@ -336,7 +365,7 @@ public class Game : MonoBehaviour
     void MicDown(Text transcript)
     {
         recording = Mic.Start();
-        transcript.text = recording ? "<color=#FF9421>● Listening…</color> release to send" : (Api.Offline ? "No mic — offline sim will pretend you said “light him up”." : "No microphone — type instead.");
+        transcript.text = recording ? "<color=#FF9421>● Listening…</color> release to send" : (Api.Offline ? "No mic — offline sim will pretend you taught a left-hook counter." : "No microphone — type instead.");
         if (!recording && Api.Offline) recording = true;
     }
 
@@ -349,7 +378,6 @@ public class Game : MonoBehaviour
         wav ??= Mic.Wav(new float[1600], 16000, 1);
         transcript.text = "Sending to 0G whisper…";
         if (mode == Mode.Train) StartCoroutine(Api.Upload($"/train/{a.botId}/coach", wav, null, r => OnCoach(r, transcript), e => transcript.text = "Coach failed: " + e));
-        else if (mode == Mode.Fight) StartCoroutine(Api.Upload($"/fights/{fightId}/coach", wav, new Dictionary<string, string> { ["botId"] = a.botId }, r => OnCoach(r, transcript), e => transcript.text = "Coach failed: " + e));
     }
 
     void SendTyped(InputField field, Text transcript)
@@ -359,25 +387,30 @@ public class Game : MonoBehaviour
         field.text = "";
         transcript.text = "…";
         if (mode == Mode.Train) StartCoroutine(Api.Call("POST", $"/train/{a.botId}/coach-text", new JObject { ["text"] = text }, r => OnCoach(r, transcript), e => transcript.text = "Coach failed: " + e));
-        else if (mode == Mode.Fight) StartCoroutine(Api.Call("POST", $"/fights/{fightId}/coach-text", new JObject { ["botId"] = a.botId, ["text"] = text }, r => OnCoach(r, transcript), e => transcript.text = "Coach failed: " + e));
     }
 
+    // Training only: show what the brain learned (diff + 0G id), drill it right away, track the daily goal.
     void OnCoach(JToken r, Text transcript)
     {
-        transcript.text = $"“{r["text"]}”" + (r["requestId"] != null ? $"  <size=20><color=#9EA5B0>0G {UI.Short((string)r["requestId"], 8)}</color></size>" : "");
+        string req = (string)r["requestId"], diff = (string)r["diff"];
+        transcript.text = $"“{r["text"]}”" + (req != null ? $"  <size=20><color=#9EA5B0>0G {UI.Short(req, 8)}</color></size>" : "");
+        ShowDaily(r["daily"]);
+        if ((bool?)r["daily"]?["justDone"] == true) StartCoroutine(ToastLater($"Daily training done · {r["daily"]["streak"]}-day streak", 3.4f));
         if (r["learned"] is JObject learned)
         {
-            Toast($"Learned: ‘{learned["say"]}’ = {learned["means"]}");
-            if (learned["moves"] is JArray mv) a.SetQueue(mv.Select(x => (string)x), front: true);
-            a.holdBlock = false;
+            Toast(diff ?? $"Learned: ‘{learned["say"]}’ = {learned["means"]}");
+            Say(a, diff, $"learned in training · {learned["id"]}" + (req != null ? "   0G " + UI.Short(req, 8) : ""), UI.Accent);
+            if ((string)learned["kind"] == "counter" && !counterAttacks.Contains((string)learned["when"])) counterAttacks.Add((string)learned["when"]);
+            if (learned["moves"] is JArray mv && mv.Count > 0) { a.holdBlock = false; a.SetQueue(mv.Select(x => (string)x), front: true); }
             return;
         }
-        var moves = r["moves"] is JArray mvs && mvs.Count > 0 ? mvs.Select(x => (string)x).ToArray() : !string.IsNullOrEmpty((string)r["command"]) ? new[] { (string)r["command"] } : null;
-        if (moves == null) return;
-        Toast("Coach: " + string.Join(" ", moves).Replace('_', ' '));
-        // In a fight the backend turns the call into the bot's next plan (override); in training we play it right away.
-        if (mode == Mode.Train) { a.holdBlock = false; a.SetQueue(moves, front: true); }
+        var command = (string)r["command"];
+        if (string.IsNullOrEmpty(command)) { if (r["error"] != null || req != null) Toast("Nothing to learn from that — try a counter, opener or finisher"); return; }
+        Toast("Drill: " + command.Replace('_', ' '));
+        a.holdBlock = false; a.SetQueue(new[] { command }, front: true);
     }
+
+    IEnumerator ToastLater(string s, float delay) { yield return new WaitForSecondsRealtime(delay); Toast(s); }
 
     void SaveBrain()
     {
@@ -460,15 +493,26 @@ public class Game : MonoBehaviour
             else foreach (var h in hist.Take(8))
                 sb.Append($"v{h["version"]}   root {UI.Short((string)h["root"], 10)}   <color=#9EA5B0>tx {UI.Short((string)h["txHash"], 8)}   {FormatAt(h["at"])}</color>\n");
             var brainObj = r["brain"];
+            string Ms(JToken m) => string.Join(" ", (m as JArray ?? new JArray()).Select(x => (string)x));
+            if (brainObj?["counters"] is JArray cs && cs.Count > 0)
+            {
+                sb.Append("\n<color=#E0AD57><b>COUNTERS</b></color>\n");
+                foreach (var c in cs.Take(6)) sb.Append($"when he throws <b>{c["when"]}</b>  →  {Ms(c["moves"])}\n");
+            }
+            if (brainObj?["combos"] is JArray co && co.Count > 0)
+            {
+                sb.Append("\n<color=#E0AD57><b>COMBOS</b></color>\n");
+                foreach (var c in co.Take(5)) sb.Append($"<b>{c["use"]}</b>  {Ms(c["moves"])}\n");
+            }
             if (brainObj?["phrases"] is JArray ph && ph.Count > 0)
             {
                 sb.Append("\n<color=#E0AD57><b>PHRASES</b></color>\n");
-                foreach (var p in ph.Take(6)) sb.Append($"“{p["say"]}”  →  {p["means"]}  <color=#9EA5B0>({string.Join(" ", (p["moves"] as JArray ?? new JArray()).Select(x => (string)x))})</color>\n");
+                foreach (var p in ph.Take(4)) sb.Append($"“{p["say"]}”  →  {p["means"]}  <color=#9EA5B0>({string.Join(" ", (p["moves"] as JArray ?? new JArray()).Select(x => (string)x))})</color>\n");
             }
             if (brainObj?["lessons"] is JArray le && le.Count > 0)
             {
                 sb.Append("\n<color=#E0AD57><b>LESSONS</b></color>\n");
-                foreach (var l in le.Take(5)) sb.Append("• " + l + "\n");
+                foreach (var l in le.Take(3)) sb.Append("• " + l + "\n");
             }
             brainList.text = sb.ToString();
         }, e => brainList.text = "<color=#F2523F>" + e + "</color>"));
@@ -585,7 +629,7 @@ public class Game : MonoBehaviour
         home = UI.Go(root, "Home");
         ((RectTransform)home.transform).At(0, 0, 1, 1);
         UI.Label(home.transform, "IRON <color=#FF9421>CORNER</color>", 92, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 0, 1, 56, -170, 1000, -40);
-        UI.Label(home.transform, "Coach your robot by voice. Every clean hit pays the other corner.", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 0, 1, 60, -220, 1000, -160);
+        UI.Label(home.transform, "Teach your robot in training. It fights on its own. Every clean hit pays the other corner.", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 0, 1, 60, -220, 1000, -160);
 
         var card = UI.Box(home.transform, UI.Card, true, "card").At(1, 0.5f, 1, 0.5f, -720, -430, -60, 430);
         var col = UI.Column(card.transform, 14).At(0, 0, 1, 1, 44, 40, -44, -40);
@@ -594,6 +638,7 @@ public class Game : MonoBehaviour
         cardMoney = UI.Label(col.transform, "—", 46, UI.Brass, TextAnchor.MiddleLeft, FontStyle.Bold).H(56);
         cardBrain = UI.Label(col.transform, "Brain —", 28, UI.Ink).H(36);
         cardAcct = UI.Label(col.transform, "", 24, UI.Dim).H(30);
+        cardDaily = UI.Label(col.transform, "", 26, UI.Ink).H(32);
         UI.Box(col.transform, UI.Line, false, "rule").H(2);
         UI.Btn(col.transform, "TRAIN", UI.Accent, Color.black, StartTrain, 40).H(96);
         fightBtn = UI.Btn(col.transform, "FIGHT", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; if (aAlive) StartFight("normal", null); else if (aNeedsRevive) Revive(); else Toast("Still repairing — a few seconds"); }, 40).H(96);
@@ -613,10 +658,12 @@ public class Game : MonoBehaviour
         ((RectTransform)train.transform).At(0, 0, 1, 1);
         UI.Btn(train.transform, "‹  HOME", UI.Steel, UI.Ink, GoHome, 28).At(0, 1, 0, 1, 40, -110, 240, -40);
         UI.Label(train.transform, "SPARRING", 60, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 0, 1, 270, -112, 1000, -30);
-        UI.Label(train.transform, "Brass Knuckle vs a low-aggression Rustbucket dummy. Nothing is paid in training.", 24, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 0, 1, 272, -150, 1200, -108);
+        UI.Label(train.transform, "Teach counters, openers, finishers and style. The dummy throws what you teach counters for. Nothing is paid here.", 24, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 0, 1, 272, -150, 1500, -108);
+
 
         UI.Btn(train.transform, "SAVE BRAIN", UI.Accent, Color.black, SaveBrain, 32).At(1, 1, 1, 1, -330, -140, -40, -60);
         trainSaved = UI.Label(train.transform, "", 26, UI.Ink, TextAnchor.UpperRight).At(1, 1, 1, 1, -700, -250, -40, -150);
+        trainDaily = UI.Label(train.transform, "", 26, UI.Ink, TextAnchor.UpperRight).At(1, 1, 1, 1, -800, -300, -40, -258);
 
         BuildCoachBar(train.transform, out trainTranscript, out trainField);
     }
@@ -663,7 +710,9 @@ public class Game : MonoBehaviour
         ticker = col.transform;
 
         UI.Btn(fight.transform, "‹  HOME", UI.Steel, UI.Ink, GoHome, 28).At(0, 0, 0, 0, 40, 40, 240, 110);
-        BuildCoachBar(fight.transform, out fightTranscript, out fightField);
+        // Fights are autonomous: no mic or typing bar here, coaching happens in Train.
+        var auto = UI.Box(fight.transform, new Color(0, 0, 0, 0.5f), true, "autonomous").At(0.5f, 0, 0.5f, 0, -620, 40, 620, 96);
+        fightTranscript = UI.Label(auto.transform, "", 26, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 20, 0, -20, 0);
     }
 
     Bubble BuildBubble(Transform root, Fighter f)
@@ -672,7 +721,7 @@ public class Game : MonoBehaviour
         var rt = box.rectTransform;
         rt.anchorMin = rt.anchorMax = Vector2.zero;
         rt.pivot = new Vector2(0.5f, 0);
-        rt.sizeDelta = new Vector2(480, 132);
+        rt.sizeDelta = new Vector2(540, 168);
         var say = UI.Label(box.transform, "", 30, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 1, 20, 0, -20, -12);
         var meta = UI.Label(box.transform, "", 19, UI.Dim, TextAnchor.LowerLeft).At(0, 0, 1, 1, 20, 10, -20, 0);
         box.gameObject.SetActive(false);
@@ -807,10 +856,14 @@ public class Game : MonoBehaviour
         StartTrain();
         yield return Wait(4f);
         yield return Shot("03_train");
-        trainField.text = "light him up";
+        trainField.text = "when he throws a left hook, slip right and uppercut";
         SendTyped(trainField, trainTranscript);
-        yield return Wait(0.9f);
+        yield return Wait(Api.Offline ? 0.9f : 2.5f);
         yield return Shot("04_train_learned");
+        float cu = Time.realtimeSinceStartup + 20f; // wait for the dummy's hook and the counter plan
+        while (!(toast.text.StartsWith("Counter fired") && Time.unscaledTime < toastUntil) && Time.realtimeSinceStartup < cu) yield return null;
+        yield return Wait(0.4f);
+        yield return Shot("04b_train_counter");
         SaveBrain();
         yield return Wait(1.5f);
         yield return Shot("05_train_saved");

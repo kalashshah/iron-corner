@@ -28,17 +28,22 @@ export const SELF_URL = env.SELF_URL ?? `http://127.0.0.1:${PORT}`;
 
 // ---- types ----
 export type Phrase = { say: string; means: string; moves: string[] };
+// Tactical rules taught in training. `when` is an opponent attack; `use` says when a combo fits.
+export type Counter = { when: string; moves: string[]; said: string };
+export type Combo = { use: "opener" | "finisher" | "any"; name: string; moves: string[]; said: string };
 export type Brain = {
   botId: string; version: number; savedAt?: string;
-  phrases: Phrase[]; lessons: string[]; scouting: Record<string, string[]>;
+  phrases: Phrase[]; counters: Counter[]; combos: Combo[]; lessons: string[]; scouting: Record<string, string[]>;
   style: { aggression: number; guard: number };
 };
+// Daily training goal: `drills` coaching calls on `day` (UTC); `goalDay` = last day the goal was hit.
+export type Daily = { day: string; drills: number; streak: number; goalDay: string | null };
 export type Bot = {
   botId: string; name: string; house: boolean;
   accountId: string | null; evmAddress: string | null;
   alive: boolean; ownerSub: string | null;
   koStakes?: "normal" | "high"; koAt?: number;
-  brain: Brain;
+  brain: Brain; daily?: Daily;
   brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean }[];
 };
 export type Payment = {
@@ -50,9 +55,8 @@ export type Fight = {
   fightId: string; a: string; b: string; stakes: "normal" | "high";
   status: "live" | "over"; budgets: Record<string, number>; startBudget: number;
   winner: string | null; payments: Payment[];
-  decisions: { botId: string; requestId: string | null; stance: string; at: string; mock?: boolean }[];
+  decisions: { botId: string; requestId: string | null; stance: string; used?: string; at: string; mock?: boolean }[];
   hits: { hitNo: number; attacker: string; defender: string; move: string; result: string; cents: number; at: string }[];
-  overrides: Record<string, string[]>;
   ledgerTopic: string | null; lessons?: Record<string, string[]>; createdAt: string;
   episode?: { root: string; txHash: string; mock?: boolean };
 };
@@ -72,7 +76,7 @@ const FILE = path.join(DATA, env.STATE_FILE ?? "state.json");
 fs.mkdirSync(DATA, { recursive: true });
 
 function newBrain(botId: string, aggression: number, guard: number): Brain {
-  return { botId, version: 0, phrases: [], lessons: [], scouting: {}, style: { aggression, guard } };
+  return { botId, version: 0, phrases: [], counters: [], combos: [], lessons: [], scouting: {}, style: { aggression, guard } };
 }
 function seed(): State {
   const bot = (botId: string, name: string, house: boolean, ag: number, g: number): Bot => ({
@@ -88,6 +92,7 @@ function seed(): State {
 // STATE_SEED (base64 state.json) lets a fresh deploy reuse existing bot accounts + brain key.
 if (!fs.existsSync(FILE) && env.STATE_SEED) fs.writeFileSync(FILE, Buffer.from(env.STATE_SEED, "base64"));
 export const state: State = fs.existsSync(FILE) ? JSON.parse(fs.readFileSync(FILE, "utf8")) : seed();
+for (const b of Object.values(state.bots)) { b.brain.counters ??= []; b.brain.combos ??= []; } // state files from before rules existed
 // Phrases learned while 0G ran in mock mode are placeholders; drop them once inference is live.
 if (modes.zg === "live") for (const b of Object.values(state.bots)) b.brain.phrases = b.brain.phrases.filter((p) => !p.means.startsWith("mock:"));
 

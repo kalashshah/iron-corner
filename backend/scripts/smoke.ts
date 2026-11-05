@@ -40,18 +40,42 @@ await step("list bots", async () => {
 });
 await step("coach-text command word", async () => {
   const r = await call("POST", "/train/bot_a/coach-text", { text: "Go body!" });
-  check(r.body.command === "body" && r.body.learned === null, JSON.stringify(r.body));
+  check(r.body.command === "body" && r.body.learned === null && r.body.daily?.drills >= 1, JSON.stringify(r.body));
 });
-await step("coach-text learns a phrase", async () => {
-  const r = await call("POST", "/train/bot_a/coach-text", { text: "light him up" });
-  check(r.body.learned?.moves?.length, JSON.stringify(r.body));
-  return `${JSON.stringify(r.body.learned)} req=${r.body.requestId}`;
+const MOVE_LIST = ["jab", "cross", "hook_l", "hook_r", "uppercut", "body", "block", "dodge_l", "dodge_r", "step_in", "step_back"];
+const teach = (kind: string | string[], text: string, extra?: (l: any) => boolean) => step(`coach-text teaches a ${kind}`, async () => {
+  const r = await call("POST", "/train/bot_a/coach-text", { text });
+  const l = r.body.learned;
+  check(r.status === 200 && [kind].flat().includes(l?.kind) && l.id && typeof r.body.diff === "string", JSON.stringify(r.body));
+  check(l.moves.every((m: string) => MOVE_LIST.includes(m)) && (!extra || extra(l)), JSON.stringify(l));
+  return `${r.body.diff}  id=${l.id} req=${r.body.requestId}`;
+});
+await teach(["phrase", "combo"], "light him up", (l) => l.moves.length > 0);
+await teach("counter", "when he throws a left hook, slip right and uppercut", (l) => l.when === "hook_l" && l.moves.length > 0);
+await teach("combo", "open the fight with jab, jab, cross", (l) => ["opener", "finisher", "any"].includes(l.use));
+await teach("style", "be more aggressive");
+await step("daily goal + streak", async () => {
+  const r = await call("GET", "/bots");
+  const d = r.body[0].daily;
+  check(d && d.goal === 3 && d.done === true && d.streak >= 1, JSON.stringify(d));
+  return JSON.stringify(d);
+});
+await step("brain holds counters + combos", async () => {
+  const r = await call("GET", "/bots/bot_a");
+  check(r.body.brain.counters.length >= 1 && r.body.brain.combos.length >= 1, JSON.stringify(r.body.brain));
 });
 await step("coach audio (multipart)", async () => {
   const fd = new FormData(); fd.append("audio", wav(), "coach.wav"); fd.append("text", "back off");
   const r = await call("POST", "/train/bot_a/coach", fd);
   check(r.status === 200 && typeof r.body.text === "string", JSON.stringify(r.body));
   return `text="${r.body.text}" command=${r.body.command} req=${r.body.requestId}`;
+});
+await step("spar uses the taught counter", async () => {
+  const r = await call("POST", "/train/bot_a/spar", { state: { t: 9, selfBudget: 50, oppBudget: 50, distance: 1, oppLastMoves: ["hook_l"], selfLastMoves: [], lastHitBy: "hook_l" } });
+  check(r.body.stance, JSON.stringify(r.body));
+  if (health.modes.zg === "mock") check(/^counter#\d+$/.test(r.body.used) && r.body.usedText, JSON.stringify(r.body));
+  else check(r.body.used === undefined || (/^(counter|combo|phrase)#\d+$/.test(r.body.used) && r.body.usedText), JSON.stringify(r.body));
+  return `${r.body.stance} ${JSON.stringify(r.body.combo)} used=${r.body.used} (${r.body.usedText}) req=${r.body.requestId}`;
 });
 await step("spar plan", async () => {
   const r = await call("POST", "/train/bot_a/spar", { state: { t: 3, selfBudget: 50, oppBudget: 50, distance: 1, oppLastMoves: ["jab"], selfLastMoves: [], lastHitBy: null } });
@@ -79,17 +103,14 @@ await step("decide x2", async () => {
   const a = await call("POST", `/fights/${fightId}/decide`, { botId: "bot_a", state: s });
   const b = await call("POST", `/fights/${fightId}/decide`, { botId: "bot_b", state: { ...s, distance: 3 } });
   check(a.body.stance && b.body.stance, "missing stance");
-  return `a=${a.body.stance}:${a.body.combo ?? ""} b=${b.body.stance}:${b.body.combo ?? ""}`;
+  check(!a.body.used || a.body.usedText, "used without usedText");
+  return `a=${a.body.stance}:${a.body.combo ?? ""} used=${a.body.used ?? "-"} b=${b.body.stance}:${b.body.combo ?? ""}`;
 });
-await step("live coach overrides next plan", async () => {
-  const fd = new FormData(); fd.append("audio", wav(), "c.wav"); fd.append("botId", "bot_a"); fd.append("text", "uppercut");
+await step("fights are autonomous (coach → 409)", async () => {
+  const fd = new FormData(); fd.append("audio", wav(), "c.wav"); fd.append("botId", "bot_a");
   const c = await call("POST", `/fights/${fightId}/coach`, fd);
-  check(c.status === 200, JSON.stringify(c.body));
-  if (c.body.command) {
-    const p = await call("POST", `/fights/${fightId}/decide`, { botId: "bot_a", state: {} });
-    check(p.body.override && p.body.combo[0] === c.body.command, JSON.stringify(p.body));
-  }
-  return `text="${c.body.text}" command=${c.body.command}`;
+  const t = await call("POST", `/fights/${fightId}/coach-text`, { botId: "bot_a", text: "uppercut" });
+  check(c.status === 409 && t.status === 409 && /autonomous/.test(t.body.error), `${c.status} ${t.status} ${JSON.stringify(t.body)}`);
 });
 await step("hits (clean, blocked, dodged, clean)", async () => {
   const hits = [["bot_a", "bot_b", "jab", "clean"], ["bot_b", "bot_a", "cross", "blocked"], ["bot_b", "bot_a", "hook_l", "dodged"], ["bot_b", "bot_a", "cross", "clean"]];
