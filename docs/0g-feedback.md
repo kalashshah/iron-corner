@@ -29,3 +29,9 @@ What we hit while building Iron Corner on 0G at ETHGlobal Mumbai (5 to 7 Nov 202
 ## Next to test
 
 - Serving the adapter with `deployAdapter` + `chatWithFineTunedModel`, and its latency. On 5 Nov the provider's inference endpoint failed the TLS handshake.
+
+## Agentic ID + camp API in the game server (6 Nov)
+
+18. **Two signers on one key collide on nonces.** Our Agentic ID mint (ethers) and a 0G Storage upload (`Indexer.upload`) from the same wallet at the same moment gave "replacement fee too low". We retry after 5 s. Helpful: let `upload()` take an ethers `NonceManager`, or document that the storage SDK picks its own nonce.
+19. **Fine-tuning task `progress` values aren't listed anywhere.** We only ever saw `Finished`. To know when to call `acknowledgeModel` we watch for a deliverable with our task id in `getAccount(provider).deliverables`. Helpful: the list of progress states in the types (an enum), and which one means "ready to acknowledge".
+20. **Acknowledging during `Delivering` reverts with "unknown custom error".** Our first poller treated any progress containing "deliver" as ready; `acknowledgeModel` then reverted on chain with no reason string. Waiting for exactly `Delivered` fixed it, and the task could be resumed by its id. Helpful: a named revert ("deliverable not ready") and an SDK-side check before sending the tx.

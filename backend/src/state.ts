@@ -40,7 +40,8 @@ export type Brain = {
 export type Daily = { day: string; drills: number; streak: number; goalDay: string | null };
 // One shadow-sparring demonstration (or a fight decision, src "fight"): features of the moment, the move, how it went.
 // f = [distance/3, lead, selfGuard, oppGuard, sinceOppAttack/5]; o1/o2 = opponent's last moves; m1 = own last move.
-export type Demo = { at: number; f: number[]; o1: string | null; o2: string | null; m1: string | null; a: string; out: string; w: number; src: "train" | "fight"; r?: string };
+// mo = [self, opp] budgets in cents (camp datasets put money in words); older demos lack it.
+export type Demo = { at: number; f: number[]; o1: string | null; o2: string | null; m1: string | null; mo?: number[]; a: string; out: string; w: number; src: "train" | "fight"; r?: string };
 // XP total + today's counters (energy = 5 - rounds); `round` = the sparring round in progress.
 export type Progress = { xp: number; day: string; rounds: number; fights: number; round?: { id: string; startedAt: number; demos: number } };
 export type Bot = {
@@ -50,6 +51,28 @@ export type Bot = {
   koStakes?: "normal" | "high"; koAt?: number;
   brain: Brain; daily?: Daily; demos?: Demo[]; progress?: Progress;
   brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean; level?: number; stats?: Record<string, number>; demos?: number }[];
+  // ---- player-owned bots (docs/flow-spec.md); demo/house bots have no owner ----
+  owner?: string | null; paint?: string; rating?: number; record?: { w: number; l: number };
+  onboarding?: { round: boolean; coached: boolean; funded: boolean };
+  hkey?: string;          // sealed Hedera private key (AES-256-GCM, server secret); never sent out
+  payAs?: string;         // house extras pay from this bot's Hedera account
+  agentId?: AgentId;
+  fund?: { day: string; hbar: number; txId: string; key?: string };
+  lastOpp?: string | null; lastMatch?: { fightId: string; at: number };
+  adapter?: { version: number; taskId: string; root: string | null; loss: number | null; at: string; mock?: boolean };
+  campId?: string;
+};
+export type AgentId = {
+  contract: string; tokenId: string | null; tx: string | null; version: number; // version = last brain version recorded on chain
+  records: { version: number; tx: string; at: string }[]; retry: "mint" | "record" | null; error?: string; mock?: boolean;
+};
+export type User = { userId: string; tokenHash: string; createdAt: string; worldSub: string | null; worldVerified: boolean; botId: string | null };
+export type QEntry = { botId: string; ownerId: string; league: string; rating: number; level: number; stakeCents: number; joinedAt: number };
+export type FightEvent = { seq: number; t: number; type: string; [k: string]: unknown };
+export type Camp = {
+  campId: string; botId: string; day: string; status: "queued" | "uploading" | "training" | "delivered" | "downloading" | "done" | "failed";
+  taskId: string | null; progress: string | null; version: number | null; adapterRoot: string | null; loss: number | null;
+  examples: number; startedAt: string; error?: string; mock?: boolean;
 };
 export type Payment = {
   hitNo: number; from: string; to: string; cents: number;
@@ -64,15 +87,19 @@ export type Fight = {
   hits: { hitNo: number; attacker: string; defender: string; move: string; result: string; cents: number; at: string }[];
   ledgerTopic: string | null; lessons?: Record<string, string[]>; createdAt: string;
   episode?: { root: string; txHash: string; mock?: boolean };
+  // server-authoritative (engine) fights only
+  engine?: boolean; house?: boolean; stakeCents?: number; seed?: string; seedHash?: string; events?: FightEvent[];
+  endReason?: string; ratingDelta?: Record<string, number>;
 };
 export type Approval = {
-  approvalId: string; botId: string; action: "high_stakes" | "revive" | "cash_out";
+  approvalId: string; botId: string; action: "high_stakes" | "revive" | "cash_out" | "sign_in"; userId?: string; mockSub?: string;
   status: "pending" | "approved" | "denied" | "expired" | "cancelled" | "used";
   qrUri: string; userCode: string; expiresAt: string; startedAt: number; sub?: string; error?: string; mock?: boolean;
 };
 type State = {
   bots: Record<string, Bot>; fights: Record<string, Fight>; approvals: Record<string, Approval>;
   ledgerTopic: string | null; brainSecret: string; mockBlobs: Record<string, string>;
+  users: Record<string, User>; queue: QEntry[]; camps: Record<string, Camp>; mockHbar: Record<string, number>;
 };
 
 // ---- persistence ----
@@ -80,7 +107,7 @@ const DATA = path.join(ROOT, "data");
 const FILE = path.join(DATA, env.STATE_FILE ?? "state.json");
 fs.mkdirSync(DATA, { recursive: true });
 
-function newBrain(botId: string, aggression: number, guard: number): Brain {
+export function newBrain(botId: string, aggression: number, guard: number): Brain {
   return { botId, version: 0, phrases: [], counters: [], combos: [], lessons: [], scouting: {}, style: { aggression, guard } };
 }
 function seed(): State {
@@ -90,7 +117,7 @@ function seed(): State {
   });
   return {
     bots: { bot_a: bot("bot_a", "Brass Knuckle", false, 0.6, 0.5), bot_b: bot("bot_b", "Rustbucket", true, 0.4, 0.6) },
-    fights: {}, approvals: {}, ledgerTopic: null,
+    fights: {}, approvals: {}, ledgerTopic: null, users: {}, queue: [], camps: {}, mockHbar: {},
     brainSecret: crypto.randomBytes(32).toString("hex"), mockBlobs: {},
   };
 }
@@ -98,6 +125,7 @@ function seed(): State {
 if (!fs.existsSync(FILE) && env.STATE_SEED) fs.writeFileSync(FILE, Buffer.from(env.STATE_SEED, "base64"));
 export const state: State = fs.existsSync(FILE) ? JSON.parse(fs.readFileSync(FILE, "utf8")) : seed();
 for (const b of Object.values(state.bots)) { b.brain.counters ??= []; b.brain.combos ??= []; } // state files from before rules existed
+state.users ??= {}; state.queue ??= []; state.camps ??= {}; state.mockHbar ??= {}; // ...and before players existed
 // Phrases learned while 0G ran in mock mode are placeholders; drop them once inference is live.
 if (modes.zg === "live") for (const b of Object.values(state.bots)) b.brain.phrases = b.brain.phrases.filter((p) => !p.means.startsWith("mock:"));
 
@@ -113,5 +141,8 @@ export function save() {
 save();
 
 export const id = (p: string) => `${p}_${crypto.randomBytes(5).toString("hex")}`;
-export class HttpError extends Error { constructor(public status: number, msg: string) { super(msg); } }
-export const fail = (status: number, msg: string): never => { throw new HttpError(status, msg); };
+// `extra` is merged into the JSON error body (e.g. {reason: "needs_training"}).
+export class HttpError extends Error { constructor(public status: number, msg: string, public extra?: Record<string, unknown>) { super(msg); } }
+export const fail = (status: number, msg: string, extra?: Record<string, unknown>): never => { throw new HttpError(status, msg, extra); };
+// 409 whose message is a machine-readable reason, as docs/flow-spec.md shows them.
+export const refuse = (reason: string, extra?: Record<string, unknown>): never => fail(409, reason, { reason, ...extra });

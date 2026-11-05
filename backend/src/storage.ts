@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import { env, modes, state, save, type Bot, type Brain } from "./state.ts";
 import { progressView } from "./demos.ts";
+import * as agentid from "./agentid.ts";
 
 const RPC = env.ZG_RPC ?? "https://evmrpc-testnet.0g.ai";
 const INDEXER = env.ZG_INDEXER ?? "https://indexer-storage-testnet-turbo.0g.ai";
@@ -57,6 +58,7 @@ export async function saveBrain(bot: Bot) {
   const entry = { version: brain.version, root, txHash, at: brain.savedAt!, level: growth.level, stats: growth.stats, demos: growth.demos, ...(mock ? { mock } : {}) };
   bot.brainHistory.push(entry);
   save();
+  void agentid.sync(bot); // record the new root/version/level on the bot's Agentic ID (background, retried on failure)
   return entry;
 }
 

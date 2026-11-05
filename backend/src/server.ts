@@ -1,25 +1,62 @@
 // Iron Corner backend: one Express process, contract in docs/spec.md.
 import express from "express";
+import crypto from "node:crypto";
 import { Readable } from "node:stream";
 import QRCode from "qrcode";
-import { modes, state, save, id, fail, HttpError, PORT, type Bot, type Fight, type Payment } from "./state.ts";
+import { env, modes, state, save, id, fail, refuse, newBrain, HttpError, PORT, type Bot, type Fight, type Payment, type User } from "./state.ts";
 import { MOVES, DAMAGE, commandFor, phraseFor, applyLearn, addLessons, addDrill, dailyView, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
 import * as hedera from "./hedera.ts";
 import * as world from "./world.ts";
 import * as demos from "./demos.ts";
+import * as agentid from "./agentid.ts";
+import * as match from "./match.ts";
+import * as engine from "./engine.ts";
+import * as camp from "./camp.ts";
+import { knockout, opponent, repairIfDue, repairIn, finishFight } from "./engine.ts";
 
 const app = express();
 app.use((req, res, next) => {
-  res.set({ "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" });
+  res.set({ "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS" });
   if (req.method === "OPTIONS") return void res.sendStatus(204);
   next();
 });
 app.use(hedera.arenaMiddleware());
 app.use(express.json({ limit: "200kb" }));
 
+// Light rate limits: a sliding minute per IP (all writes) plus tighter ones on the routes that spend testnet funds.
+// ponytail: in-memory, single process; fine for one Fly machine.
+const seen = new Map<string, number[]>();
+function limit(n: number, key = "") {
+  return (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const k = `${req.ip}|${key}`, now = Date.now(), xs = (seen.get(k) ?? []).filter((t) => now - t < 60_000);
+    if (xs.length >= n) return next(new HttpError(429, "too many requests, slow down"));
+    xs.push(now); seen.set(k, xs); next();
+  };
+}
+app.use((req, res, next) => (req.method === "GET" ? next() : limit(Number(env.WRITE_LIMIT_PER_MIN ?? 240), "w")(req, res, next)));
+
 const bot = (botId: string): Bot => state.bots[botId] ?? fail(404, `unknown bot ${botId}`);
+
+// ---- identity: bearer tokens, only their SHA-256 is stored ----
+const sha256 = (x: string) => crypto.createHash("sha256").update(x).digest("hex");
+function userOf(req: express.Request): User | null {
+  const m = /^Bearer\s+(\S{20,200})$/.exec(req.headers.authorization ?? "");
+  if (!m) return null;
+  const h = sha256(m[1]);
+  return Object.values(state.users).find((u) => u.tokenHash === h) ?? null;
+}
+const me = (req: express.Request) => userOf(req) ?? fail(401, "sign in first: Authorization: Bearer <token>");
+// Bot writes: a player's bot only by its owner; demo/house bots (no owner) stay open so the demo keeps working.
+function ownBot(req: express.Request, botId: string): Bot {
+  const b = bot(botId);
+  if (b.owner) { const u = me(req); if (u.userId !== b.owner) fail(403, "not your bot"); }
+  return b;
+}
+const leagueOf = (b: Bot) => (b.owner && state.users[b.owner]?.worldVerified ? "verified" : "open");
+const trained = (b: Bot) => !b.owner || !!(b.onboarding?.round && b.onboarding.coached);
+const onboard = (b: Bot) => (b.onboarding ??= { round: false, coached: false, funded: false });
 const fightOf = (fid: string): Fight => state.fights[fid] ?? fail(404, "unknown fight");
 const owned = (f: { a: string; b: string }) => (state.bots[f.a].house ? f.b : f.a);
 
@@ -54,16 +91,12 @@ async function teach(b: Bot, text: string) {
     }
   }
   const goalHit = out.command || out.learned ? addDrill(b) : false;
+  if (out.command || out.learned) onboard(b).coached = true;
   save();
   return { ...out, daily: { ...dailyView(b), justDone: goalHit } };
 }
 
-// A normal-fight KO repairs itself after REPAIR_MS; a high-stakes KO needs a World ID revive.
-const REPAIR_MS = Number(process.env.REPAIR_MS ?? 30_000);
-function repairIfDue(b: Bot) {
-  if (!b.alive && (b.house || (b.koStakes !== "high" && Date.now() - (b.koAt ?? 0) >= REPAIR_MS))) { b.alive = true; save(); }
-}
-const repairIn = (b: Bot) => b.alive || b.koStakes === "high" ? null : Math.max(0, Math.ceil((REPAIR_MS - (Date.now() - (b.koAt ?? 0))) / 1000));
+// A normal-fight KO repairs itself after REPAIR_MS (engine.ts); a high-stakes KO needs a World ID revive.
 
 async function botView(b: Bot) {
   repairIfDue(b);
@@ -72,24 +105,27 @@ async function botView(b: Bot) {
   return { botId: b.botId, name: b.name, house: b.house, accountId: b.accountId, evmAddress: b.evmAddress, ...bal,
     payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, daily: dailyView(b), brainRoot: last?.root ?? null, alive: b.alive,
     koStakes: b.alive ? null : b.koStakes ?? null, repairIn: repairIn(b), needsRevive: !b.alive && b.koStakes === "high",
-    progress: demos.progressView(b) };
+    progress: demos.progressView(b),
+    paint: b.paint ?? null, owner: b.owner ?? null, league: leagueOf(b), rating: b.rating ?? 1000, record: b.record ?? { w: 0, l: 0 },
+    onboarding: { trained: trained(b), funded: !!b.onboarding?.funded, round: !!b.onboarding?.round, coached: !!b.onboarding?.coached },
+    agentId: agentid.view(b), adapter: b.adapter ?? null };
 }
 
 // ---- health / bots ----
 app.get("/health", (_req, res) => void res.json({ ok: true, modes, payAsset: hedera.PAY_ASSET, ledgerTopic: hedera.ledgerTopic() }));
 app.get("/bots", async (_req, res) => void res.json(await Promise.all(Object.values(state.bots).map(botView))));
 app.get("/bots/:id", async (req, res) => {
-  const b = bot(req.params.id);
-  res.json({ ...(await botView(b)), brain: b.brain, brainHistory: b.brainHistory });
+  const b = bot(req.params.id), mine = !b.owner || userOf(req)?.userId === b.owner; // a player's brain is for its owner
+  res.json({ ...(await botView(b)), ...(mine ? { brain: b.brain } : {}), brainHistory: b.brainHistory });
 });
 // Download + decrypt a saved version from 0G Storage (defaults to the latest).
 app.get("/bots/:id/brain", async (req, res) => {
-  const b = bot(req.params.id);
+  const b = ownBot(req, req.params.id);
   const root = (req.query.root as string) ?? b.brainHistory.at(-1)?.root ?? fail(404, "no saved brain yet");
   res.json({ root, brain: await loadBrain(b.botId, root) });
 });
 app.post("/bots/:id/revive", (req, res) => {
-  const b = bot(req.params.id);
+  const b = ownBot(req, req.params.id);
   world.consume(req.body?.approvalId, b.botId, "revive");
   b.alive = true; save();
   res.json({ botId: b.botId, alive: true });
@@ -97,25 +133,30 @@ app.post("/bots/:id/revive", (req, res) => {
 
 // ---- training ----
 app.post("/train/:botId/coach", async (req, res) => {
-  const b = bot(req.params.botId);
+  const b = ownBot(req, req.params.botId);
   const t = await heard(await form(req));
   const r = await teach(b, t.text);
   res.json({ text: t.text, ...r, requestId: r.requestId ?? t.requestId, sttRequestId: t.requestId, ...(t.mock ? { mock: true } : {}) });
 });
 app.post("/train/:botId/coach-text", async (req, res) => {
-  const b = bot(req.params.botId);
+  const b = ownBot(req, req.params.botId);
   const text = String(req.body?.text ?? "").trim().slice(0, 200) || fail(400, "text required");
   res.json({ text, ...(await teach(b, text)) });
 });
-app.post("/train/:botId/spar", async (req, res) => void res.json(await zg.decide(bot(req.params.botId), (req.body?.state ?? {}) as FightState, "dummy")));
+app.post("/train/:botId/spar", async (req, res) => void res.json(await zg.decide(ownBot(req, req.params.botId), (req.body?.state ?? {}) as FightState, "dummy")));
 // Shadow sparring: batches of demonstrations from the move pad; `roundEnd` closes a round (energy + XP).
-app.post("/train/:botId/demos", (req, res) => void res.json(demos.addDemos(bot(req.params.botId), req.body)));
-app.post("/train/:botId/save", async (req, res) => void res.json(await saveBrain(bot(req.params.botId))));
+// A round that ran long enough (15 s, 3 moves) counts as the onboarding training round.
+app.post("/train/:botId/demos", (req, res) => {
+  const b = ownBot(req, req.params.botId), out = demos.addDemos(b, req.body);
+  if (out.round && !/too short/.test(out.round.reason ?? "")) { onboard(b).round = true; save(); }
+  res.json(out);
+});
+app.post("/train/:botId/save", limit(20, "save"), async (req, res) => void res.json(await saveBrain(ownBot(req, req.params.botId))));
 
 // ---- fights ----
 app.post("/fights", async (req, res) => {
   const { a = "bot_a", b = "bot_b", stakes = "normal", budgetUsd = 0.5, approvalId } = req.body ?? {};
-  bot(a); bot(b);
+  ownBot(req, String(a)); ownBot(req, String(b));
   if (a === b) fail(400, "a bot cannot fight itself");
   if (!["normal", "high"].includes(stakes)) fail(400, "stakes must be normal or high");
   const cents = Math.round(Number(budgetUsd) * 100);
@@ -136,18 +177,13 @@ function inFight(f: Fight, botId: unknown): string {
   if (botId !== f.a && botId !== f.b) fail(400, "botId is not in this fight");
   return botId as string;
 }
-const opponent = (f: Fight, x: string) => (x === f.a ? f.b : f.a);
 
-function knockout(f: Fight, loser: string) {
-  if (f.status !== "live") return;
-  f.budgets[loser] = 0; f.status = "over"; f.winner = opponent(f, loser);
-  Object.assign(state.bots[loser], { alive: false, koStakes: f.stakes, koAt: Date.now() });
-  hedera.ledger({ t: "ko", fight: f.fightId, loser, winner: f.winner });
-  save();
-}
+// Matched fights run on the server; the client-driven routes below are for the demo fight only.
+const clientDriven = (f: Fight) => { if (f.engine) fail(409, "the server runs this fight; play GET /fights/:id/events"); };
 
 app.post("/fights/:id/decide", async (req, res) => {
   const f = fightOf(req.params.id), botId = inFight(f, req.body?.botId);
+  clientDriven(f);
   if (f.status !== "live") return void res.json({ stance: "safe_stop", reason: "fight over" });
   const plan = await zg.decide(bot(botId), (req.body?.state ?? {}) as FightState, opponent(f, botId));
   if (plan.stance === "safe_stop") console.warn(`[decide] ${f.fightId} ${botId} safe_stop: ${plan.reason}`);
@@ -159,6 +195,7 @@ app.post("/fights/:id/decide", async (req, res) => {
 
 app.post("/fights/:id/hit", (req, res) => {
   const f = fightOf(req.params.id);
+  clientDriven(f);
   const { attacker, defender, move, result } = req.body ?? {};
   inFight(f, attacker); inFight(f, defender);
   if (attacker === defender) fail(400, "attacker and defender must differ");
@@ -188,7 +225,17 @@ app.get("/fights/:id", (req, res) => {
   const f = fightOf(req.params.id);
   res.json({ fightId: f.fightId, a: f.a, b: f.b, stakes: f.stakes, status: f.status, budgets: f.budgets, winner: f.winner,
     payments: f.payments, ledgerTopic: f.ledgerTopic, decisions: f.decisions, hits: f.hits.length, lessons: f.lessons ?? null,
-    episode: f.episode ?? null });
+    episode: f.episode ?? null,
+    ...(f.engine ? { engine: true, house: !!f.house, stakeCents: f.stakeCents, seedHash: f.seedHash, seed: f.status === "over" ? f.seed : null,
+      endReason: f.endReason ?? null, ratingDelta: f.ratingDelta ?? null } : {}) });
+});
+// The event stream the app plays (poll with since = last seq seen). The seed is revealed once the fight is over.
+app.get("/fights/:id/events", (req, res) => {
+  const f = fightOf(req.params.id);
+  if (!f.engine) fail(404, "only server-run fights have an event stream");
+  const since = Math.max(0, Number(req.query.since) || 0);
+  res.json({ events: f.events!.filter((e) => e.seq > since), status: f.status, budgets: f.budgets, winner: f.winner,
+    seedHash: f.seedHash, ...(f.status === "over" ? { seed: f.seed } : {}) });
 });
 
 // Replay source: the episode log read back from 0G Storage (not from server memory).
@@ -199,42 +246,143 @@ app.get("/fights/:id/episode", async (req, res) => {
 });
 app.post("/fights/:id/end", async (req, res) => {
   const f = fightOf(req.params.id);
-  if (f.lessons) return void res.json({ winner: f.winner, lessons: f.lessons });
-  if (f.status === "live") {
-    f.status = "over";
-    f.winner = f.budgets[f.a] === f.budgets[f.b] ? null : f.budgets[f.a] > f.budgets[f.b] ? f.a : f.b;
-    hedera.ledger({ t: "end", fight: f.fightId, winner: f.winner, budgets: f.budgets });
-  }
-  const bots = [bot(f.a), bot(f.b)];
-  const xp = demos.onFightEnd(f);
-  const out = await zg.lessons(bots, f.hits, f.decisions);
-  for (const b of bots) {
-    addLessons(b.brain, out.lessons[b.botId] ?? []);
-    const opp = opponent(f, b.botId), notes = out.scouting[b.botId] ?? [];
-    if (notes.length) b.brain.scouting[opp] = [...(b.brain.scouting[opp] ?? []), ...notes].slice(-10);
-  }
-  f.lessons = out.lessons; save();
-  // 0G uploads take ~15 s each: save in the background, results land in GET /bots/:id brainHistory.
-  (async () => {
-    // Episode log first (it is what the replay and the judges read), then each brain.
-    const ep = { fightId: f.fightId, a: f.a, b: f.b, stakes: f.stakes, winner: f.winner, budgets: f.budgets, startBudget: f.startBudget,
-      decisions: f.decisions, hits: f.hits, payments: f.payments, ledgerTopic: f.ledgerTopic, lessons: f.lessons };
-    await saveEpisode(ep).then((r) => { f.episode = r; save(); hedera.ledger({ t: "episode", fight: f.fightId, root: r.root }); })
-      .catch((e) => console.warn(`[0g-storage] episode ${f.fightId} failed:`, e.message));
-    for (const b of bots) await saveBrain(b).catch((e) => console.warn(`[0g-storage] ${b.botId} save failed:`, e.message));
-  })();
-  res.json({ winner: f.winner, lessons: f.lessons, xp, brainSave: "queued", ...(out.mock ? { mock: true } : {}) });
+  if (f.engine && f.status === "live") fail(409, "the server ends this fight (KO or 90 s)");
+  res.json(await finishFight(f));
 });
 
 // ---- approvals ----
 const approvalView = (a: ReturnType<typeof world.get>) =>
-  ({ approvalId: a.approvalId, botId: a.botId, action: a.action, status: a.status, qrUri: a.qrUri, userCode: a.userCode, expiresAt: a.expiresAt, ...(a.mock ? { mock: true } : {}) });
-app.post("/approvals", async (req, res) => void res.json(approvalView(await world.create(String(req.body?.botId), req.body?.action))));
+  ({ approvalId: a.approvalId, botId: a.botId, action: a.action, status: a.status, qrUri: a.qrUri, userCode: a.userCode, expiresAt: a.expiresAt,
+    ...(a.error ? { error: a.error } : {}), ...(a.mock ? { mock: true } : {}) });
+app.post("/approvals", limit(20, "ap"), async (req, res) => {
+  if (req.body?.action === "sign_in") fail(400, "use POST /auth/world/start");
+  ownBot(req, String(req.body?.botId));
+  res.json(approvalView(await world.create(String(req.body?.botId), req.body?.action)));
+});
 app.get("/approvals/:id", (req, res) => void res.json(approvalView(world.get(req.params.id))));
 app.get("/approvals/:id/qr.png", async (req, res) => {
   res.type("png").send(await QRCode.toBuffer(world.get(req.params.id).qrUri, { width: 512, margin: 2 }));
 });
 app.post("/approvals/:id/cancel", (req, res) => void res.json(approvalView(world.cancel(req.params.id))));
+
+// ---- players (docs/flow-spec.md) ----
+app.post("/users", limit(5, "users"), (_req, res) => {
+  const token = crypto.randomBytes(32).toString("base64url"), userId = id("u");
+  state.users[userId] = { userId, tokenHash: sha256(token), createdAt: new Date().toISOString(), worldSub: null, worldVerified: false, botId: null };
+  save();
+  res.json({ userId, token });
+});
+app.get("/me", (req, res) => {
+  const u = me(req), b = u.botId ? state.bots[u.botId] : null;
+  res.json({ userId: u.userId, worldVerified: u.worldVerified, league: u.worldVerified ? "verified" : "open", botId: b?.botId ?? null });
+});
+// World ID sign-in (device flow, action sign_in). Approved → user.worldSub; a subject behind another fighter → denied, error world_already_used.
+app.post("/auth/world/start", limit(10, "world"), async (req, res) => {
+  const u = me(req);
+  const mockSub = modes.world === "mock" && typeof req.body?.mockSub === "string" ? req.body.mockSub.slice(0, 60) : undefined; // tests only
+  res.json(approvalView(await world.create("", "sign_in", u.userId, mockSub)));
+});
+
+export const PAINTS = ["brass", "gunmetal", "crimson", "cobalt", "jade", "bone"];
+const MAX_PLAYER_BOTS = Number(env.MAX_PLAYER_BOTS ?? 8); // each costs the operator 0.3 testnet HBAR
+app.post("/bots", limit(10, "bots"), async (req, res) => {
+  const u = me(req);
+  if (u.botId) refuse("one_bot_per_user", { botId: u.botId });
+  const name = String(req.body?.name ?? "").trim().replace(/\s+/g, " ");
+  if (!/^[A-Za-z0-9 ]{2,20}$/.test(name)) fail(400, "name: 2-20 letters, digits or spaces");
+  const paint = String(req.body?.paint ?? "");
+  if (!PAINTS.includes(paint)) fail(400, `paint: one of ${PAINTS.join(", ")}`);
+  if (Object.values(state.bots).filter((b) => b.owner).length >= MAX_PLAYER_BOTS) refuse("arena_full", { error: "The arena is full for this testnet build. Try the demo bots." });
+  if (u.worldVerified && Object.values(state.users).some((x) => x.userId !== u.userId && x.worldSub === u.worldSub && x.botId)) refuse("world_already_used");
+  const b: Bot = { botId: id("bot"), name, house: false, accountId: null, evmAddress: null, alive: true, ownerSub: u.worldSub,
+    brain: newBrain("", 0.5, 0.5), brainHistory: [], owner: u.userId, paint, rating: 1000, record: { w: 0, l: 0 },
+    onboarding: { round: false, coached: false, funded: false } };
+  b.brain.botId = b.botId;
+  state.bots[b.botId] = b; u.botId = b.botId; save(); // slot taken before the slow part
+  try { await hedera.createBotAccount(b); }
+  catch (e: any) {
+    delete state.bots[b.botId]; u.botId = null; save();
+    console.warn(`[bots] account create failed: ${e.message}`);
+    fail(502, "could not create the bot's Hedera account, try again");
+  }
+  save();
+  void agentid.sync(b); // mint the Agentic ID in the background; failures land in agentId.retry
+  res.json(await botView(b));
+});
+
+// Test funds from the house faucet: once per bot per UTC day, tops up to 0.5 HBAR, only while below 0.5.
+// Idempotency-Key: a repeat with the same key returns the first result.
+const funding = new Set<string>();
+app.post("/bots/:id/fund", limit(6, "fund"), async (req, res) => {
+  const b = ownBot(req, req.params.id), key = String(req.get("idempotency-key") ?? "").slice(0, 80) || undefined;
+  if (!b.owner || !b.hkey) refuse("demo_bot");
+  const today = new Date().toISOString().slice(0, 10);
+  if (b.fund?.day === today) {
+    if (key && b.fund.key === key) return void res.json({ hbar: b.fund.hbar, txId: b.fund.txId, hashscan: modes.hedera === "live" ? hedera.hashscan(b.fund.txId) : null, repeat: true });
+    refuse("already_funded_today");
+  }
+  if (funding.has(b.botId)) refuse("in_progress");
+  funding.add(b.botId);
+  try {
+    const bal = await hedera.balance(b.accountId!, true);
+    const hbar = Math.floor((0.5 - (bal.hbar ?? 0)) * 100) / 100;
+    if (hbar < 0.01) refuse("balance_high", { hbarNow: bal.hbar });
+    if ((await hedera.operatorBalance()).hbar < Number(env.FAUCET_FLOOR_HBAR ?? 1)) refuse("faucet_empty");
+    const txId = await hedera.sendHbar(b, hbar);
+    b.fund = { day: today, hbar, txId, ...(key ? { key } : {}) }; onboard(b).funded = true; save();
+    res.json({ hbar, txId, hashscan: modes.hedera === "live" ? hedera.hashscan(txId) : null });
+  } finally { funding.delete(b.botId); }
+});
+
+// ---- matchmaking ----
+const inLiveFight = (botId: string) => Object.values(state.fights).some((f) => f.engine && f.status === "live" && (f.a === botId || f.b === botId));
+function queueView(b: Bot) {
+  const e = state.queue.find((x) => x.botId === b.botId), lm = b.lastMatch, f = lm ? state.fights[lm.fightId] : null;
+  if (e) return { status: "searching", waitedSec: Math.floor((Date.now() - e.joinedAt) / 1000), queueSize: state.queue.length, stakeCents: e.stakeCents };
+  if (f && (f.status === "live" || Date.now() - lm!.at < 120_000)) return { status: "matched", waitedSec: 0, queueSize: state.queue.length, fightId: f.fightId, house: !!f.house };
+  return { status: "idle", waitedSec: 0, queueSize: state.queue.length };
+}
+app.post("/queue", limit(20, "queue"), async (req, res) => {
+  const b = ownBot(req, String(req.body?.botId)), stakeCents = Number(req.body?.stakeCents);
+  if (b.house) fail(400, "house bots don't queue");
+  if (!match.STAKES.includes(stakeCents)) fail(400, `stakeCents: one of ${match.STAKES.join(", ")}`);
+  if (state.queue.some((x) => x.botId === b.botId)) return void res.json(queueView(b)); // joining twice is a no-op
+  repairIfDue(b);
+  if (!b.alive) refuse(b.koStakes === "high" ? "needs_revive" : "repairing", { repairIn: repairIn(b) });
+  if (!trained(b)) refuse("needs_training");
+  if (inLiveFight(b.botId)) refuse("in_fight");
+  // The stake is reserved while queued and fighting: one entry or fight per bot, and the wallet must cover it (+5 c fees).
+  const bal = await hedera.balance(b.accountId!, true);
+  const have = hedera.PAY_ASSET === "usdc" ? (bal.usdc ?? 0) * 100 : (bal.hbar ?? 0) / hedera.HBAR_PER_CENT;
+  if (have < stakeCents + 5) refuse("insufficient_funds", { haveCents: Math.floor(have), needCents: stakeCents + 5 });
+  if (!state.queue.some((x) => x.botId === b.botId) && !inLiveFight(b.botId)) {
+    state.queue.push({ botId: b.botId, ownerId: b.owner ?? `demo:${b.botId}`, league: leagueOf(b), rating: b.rating ?? 1000,
+      level: demos.progressView(b).level, stakeCents, joinedAt: Date.now() });
+    save();
+  }
+  res.json(queueView(b));
+});
+app.delete("/queue/:botId", (req, res) => {
+  const b = ownBot(req, req.params.botId);
+  state.queue = state.queue.filter((x) => x.botId !== b.botId); save();
+  res.json(queueView(b));
+});
+app.get("/queue/:botId", (req, res) => void res.json(queueView(ownBot(req, req.params.botId))));
+
+// One matcher pass every 2 s; synchronous, so a pass is atomic in this single process.
+function matchTick() {
+  state.queue = state.queue.filter((e) => state.bots[e.botId]?.alive);
+  if (!state.queue.length) return;
+  const { pairs, house, rest } = match.pass(state.queue, Date.now(), (x) => state.bots[x]?.lastOpp);
+  state.queue = rest;
+  for (const [x, y] of pairs) engine.startFight(state.bots[x.botId], state.bots[y.botId], x.stakeCents, false);
+  for (const x of house) engine.startFight(state.bots[x.botId], engine.houseFor(x.level), x.stakeCents, true);
+  if (pairs.length || house.length) { save(); console.log(`[match] ${pairs.length} pair(s), ${house.length} house fight(s), ${rest.length} waiting`); }
+}
+
+// ---- fight camp (LoRA on 0G Compute) ----
+app.post("/bots/:id/camp", limit(3, "camp"), async (req, res) => void res.json(camp.view(await camp.start(ownBot(req, req.params.id)))));
+app.get("/bots/:id/camp", (req, res) => { const b = bot(req.params.id); res.json(camp.view(b.campId ? state.camps[b.campId] : undefined)); });
 
 // ---- arena (x402 paid route; the middleware above settles payment) ----
 app.post("/arena/hit", (_req, res) => void res.json({ ok: true }));
@@ -243,7 +391,7 @@ app.use((_req, res) => void res.status(404).json({ error: "not found" }));
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const status = err instanceof HttpError ? err.status : err?.status ?? 500;
   if (status >= 500) console.error(err);
-  res.status(status).json({ error: err?.message ?? String(err) });
+  res.status(status).json({ error: err?.message ?? String(err), ...(err instanceof HttpError ? err.extra : {}) });
 });
 
 // ---- start ----
@@ -251,4 +399,7 @@ for (const a of Object.values(state.approvals)) if (a.status === "pending") a.st
 console.log(`[modes] 0G inference=${modes.zg} 0G storage=${modes.storage} hedera=${modes.hedera} (pay in ${hedera.PAY_ASSET}) world=${modes.world}`);
 await hedera.init();
 console.log(`[hedera] bots ${Object.values(state.bots).map((b) => `${b.botId}=${b.accountId}`).join(" ")} ledger=${hedera.ledgerTopic()}`);
+engine.closeOrphans();
+camp.resumeAll();
+setInterval(matchTick, Number(env.MATCH_TICK_MS ?? 2000)).unref?.();
 app.listen(PORT, () => console.log(`[iron-corner] listening on :${PORT}`));

@@ -1,5 +1,6 @@
 // Hedera: bot accounts, x402 arena route + per-bot payers, HCS fight ledger. Mock mode fakes all of it.
-import { env, modes, state, save, SELF_URL, type Fight, type Payment } from "./state.ts";
+import crypto from "node:crypto";
+import { env, modes, state, save, SELF_URL, type Bot, type Fight, type Payment } from "./state.ts";
 // Hedera SDK classes come through @x402/hedera so there is exactly one SDK instance.
 import { Client, PrivateKey, AccountId, Hbar, TokenId, TransferTransaction, createClientHederaSigner } from "@x402/hedera";
 // Not re-exported by @x402/hedera; this resolves to the same single install it depends on (npm ls @hiero-ledger/sdk).
@@ -56,12 +57,13 @@ export async function init() {
       console.log(`[hedera] created ${botId} account ${acct}`);
     }
     bot.accountId = acct; bot.evmAddress = evm;
-    const signer = createClientHederaSigner(acct, key, { network: NET });
-    const client = x402Client.fromConfig({
-      schemes: [{ network: "hedera:*", client: new ClientScheme(signer) }],
-      spendControls: { maxAmountPerPayment: "$0.05", allowedAssets: [{ network: NET, asset: "0.0.0", maxAmountPerPayment: String(5 * TINYBAR_PER_CENT) }] },
-    });
-    payers[botId] = wrapFetchWithPayment(fetch, client);
+    addPayer(botId, acct, key);
+  }
+  // Player bots: their keys live sealed in state.
+  for (const bot of Object.values(state.bots)) {
+    if (!bot.hkey || bot.hkey === "mock" || !bot.accountId) continue;
+    try { addPayer(bot.botId, bot.accountId, PrivateKey.fromStringECDSA(unseal(bot))); }
+    catch (e: any) { console.warn(`[hedera] ${bot.botId} key unseal failed (BRAIN_SECRET changed?): ${e.message}`); }
   }
   if (!state.ledgerTopic) {
     const rc = await (await new TopicCreateTransaction().setTopicMemo("Iron Corner fight ledger").setSubmitKey(opKey.publicKey).execute(op)).getReceipt(op);
@@ -72,10 +74,60 @@ export async function init() {
   await topUp().catch((e) => console.warn("[hedera] top-up skipped:", e.message));
 }
 
+function addPayer(botId: string, acct: string, key: PrivateKey) {
+  const signer = createClientHederaSigner(acct, key, { network: NET });
+  const client = x402Client.fromConfig({
+    schemes: [{ network: "hedera:*", client: new ClientScheme(signer) }],
+    spendControls: { maxAmountPerPayment: "$0.05", allowedAssets: [{ network: NET, asset: "0.0.0", maxAmountPerPayment: String(5 * TINYBAR_PER_CENT) }] },
+  });
+  payers[botId] = wrapFetchWithPayment(fetch, client);
+}
+
+// ---- player bots: account from the operator, sealed key, faucet ----
+// Bot keys are sealed with AES-256-GCM under HKDF(server secret, botId), so state.json alone doesn't leak them.
+const sealKey = (botId: string) => Buffer.from(crypto.hkdfSync("sha256", env.BRAIN_SECRET ?? state.brainSecret, "iron-corner-hedera-key", botId, 32));
+function seal(botId: string, text: string) {
+  const iv = crypto.randomBytes(12), c = crypto.createCipheriv("aes-256-gcm", sealKey(botId), iv);
+  return Buffer.concat([iv, c.update(text, "utf8"), c.final(), c.getAuthTag()]).toString("base64");
+}
+function unseal(bot: Bot) {
+  const blob = Buffer.from(bot.hkey!, "base64"), d = crypto.createDecipheriv("aes-256-gcm", sealKey(bot.botId), blob.subarray(0, 12));
+  d.setAuthTag(blob.subarray(-16));
+  return Buffer.concat([d.update(blob.subarray(12, -16)), d.final()]).toString("utf8");
+}
+export const NEW_BOT_HBAR = Number(env.NEW_BOT_HBAR ?? 0.3);
+// New ECDSA account (alias = EVM address, unlimited auto-associations) funded by the operator.
+export async function createBotAccount(bot: Bot) {
+  if (modes.hedera === "mock") {
+    bot.accountId = `0.0.${2000 + Object.values(state.bots).filter((b) => b.hkey).length}`;
+    bot.evmAddress = "0x" + crypto.randomBytes(20).toString("hex"); bot.hkey = "mock";
+    state.mockHbar[bot.accountId] = NEW_BOT_HBAR;
+    return;
+  }
+  const key = PrivateKey.generateECDSA();
+  const rc = await (await new AccountCreateTransaction().setECDSAKeyWithAlias(key).setInitialBalance(new Hbar(NEW_BOT_HBAR))
+    .setMaxAutomaticTokenAssociations(-1).execute(op!)).getReceipt(op!);
+  bot.accountId = rc.accountId!.toString(); bot.evmAddress = "0x" + key.publicKey.toEvmAddress();
+  bot.hkey = seal(bot.botId, key.toStringRaw());
+  addPayer(bot.botId, bot.accountId, key);
+  console.log(`[hedera] created ${bot.botId} account ${bot.accountId}`);
+}
+export const operatorBalance = async () => (modes.hedera === "mock" ? { hbar: 100, usdc: 0 } : balance(operatorId, true));
+// Faucet: operator → bot, testnet HBAR.
+export async function sendHbar(bot: Bot, hbar: number): Promise<string> {
+  if (modes.hedera === "mock") { state.mockHbar[bot.accountId!] = (state.mockHbar[bot.accountId!] ?? 0) + hbar; save(); return `mock-fund-${bot.botId}-${Date.now()}`; }
+  const tiny = Math.round(hbar * 1e8);
+  const resp = await new TransferTransaction().addHbarTransfer(operatorId, Hbar.fromTinybars(-tiny)).addHbarTransfer(bot.accountId!, Hbar.fromTinybars(tiny))
+    .setTransactionMemo(`Iron Corner test funds ${bot.botId}`).execute(op!);
+  await resp.getReceipt(op!);
+  balCache.delete(bot.accountId!);
+  return resp.transactionId.toString();
+}
+
 // Keep bots able to pay: HBAR ≥ 1, and USDC ≥ $0.50 when the operator holds USDC.
 async function topUp() {
   const opBal = await balance(operatorId, true);
-  for (const bot of Object.values(state.bots)) {
+  for (const bot of [state.bots.bot_a, state.bots.bot_b]) { // demo bots only; player bots use the capped faucet
     const b = await balance(bot.accountId!, true);
     if (b.hbar < 1) {
       await (await new TransferTransaction().addHbarTransfer(operatorId, new Hbar(-1)).addHbarTransfer(bot.accountId!, new Hbar(1)).execute(op!)).getReceipt(op!);
@@ -93,7 +145,7 @@ async function topUp() {
 
 const balCache = new Map<string, { at: number; v: { hbar: number; usdc: number } }>();
 export async function balance(accountId: string, fresh = false) {
-  if (modes.hedera === "mock") return { hbar: 0, usdc: 0, mock: true };
+  if (modes.hedera === "mock") return { hbar: state.mockHbar[accountId] ?? 0, usdc: 0, mock: true };
   const c = balCache.get(accountId);
   if (c && !fresh && Date.now() - c.at < 5000) return c.v;
   const a = await mirror(`/accounts/${accountId}`);
@@ -143,14 +195,17 @@ export function arenaMiddleware() {
 
 // ---- payer side: one serial queue per paying bot so the fight never waits ----
 const queues: Record<string, Promise<unknown>> = {};
-export function queuePayment(fight: Fight, p: Payment, onFail: () => void) {
-  queues[p.from] = (queues[p.from] ?? Promise.resolve()).then(() => settle(fight, p)).catch((e) => {
+export const HBAR_PER_CENT = TINYBAR_PER_CENT / 1e8;
+export function queuePayment(fight: Fight, p: Payment, onFail: () => void, onDone?: (p: Payment) => void) {
+  const q = state.bots[p.from]?.accountId ?? p.from; // house extras share bot_b's account: one queue per paying account
+  queues[q] = (queues[q] ?? Promise.resolve()).then(() => settle(fight, p)).catch((e) => {
     p.status = "failed"; p.error = String(e?.message ?? e).slice(0, 200);
     console.warn(`[pay] hit ${p.hitNo} failed: ${p.error}`);
     onFail();
   }).finally(() => {
     save();
     ledger({ t: "pay", fight: fight.fightId, hit: p.hitNo, from: p.from, to: p.to, cents: p.cents, status: p.status, tx: p.txId });
+    onDone?.(p);
   });
 }
 
@@ -170,7 +225,9 @@ async function settle(fight: Fight, p: Payment) {
     let lastErr: unknown;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await payers[p.from](`${SELF_URL}/arena/hit`, {
+        const pay = payers[p.from] ?? payers[state.bots[p.from]?.payAs ?? ""];
+        if (!pay) throw new Error(`no payer for ${p.from}`);
+        const res = await pay(`${SELF_URL}/arena/hit`, {
           method: "POST", headers: { "content-type": "application/json", "x-hit-ref": ref }, body: JSON.stringify({ ref }),
         });
         const hdr = res.headers.get("payment-response");

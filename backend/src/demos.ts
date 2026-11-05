@@ -26,7 +26,8 @@ export function feats(s: FightState): number[] {
 }
 const W = [2, 0.5, 0.5, 0.5, 1.5]; // distance and timing matter most
 const mv = (x: unknown) => (typeof x === "string" && (MOVES as readonly string[]).includes(x) ? x : null);
-const key = (s: FightState) => ({ f: feats(s), o1: mv(s.oppLastMoves?.at(-1)), o2: mv(s.oppLastMoves?.at(-2)), m1: mv(s.selfLastMoves?.at(-1)) });
+const key = (s: FightState) => ({ f: feats(s), o1: mv(s.oppLastMoves?.at(-1)), o2: mv(s.oppLastMoves?.at(-2)), m1: mv(s.selfLastMoves?.at(-1)),
+  mo: [num(s.selfBudget, 50), num(s.oppBudget, 50)] });
 type Key = ReturnType<typeof key>;
 function gap(q: Key, d: Demo) {
   let s = 0;
@@ -51,7 +52,7 @@ function rustOf(demos: Demo[], now = Date.now()) {
 // ---- library ----
 function add(b: Bot, d: Demo) {
   const lib = (b.demos ??= []);
-  const q = { f: d.f, o1: d.o1, o2: d.o2, m1: d.m1 }, sc = score(d.a, d.out);
+  const q = { f: d.f, o1: d.o1, o2: d.o2, m1: d.m1, mo: d.mo ?? [] }, sc = score(d.a, d.out);
   // Reinforce: the same move in a near-identical moment gets stronger when it works again, weaker when it fails.
   if (sc) for (const x of lib) if (x.a === d.a && gap(q, x) < 0.5) x.w = r2(clamp(x.w + (sc > 0 ? 0.1 : -0.1), 0.1, 2));
   lib.push(d);

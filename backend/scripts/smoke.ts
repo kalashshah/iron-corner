@@ -3,10 +3,12 @@ const BASE = process.argv[2] ?? process.env.BASE_URL ?? "http://127.0.0.1:8787";
 let failed = 0;
 const proofs: string[] = [];
 
-async function call(method: string, path: string, body?: unknown) {
-  const init: RequestInit = { method };
+async function call(method: string, path: string, body?: unknown, token?: string, extra: Record<string, string> = {}) {
+  const init: RequestInit = { method }, headers: Record<string, string> = { ...extra };
+  if (token) headers.authorization = `Bearer ${token}`;
   if (body instanceof FormData) init.body = body;
-  else if (body !== undefined) { init.body = JSON.stringify(body); init.headers = { "content-type": "application/json" }; }
+  else if (body !== undefined) { init.body = JSON.stringify(body); headers["content-type"] = "application/json"; }
+  init.headers = headers;
   const r = await fetch(BASE + path, init);
   const ct = r.headers.get("content-type") ?? "";
   return { status: r.status, body: ct.includes("json") ? await r.json() : Buffer.from(await r.arrayBuffer()) } as { status: number; body: any };
@@ -51,7 +53,7 @@ await step("start sparring round", async () => {
 });
 await step("list bots", async () => {
   const r = await call("GET", "/bots");
-  check(r.body.length === 2 && r.body[0].botId === "bot_a", "expected bot_a and bot_b");
+  check(r.body.length >= 2 && r.body[0].botId === "bot_a" && r.body[1].botId === "bot_b", "expected bot_a and bot_b first");
   return r.body.map((b: any) => `${b.botId}=${b.accountId} hbar=${b.hbar} usdc=${b.usdc} v${b.brainVersion}`).join(", ");
 });
 await step("coach-text command word", async () => {
@@ -225,6 +227,228 @@ await step("home shows growth", async () => {
 await step("bad input gives 4xx JSON error", async () => {
   const r = await call("POST", `/fights/${fightId}/hit`, { attacker: "bot_a", defender: "bot_b", move: "laser", result: "clean" });
   check(r.status === 400 && r.body.error, JSON.stringify(r.body));
+});
+
+// ---- new player flow (docs/flow-spec.md): two players, each creates, verifies, trains, funds, queues; the server fights ----
+type P = { name: string; token: string; userId: string; botId: string };
+const players: P[] = [];
+const authed = (p: P) => (m: string, path: string, body?: unknown, extra?: Record<string, string>) => call(m, path, body, p.token, extra);
+let matchId = "";
+for (const [i, name] of ["Smoke Alpha", "Smoke Bravo"].entries()) {
+  await step(`create user ${i + 1}`, async () => {
+    const r = await call("POST", "/users");
+    check(r.status === 200 && r.body.token?.length >= 40 && r.body.userId, JSON.stringify(r.body));
+    players.push({ name: `${name} ${Date.now() % 1000}`, token: r.body.token, userId: r.body.userId, botId: "" });
+    const m = await call("GET", "/me", undefined, r.body.token);
+    check(m.status === 200 && m.body.botId === null && m.body.worldVerified === false && m.body.league === "open", JSON.stringify(m.body));
+    return r.body.userId;
+  });
+}
+await step("/me needs a token", async () => {
+  const r = await call("GET", "/me"); const b = await call("GET", "/me", undefined, "x".repeat(43));
+  check(r.status === 401 && b.status === 401, `${r.status} ${b.status}`);
+});
+await step("create bot validates name + paint", async () => {
+  const p = players[0];
+  const bad = [await authed(p)("POST", "/bots", { name: "x", paint: "brass" }), await authed(p)("POST", "/bots", { name: "Robo<script>", paint: "brass" }),
+    await authed(p)("POST", "/bots", { name: "Robo", paint: "pink" })];
+  check(bad.every((r) => r.status === 400), bad.map((r) => r.status).join());
+});
+for (const [i, paint] of ["crimson", "cobalt"].entries()) {
+  await step(`create bot ${i + 1} (Hedera account + Agentic ID)`, async () => {
+    const p = players[i], r = await authed(p)("POST", "/bots", { name: p.name, paint });
+    check(r.status === 200 && r.body.botId && r.body.accountId && r.body.paint === paint && r.body.owner === p.userId && r.body.rating === 1000, JSON.stringify(r.body));
+    check(r.body.onboarding?.trained === false && r.body.league === "open", JSON.stringify(r.body.onboarding));
+    p.botId = r.body.botId;
+    let a: any;
+    for (let k = 0; k < 40 && !(a = (await call("GET", `/bots/${p.botId}`)).body.agentId)?.tokenId; k++) await sleep(1000);
+    check(a?.tokenId && a.tx, `agentId not minted: ${JSON.stringify(a)}`);
+    if (a.chainscan) proofs.push(`Agentic ID mint ${p.botId} token ${a.tokenId}: ${a.chainscan}`);
+    return `${p.botId} account=${r.body.accountId} evm=${r.body.evmAddress} agentId token=${a.tokenId} tx=${a.tx}`;
+  });
+}
+await step("one bot per user", async () => {
+  const r = await authed(players[0])("POST", "/bots", { name: "Second Bot", paint: "jade" });
+  check(r.status === 409 && r.body.reason === "one_bot_per_user", JSON.stringify(r.body));
+});
+await step("owner checks (401 no token, 403 other player)", async () => {
+  const [p, q] = players;
+  const none = await call("POST", `/train/${p.botId}/coach-text`, { text: "jab" });
+  const other = await authed(q)("POST", `/train/${p.botId}/coach-text`, { text: "jab" });
+  const queue = await authed(q)("POST", "/queue", { botId: p.botId, stakeCents: 10 });
+  check(none.status === 401 && other.status === 403 && queue.status === 403, `${none.status} ${other.status} ${queue.status}`);
+});
+await step("queue refuses an untrained bot", async () => {
+  const r = await authed(players[0])("POST", "/queue", { botId: players[0].botId, stakeCents: 10 });
+  check(r.status === 409 && r.body.reason === "needs_training", JSON.stringify(r.body));
+});
+const signIn = async (p: P, mockSub: string) => {
+  const r = await authed(p)("POST", "/auth/world/start", { mockSub });
+  check(r.status === 200 && r.body.approvalId && r.body.qrUri && r.body.userCode && r.body.action === "sign_in", JSON.stringify(r.body));
+  for (let k = 0; k < 40; k++) {
+    const s = await call("GET", `/approvals/${r.body.approvalId}`);
+    if (s.body.status !== "pending") return s.body;
+    await sleep(500);
+  }
+  throw new Error("sign-in still pending (live World needs a human)");
+};
+for (const [i, p] of players.entries()) {
+  await step(`World sign-in player ${i + 1}`, async () => {
+    const s = await signIn(p, `smoke-human-${p.userId}`);
+    check(s.status === "approved", JSON.stringify(s));
+    const m = await authed(p)("GET", "/me");
+    check(m.body.worldVerified === true && m.body.league === "verified" && m.body.botId === p.botId, JSON.stringify(m.body));
+    return `league=${m.body.league}`;
+  });
+}
+await step("one verified fighter per World subject", async () => {
+  const u = await call("POST", "/users"), p3: P = { name: "", token: u.body.token, userId: u.body.userId, botId: "" };
+  const s = await signIn(p3, `smoke-human-${players[0].userId}`);
+  check(s.status === "denied" && s.error === "world_already_used", JSON.stringify(s));
+});
+await step("first training round + coaching line (both players)", async () => {
+  await Promise.all(players.map(async (p) => {
+    const round = `onb_${p.botId}`;
+    await authed(p)("POST", `/train/${p.botId}/demos`, { round, demos: [] });
+    const c = await authed(p)("POST", `/train/${p.botId}/coach-text`, { text: "when he throws a left hook, slip right and uppercut" });
+    check(c.status === 200, JSON.stringify(c.body));
+    const d = await authed(p)("POST", `/train/${p.botId}/demos`, { round, demos: DEMOS });
+    check(d.status === 200 && d.body.stored === DEMOS.length, JSON.stringify(d.body));
+    await sleep(15500);
+    const e = await authed(p)("POST", `/train/${p.botId}/demos`, { round, roundEnd: true, demos: [] });
+    check(e.body.round?.moves === DEMOS.length, JSON.stringify(e.body));
+  }));
+  const b = await call("GET", `/bots/${players[0].botId}`);
+  check(b.body.onboarding.trained === true, JSON.stringify(b.body.onboarding));
+});
+await step("fund: tops up once a day, idempotent", async () => {
+  const p = players[0], key = `smoke-${p.botId}`;
+  const r = await authed(p)("POST", `/bots/${p.botId}/fund`, {}, { "idempotency-key": key });
+  check(r.status === 200 && r.body.hbar > 0 && r.body.hbar <= 0.5 && r.body.txId, JSON.stringify(r.body));
+  const again = await authed(p)("POST", `/bots/${p.botId}/fund`, {}, { "idempotency-key": key });
+  check(again.status === 200 && again.body.txId === r.body.txId && again.body.repeat, JSON.stringify(again.body));
+  const other = await authed(p)("POST", `/bots/${p.botId}/fund`, {});
+  check(other.status === 409 && ["already_funded_today", "balance_high"].includes(other.body.reason), JSON.stringify(other.body));
+  const b = await call("GET", `/bots/${p.botId}`);
+  check(b.body.onboarding.funded === true, JSON.stringify(b.body.onboarding));
+  if (r.body.hashscan) proofs.push(`faucet ${p.botId} ${r.body.hbar} HBAR: ${r.body.hashscan}`);
+  return `${r.body.hbar} HBAR tx=${r.body.txId}`;
+});
+await step("queue two players → matched", async () => {
+  const stake = Number(process.env.SMOKE_STAKE ?? 10);
+  for (const p of players) {
+    const r = await authed(p)("POST", "/queue", { botId: p.botId, stakeCents: stake });
+    check(r.status === 200 && ["searching", "matched"].includes(r.body.status), JSON.stringify(r.body));
+    const twice = await authed(p)("POST", "/queue", { botId: p.botId, stakeCents: stake });
+    check(twice.status === 200, "joining twice must be a no-op");
+  }
+  for (let k = 0; k < 20; k++) {
+    const [a, b] = await Promise.all(players.map((p) => authed(p)("GET", `/queue/${p.botId}`)));
+    if (a.body.status === "matched" && b.body.status === "matched") {
+      check(a.body.fightId === b.body.fightId && !a.body.house, JSON.stringify([a.body, b.body]));
+      matchId = a.body.fightId; return `${matchId} (queue ${a.body.queueSize})`;
+    }
+    await sleep(1000);
+  }
+  throw new Error("not matched within 20 s");
+});
+await step("client can't drive a server fight", async () => {
+  const r = await call("POST", `/fights/${matchId}/hit`, { attacker: players[0].botId, defender: players[1].botId, move: "jab", result: "clean" });
+  check(r.status === 409, `${r.status}`);
+});
+let finalEvents: any[] = [], finalSeed = "", finalHash = "";
+await step("event stream to the end", async () => {
+  let since = 0, ended = false;
+  for (let k = 0; k < 400 && !ended; k++) {
+    const r = await call("GET", `/fights/${matchId}/events?since=${since}`);
+    check(r.status === 200 && Array.isArray(r.body.events) && r.body.seedHash, JSON.stringify(r.body).slice(0, 200));
+    for (const e of r.body.events) { check(e.seq === since + 1, `seq gap ${since} → ${e.seq}`); since = e.seq; finalEvents.push(e); }
+    ended = r.body.status === "over" && finalEvents.some((e) => e.type === "end");
+    if (ended) { finalSeed = r.body.seed; finalHash = r.body.seedHash; }
+    else check(!r.body.seed, "seed revealed before the end");
+    await sleep(500);
+  }
+  check(ended, "fight did not end");
+  const types = new Set(finalEvents.map((e) => e.type)), end = finalEvents.find((e) => e.type === "end");
+  check(finalEvents[0].type === "start" && types.has("plan") && types.has("move"), [...types].join());
+  const { createHash } = await import("node:crypto");
+  check(createHash("sha256").update(Buffer.from(finalSeed, "hex")).digest("hex") === finalHash, "sha256(seed) != seedHash");
+  return `${finalEvents.length} events, ${finalEvents.filter((e) => e.type === "hit").length} hits, end=${JSON.stringify(end)}`;
+});
+await step("replay from seed + plans gives the same events", async () => {
+  process.env.STATE_FILE = "smoke-replay.json"; // the engine module loads state; keep it away from the real file
+  const { replay } = await import("../src/engine.ts");
+  const strip = ({ seq, ...e }: any) => e;
+  const core = finalEvents.filter((e) => ["plan", "move", "hit", "ko"].includes(e.type) && !e.reason).map(strip);
+  const start = finalEvents[0];
+  const again = replay(finalSeed, start.a, start.b, start.stakeCents, core.filter((e: any) => e.type === "plan"));
+  check(JSON.stringify(again) === JSON.stringify(core), "replay differs");
+  (await import("node:fs")).rmSync(new URL("../data/smoke-replay.json", import.meta.url), { force: true });
+  return `${core.length} events replayed`;
+});
+await step("ratings, record, payments after the fight", async () => {
+  await sleep(1500);
+  const f = await call("GET", `/fights/${matchId}`);
+  check(f.body.status === "over" && f.body.seed && f.body.ratingDelta, JSON.stringify(f.body).slice(0, 300));
+  const bots = await Promise.all(players.map((p) => call("GET", `/bots/${p.botId}`)));
+  const [ra, rb] = bots.map((b) => b.body.rating), d = f.body.ratingDelta;
+  check(ra - 1000 === d[players[0].botId] && rb - 1000 === d[players[1].botId] && ra + rb === 2000, `${ra} ${rb} ${JSON.stringify(d)}`);
+  if (f.body.winner) check(bots.some((b) => b.body.record.w === 1) && bots.some((b) => b.body.record.l === 1), "record not updated");
+  for (let k = 0; k < 90; k++) {
+    const ps = (await call("GET", `/fights/${matchId}`)).body.payments;
+    if (ps.every((p: any) => p.status !== "pending")) {
+      for (const p of ps.slice(0, 6)) proofs.push(`x402 ${matchId} hit ${p.hitNo} ${p.from}->${p.to} ${p.cents}c ${p.status}: ${p.txId} ${p.hashscan ?? ""}`);
+      check(ps.every((p: any) => p.status === "settled"), JSON.stringify(ps.filter((p: any) => p.status !== "settled")));
+      break;
+    }
+    await sleep(2000);
+  }
+  proofs.push(`fight ${matchId} seedHash ${f.body.seedHash} seed ${f.body.seed} ledger ${f.body.ledgerTopic} winner ${f.body.winner} (${f.body.endReason})`);
+  return `winner=${f.body.winner} reason=${f.body.endReason} ratings ${ra}/${rb} payments ${f.body.payments.length}`;
+});
+await step("camp needs 40 demos, then runs (mock unless CAMP_MODE=live)", async () => {
+  const p = players[0];
+  const no = await authed(p)("POST", `/bots/${p.botId}/camp`);
+  check(no.status === 409 && no.body.reason === "not_enough_demos", JSON.stringify(no.body));
+  if (process.env.SMOKE_CAMP === "skip") return "skipped";
+  const more = Array.from({ length: 45 }, (_, k) => ({ t: k, state: st(["hook_l", "hook_r", "jab", "body"][k % 4], [], 1 + (k % 3) * 0.5), action: ["dodge_r", "dodge_l", "block", "block"][k % 4], outcome: k % 5 ? "dodged" : "whiff" }));
+  await authed(p)("POST", `/train/${p.botId}/demos`, { demos: more });
+  const r = await authed(p)("POST", `/bots/${p.botId}/camp`);
+  check(r.status === 200 && r.body.status, JSON.stringify(r.body));
+  const again = await authed(p)("POST", `/bots/${p.botId}/camp`);
+  check(again.status === 409, JSON.stringify(again.body));
+  for (let k = 0; k < 30; k++) {
+    const s = await call("GET", `/bots/${p.botId}/camp`);
+    if (s.body.status === "done") { check(s.body.version === 1 && s.body.adapterRoot && s.body.taskId, JSON.stringify(s.body)); return JSON.stringify(s.body); }
+    check(s.body.status !== "failed", JSON.stringify(s.body));
+    await sleep(1000);
+  }
+  throw new Error("mock camp didn't finish");
+});
+await step("leave queue, then house fallback after 25 s", async () => {
+  if (process.env.SMOKE_HOUSE === "skip") return "skipped";
+  const winner = (await call("GET", `/fights/${matchId}`)).body.winner;
+  const p = players.find((x) => x.botId === winner) ?? players[0], q = authed(p);
+  for (let k = 0; k < 40 && !(await call("GET", `/bots/${p.botId}`)).body.alive; k++) await sleep(1000); // a KO repairs in 30 s
+  const j = await q("POST", "/queue", { botId: p.botId, stakeCents: 10 });
+  check(j.status === 200 && j.body.status === "searching", JSON.stringify(j.body));
+  const l = await q("DELETE", `/queue/${p.botId}`);
+  check(l.body.status !== "searching", JSON.stringify(l.body));
+  await q("POST", "/queue", { botId: p.botId, stakeCents: 10 });
+  for (let k = 0; k < 40; k++) {
+    const r = await q("GET", `/queue/${p.botId}`);
+    if (r.body.status === "matched" && r.body.house) {
+      check(k >= 20, `house came too early (${k} s)`);
+      for (let w = 0; w < 200; w++) {
+        const f = await call("GET", `/fights/${r.body.fightId}`);
+        if (f.body.status === "over") { check(Object.values(f.body.ratingDelta).every((x) => x === 0), "house fights are unrated"); return `${r.body.fightId} vs ${f.body.b} winner=${f.body.winner}`; }
+        await sleep(1000);
+      }
+      throw new Error("house fight did not end");
+    }
+    await sleep(1000);
+  }
+  throw new Error("no house match after 40 s");
 });
 
 console.log("\n" + (proofs.length ? proofs.join("\n") : "") + `\n${failed ? `${failed} step(s) FAILED` : "ALL PASS"}`);

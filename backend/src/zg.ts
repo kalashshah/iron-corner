@@ -4,6 +4,7 @@ import { env, modes, type Bot } from "./state.ts";
 import { MOVES, DAMAGE, SAFE_STOP, validatePlan, validateLearn, mockPlan, mockLearn, mockLessons, ruleSheet, ruleHints, resolveUsed,
   type Plan, type FightState, type Learned } from "./game.ts";
 import { recall, demoUsed } from "./demos.ts";
+import { adapterMoves, ADAPTER_SERVING } from "./camp.ts";
 
 const BASE = env.ZG_BASE_URL ?? "https://router-api.0g.ai/v1";
 const CHAT_MODEL = env.ZG_CHAT_MODEL ?? "qwen-flash";
@@ -45,6 +46,11 @@ const brainSheet = (bot: Bot, opp?: string) => {
 };
 
 export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Plan> {
+  if (ADAPTER_SERVING && bot.adapter) { // the bot's own camp adapter (off: serving needs 2 0G on the provider)
+    const moves = await adapterMoves(bot, s).catch((e) => (console.warn(`[adapter] ${bot.botId}: ${e.message}`), null));
+    if (moves) return { stance: moves.some((m) => DAMAGE[m]) ? "aggressive" : "defensive", combo: moves, trigger: "now", say: "Camp instincts.",
+      used: "adapter", usedText: `Fight camp v${bot.adapter.version}`, requestId: null };
+  }
   const rc = recall(bot, s); // the k nearest shadow-sparring demos for this moment
   if (!ai) {
     const p = mockPlan(bot.brain, s);

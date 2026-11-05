@@ -24,15 +24,22 @@ async function config() {
   return cfg;
 }
 
-export async function create(botId: string, action: Approval["action"]): Promise<Approval> {
-  if (!state.bots[botId]) fail(404, "unknown bot");
-  if (!["high_stakes", "revive", "cash_out"].includes(action)) fail(400, "bad action");
+// sign_in: botId is "" and userId names the player; approval sets user.worldSub (one verified fighter per World subject).
+export async function create(botId: string, action: Approval["action"], userId?: string, mockSub?: string): Promise<Approval> {
+  if (action === "sign_in") { if (!userId || !state.users[userId]) fail(401, "sign in needs a user"); }
+  else if (!state.bots[botId]) fail(404, "unknown bot");
+  if (!["high_stakes", "revive", "cash_out", "sign_in"].includes(action)) fail(400, "bad action");
   const approvalId = id("ap"), startedAt = Math.floor(Date.now() / 1000);
   let a: Approval;
   if (modes.world === "mock") {
     a = { approvalId, botId, action, status: "pending", qrUri: `https://world.org/mock-approve?id=${approvalId}`,
-      userCode: approvalId.slice(-6).toUpperCase(), expiresAt: new Date(Date.now() + 300_000).toISOString(), startedAt, mock: true };
-    setTimeout(() => { if (a.status === "pending") { a.status = "approved"; a.sub = "mock-sub"; save(); } }, MOCK_APPROVE_MS);
+      userCode: approvalId.slice(-6).toUpperCase(), expiresAt: new Date(Date.now() + 300_000).toISOString(), startedAt, mock: true,
+      ...(userId ? { userId } : {}) };
+    setTimeout(() => {
+      if (a.status !== "pending") return;
+      if (action === "sign_in") signIn(a, mockSub || `mock-sub-${userId}`); else { a.status = "approved"; a.sub = "mock-sub"; }
+      save();
+    }, MOCK_APPROVE_MS);
   } else {
     const { oc, c } = await config();
     const da = await oc.initiateDeviceAuthorization(c, {
@@ -40,7 +47,7 @@ export async function create(botId: string, action: Approval["action"]): Promise
       ...(ACR ? { claims: JSON.stringify({ id_token: { acr: { essential: true, values: [ACR] } } }) } : {}),
     });
     a = { approvalId, botId, action, status: "pending", qrUri: da.verification_uri_complete ?? da.verification_uri,
-      userCode: da.user_code, expiresAt: new Date(Date.now() + da.expires_in * 1000).toISOString(), startedAt };
+      userCode: da.user_code, expiresAt: new Date(Date.now() + da.expires_in * 1000).toISOString(), startedAt, ...(userId ? { userId } : {}) };
     const ctl = new AbortController();
     running.set(approvalId, ctl);
     poll(a, oc, c, da, ctl.signal).finally(() => { running.delete(approvalId); save(); });
@@ -62,9 +69,10 @@ async function poll(a: Approval, oc: any, c: any, da: any, signal: AbortSignal) 
       (ACR ? cl.acr !== ACR : !ACCEPT.includes(String(cl.acr))) ? `acr ${cl.acr ?? "missing (unverified account)"}` :
       !amr.includes("pop") ? "amr lacks pop" :
       typeof cl.auth_time !== "number" || cl.auth_time < a.startedAt - 5 ? "stale auth_time" :
-      bot.ownerSub && bot.ownerSub !== cl.sub ? "not this bot's owner" : null;
+      bot?.ownerSub && bot.ownerSub !== cl.sub ? "not this bot's owner" : null;
     if (a.status !== "pending") return; // cancelled meanwhile
     if (problem) { a.status = "denied"; a.error = problem; return; }
+    if (a.action === "sign_in") return signIn(a, cl.sub);
     bot.ownerSub ??= cl.sub; // first approval pins the owner
     a.sub = cl.sub; a.status = "approved";
   } catch (e: any) {
@@ -73,6 +81,17 @@ async function poll(a: Approval, oc: any, c: any, da: any, signal: AbortSignal) 
     a.status = code === "access_denied" ? "denied" : code === "expired_token" ? "expired" : code === "AbortError" || signal.aborted ? "cancelled" : "denied";
     a.error = String(e?.error_description ?? e?.message ?? e).slice(0, 200);
   }
+}
+
+// One verified human, one verified fighter: a World subject already behind another player's fighter is refused.
+// A previous fighterless sign-in with the same subject (lost token) is released.
+function signIn(a: Approval, sub: string) {
+  const u = state.users[a.userId!];
+  const others = Object.values(state.users).filter((x) => x.userId !== u.userId && x.worldSub === sub);
+  if (others.some((x) => x.botId)) { a.status = "denied"; a.error = "world_already_used"; return; }
+  for (const x of others) { x.worldSub = null; x.worldVerified = false; }
+  u.worldSub = sub; u.worldVerified = true;
+  a.sub = sub; a.status = "approved";
 }
 
 export function get(approvalId: string) {
