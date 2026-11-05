@@ -1,7 +1,8 @@
-// 0G Compute router (OpenAI-compatible): whisper transcription + qwen-flash decisions.
-import OpenAI, { toFile } from "openai";
-import { env, modes, type Bot, type Phrase } from "./state.ts";
-import { MOVES, DAMAGE, SAFE_STOP, validatePlan, validatePhrase, mockPlan, mockPhrase, mockLessons, type Plan, type FightState } from "./game.ts";
+// 0G Compute router (OpenAI-compatible): qwen omni speech-to-text + qwen-flash decisions.
+import OpenAI from "openai";
+import { env, modes, type Bot } from "./state.ts";
+import { MOVES, DAMAGE, SAFE_STOP, validatePlan, validateLearn, mockPlan, mockLearn, mockLessons, ruleSheet, ruleHints, resolveUsed,
+  type Plan, type FightState, type Learned } from "./game.ts";
 
 const BASE = env.ZG_BASE_URL ?? "https://router-api.0g.ai/v1";
 const CHAT_MODEL = env.ZG_CHAT_MODEL ?? "qwen-flash";
@@ -14,13 +15,13 @@ function trace(body: any, headers: Headers): Trace {
   return { requestId: t.request_id ?? headers.get("x-request-id"), teeVerified: t.tee_verified ?? body?.tee_verified ?? null };
 }
 
-async function chatJson(system: string, user: string, timeoutMs: number): Promise<{ json: unknown; trace: Trace }> {
+async function chatJson(system: string, user: string, timeoutMs: number, maxTokens = 160, temperature = 0.4): Promise<{ json: unknown; trace: Trace }> {
   const { data, response } = await ai!.chat.completions
     .create(
       // qwen-flash has no provider for response_format (503 "No available providers"), so ask for JSON in the
-      // prompt and pull the object out of any ``` fences. Strict validation happens in validatePlan/validatePhrase.
+      // prompt and pull the object out of any ``` fences. Strict validation happens in validatePlan/validateLearn.
       { model: CHAT_MODEL, messages: [{ role: "system", content: system }, { role: "user", content: user }],
-        temperature: 0.4, max_tokens: 160, verify_tee: true } as any,
+        temperature, max_tokens: maxTokens, verify_tee: true } as any,
       { signal: AbortSignal.timeout(timeoutMs) },
     )
     .withResponse();
@@ -30,25 +31,30 @@ async function chatJson(system: string, user: string, timeoutMs: number): Promis
 }
 
 const moveSheet = () =>
-  `Moves: ${MOVES.join(", ")}. Damage in cents per clean hit: ${Object.entries(DAMAGE).map(([m, d]) => `${m} ${d}`).join(", ")}. ` +
+  `Move names: ${MOVES.join(", ")}. Damage per clean hit: ${Object.entries(DAMAGE).map(([m, d]) => `${m}=${d}c`).join(", ")}. ` +
   `block chips guard and stops damage; dodge_l/dodge_r make the hit miss; step_in/step_back change distance (1 = punching range).`;
 
+// Compact on purpose: the decision runs every 1.5 s per bot and has to come back in well under 2 s.
 const brainSheet = (bot: Bot, opp?: string) => {
-  const b = bot.brain;
+  const b = bot.brain, rules = ruleSheet(b), scout = opp ? b.scouting[opp] ?? [] : [];
   return `You are ${bot.name}, a robot boxer. Style: aggression ${b.style.aggression}, guard ${b.style.guard}.\n` +
-    `Coach phrases: ${JSON.stringify(b.phrases)}\nLessons: ${JSON.stringify(b.lessons)}\n` +
-    (opp ? `Scouting on opponent: ${JSON.stringify(b.scouting[opp] ?? [])}\n` : "");
+    (rules ? `Rules your coach taught you in training:\n${rules}\n` : "") +
+    (b.lessons.length ? `Lessons: ${b.lessons.slice(-5).join("; ")}\n` : "") +
+    (scout.length ? `Scouting: ${scout.slice(-3).join("; ")}\n` : "");
 };
 
 export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Plan> {
   if (!ai) return mockPlan(bot.brain, s);
-  const system = `${brainSheet(bot, opp)}${moveSheet()}\n` +
-    `Budgets are health in cents. Reply with ONLY a JSON object: {"stance":"aggressive|defensive|counter","combo":[1-4 moves],"trigger":"now|after_block|when_close","say":"short thought, max 8 words"}`;
+  const system = `${brainSheet(bot, opp)}${moveSheet()}\nBudgets are health in cents. Follow a taught rule when one fits.\n` +
+    `Reply with ONLY JSON like {"stance":"aggressive","combo":["jab","cross"],"trigger":"when_close","used":"<rule id or none>","say":"Testing his guard"}\n` +
+    `stance: aggressive|defensive|counter. combo: 1-4 move NAMES. trigger: now|after_block|when_close. ` +
+    `used: the rule id you follow (e.g. counter#1) or "none". say: your own thought, max 8 words.`;
+  const hints = ruleHints(bot.brain, s);
   try {
-    const { json, trace: tr } = await chatJson(system, `Fight state: ${JSON.stringify(s)}`, DECIDE_MS);
+    const { json, trace: tr } = await chatJson(system, `Fight state: ${JSON.stringify(s)}${hints.length ? `\nNote: ${hints.join("; ")}` : ""}`, DECIDE_MS, 110);
     const plan = validatePlan(json);
-    if (!plan) return { ...SAFE_STOP("invalid plan from model"), requestId: tr.requestId };
-    return { ...plan, ...tr };
+    if (!plan) return { ...SAFE_STOP(`invalid plan from model: ${JSON.stringify(json).slice(0, 160)}`), requestId: tr.requestId };
+    return { ...plan, ...resolveUsed(bot.brain, (json as any).used, plan.combo!), ...tr };
   } catch (e: any) {
     return SAFE_STOP(e?.name === "AbortError" || /timed? ?out|abort/i.test(String(e?.message)) ? "timeout" : `0G error: ${e?.message ?? e}`);
   }
@@ -56,31 +62,39 @@ export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Pla
 
 export async function transcribe(audio: Blob, mockText?: string): Promise<{ text: string; requestId: string | null; mock?: boolean }> {
   if (!ai) return { text: mockText || "block", requestId: null, mock: true };
-  const file = await toFile(Buffer.from(await audio.arrayBuffer()), "coach.wav", { type: "audio/wav" });
-  let lastErr: unknown;
-  for (const model of [env.ZG_STT_MODEL ?? "whisper-large-v3", "openai/whisper-large-v3"]) {
-    try {
-      const { data, response } = await ai.audio.transcriptions
-        .create({ file, model }, { query: { verify_tee: true }, signal: AbortSignal.timeout(15000) })
-        .withResponse();
-      return { text: String((data as any).text ?? "").trim(), requestId: trace(data, response.headers).requestId };
-    } catch (e: any) {
-      lastErr = e;
-      if (e?.status !== 400 && e?.status !== 404) break; // only retry the alternate id on a model-not-found style error
-    }
-  }
-  throw lastErr;
+  // 0G's router dropped whisper (Nov 6); qwen omni models take audio as a chat input. The provider wants a data URL.
+  const b64 = Buffer.from(await audio.arrayBuffer()).toString("base64");
+  const { data, response } = await ai.chat.completions
+    .create({
+      model: env.ZG_STT_MODEL ?? "qwen3-omni-flash", max_tokens: 80, temperature: 0,
+      messages: [{ role: "user", content: [
+        { type: "input_audio", input_audio: { data: `data:audio/wav;base64,${b64}`, format: "wav" } },
+        { type: "text", text: "Transcribe this boxing coach's words exactly. Reply with the transcript only." },
+      ] }],
+    } as any, { signal: AbortSignal.timeout(15000) })
+    .withResponse();
+  const text = String((data as any).choices?.[0]?.message?.content ?? "").trim().replace(/^["']|["']$/g, "");
+  return { text, requestId: trace(data, response.headers).requestId };
 }
 
-export async function mapPhrase(bot: Bot, text: string): Promise<{ learned: Phrase | null; requestId: string | null; mock?: boolean }> {
-  if (!ai) return { learned: mockPhrase(text), requestId: null, mock: true };
-  const system = `${brainSheet(bot)}${moveSheet()}\nYour coach just said a phrase. Map it to a short combo. ` +
-    `Reply with ONLY JSON: {"means":"what the coach wants, max 8 words","moves":[1-4 moves]} or {"moves":[]} if it is not a fighting instruction.`;
+// Training: classify one coach line into a structured brain update (validated strictly in game.ts).
+const LEARN_SYSTEM = `A robot boxer's coach said one line in training. ${moveSheet()}\n` +
+  `Turn it into ONE brain update. Reply with ONLY JSON, one of:\n` +
+  `{"kind":"counter","when":"<opponent attack move>","moves":[1-4 moves]}  // what to do right after the opponent throws that move\n` +
+  `{"kind":"style","aggression":-0.2..0.2,"guard":-0.2..0.2}  // be more/less aggressive or careful\n` +
+  `{"kind":"phrase","means":"max 8 words","moves":[1-4 moves]}  // a catchphrase that means a combo\n` +
+  `{"kind":"combo","use":"opener|finisher|any","name":"2-4 words","moves":[2-4 moves]}  // use=opener only if told to start/open with it, finisher only if told to finish with it, else any\n` +
+  `{"kind":"none"}  // not a boxing instruction\n` +
+  `A line about reacting to the opponent ("when he throws/does X, ...", "if he jabs, ...", "after his hook ...") is ALWAYS a counter: ` +
+  `"when" = the opponent's attack move (jab|cross|hook_l|hook_r|uppercut|body; "left hook"=hook_l, "right hook"=hook_r), "moves" = our response ("slip right"=dodge_r, "slip left"=dodge_l, "duck"=dodge_l).\n` +
+  `Slang or a nickname for attacking ("light him up") is a phrase.`;
+export async function learn(text: string): Promise<{ learned: Learned | null; requestId: string | null; mock?: boolean; error?: string }> {
+  if (!ai) return { learned: validateLearn(mockLearn(text)), requestId: null, mock: true };
   try {
-    const { json, trace: tr } = await chatJson(system, `Coach said: "${text}"`, 6000);
-    return { learned: validatePhrase(json, text), requestId: tr.requestId };
-  } catch {
-    return { learned: null, requestId: null };
+    const { json, trace: tr } = await chatJson(LEARN_SYSTEM, `Coach said: "${text}"`, 6000, 80, 0);
+    return { learned: validateLearn(json), requestId: tr.requestId };
+  } catch (e: any) {
+    return { learned: null, requestId: null, error: `0G error: ${e?.message ?? e}` };
   }
 }
 

@@ -21,7 +21,7 @@ Each sponsor integration runs live when its credentials are present and mock oth
 
 | Var | Live needs | Mock does |
 |---|---|---|
-| `ZG_MODE` | `ZG_API_KEY` (0G router, `qwen-flash` + `whisper-large-v3`) | deterministic planner; STT returns the form field `text` (or `"block"`) |
+| `ZG_MODE` | `ZG_API_KEY` (0G router, `qwen-flash` + `qwen3-omni-flash` for speech) | deterministic planner; STT returns the form field `text` (or `"block"`) |
 | `ZG_STORAGE_MODE` | `OG_OPS_PRIVATE_KEY` (Galileo testnet gas) | AES-GCM blobs kept in the state file |
 | `HEDERA_MODE` | `HEDERA_OPERATOR_PRIVATE_KEY`, `BOT_A_PRIVATE_KEY`, `BOT_B_PRIVATE_KEY` | payments settle after 300 ms with `mock-...` tx ids; no HCS |
 | `WORLD_MODE` | `WORLD_CLIENT_ID` (+ `WORLD_CLIENT_SECRET` if the client has one) | approvals turn `approved` after `MOCK_APPROVE_MS` (3 s) |
