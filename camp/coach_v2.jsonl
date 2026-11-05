@@ -1,0 +1,600 @@
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block dist=1.3 my_budget=10 opp_budget=8 my_guard=0.7","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none dist=1.0 my_budget=45 opp_budget=9 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.7 my_budget=48 opp_budget=6 my_guard=0.3","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross dist=1.6 my_budget=37 opp_budget=45 my_guard=0.3","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross dist=1.1 my_budget=17 opp_budget=17 my_guard=0.6","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block dist=1.1 my_budget=49 opp_budget=39 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=2.1 my_budget=17 opp_budget=9 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.3 my_budget=41 opp_budget=22 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=1.2 my_budget=29 opp_budget=15 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.1 my_budget=12 opp_budget=29 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=1.3 my_budget=19 opp_budget=34 my_guard=0.8","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block dist=1.9 my_budget=17 opp_budget=39 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.8 my_budget=13 opp_budget=21 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=2.0 my_budget=18 opp_budget=19 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block dist=1.7 my_budget=38 opp_budget=40 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block dist=1.0 my_budget=22 opp_budget=28 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.1 my_budget=12 opp_budget=39 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.8 my_budget=27 opp_budget=14 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block dist=1.8 my_budget=35 opp_budget=36 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.4 my_budget=30 opp_budget=17 my_guard=0.4","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross dist=1.5 my_budget=20 opp_budget=7 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block dist=1.7 my_budget=30 opp_budget=6 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab dist=1.8 my_budget=20 opp_budget=28 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.6 my_budget=44 opp_budget=9 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.3 my_budget=39 opp_budget=26 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=2.1 my_budget=49 opp_budget=22 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block dist=1.9 my_budget=29 opp_budget=30 my_guard=0.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross dist=1.9 my_budget=28 opp_budget=37 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.2 my_budget=36 opp_budget=18 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block dist=1.1 my_budget=27 opp_budget=35 my_guard=0.5","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none dist=1.1 my_budget=35 opp_budget=45 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=1.4 my_budget=38 opp_budget=25 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=2.0 my_budget=48 opp_budget=41 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none dist=1.2 my_budget=39 opp_budget=24 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross dist=1.8 my_budget=24 opp_budget=15 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross dist=1.1 my_budget=46 opp_budget=38 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.8 my_budget=10 opp_budget=16 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=1.8 my_budget=16 opp_budget=48 my_guard=0.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=2.1 my_budget=19 opp_budget=45 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab dist=1.6 my_budget=10 opp_budget=36 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.4 my_budget=29 opp_budget=16 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab dist=1.6 my_budget=13 opp_budget=16 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.1 my_budget=48 opp_budget=23 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=2.0 my_budget=20 opp_budget=8 my_guard=1.0","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross dist=1.3 my_budget=46 opp_budget=42 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab dist=1.5 my_budget=43 opp_budget=20 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block dist=1.7 my_budget=28 opp_budget=16 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.9 my_budget=16 opp_budget=39 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.6 my_budget=41 opp_budget=35 my_guard=0.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.6 my_budget=32 opp_budget=43 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=1.0 my_budget=20 opp_budget=17 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.0 my_budget=49 opp_budget=21 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=2.1 my_budget=34 opp_budget=44 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=2.0 my_budget=27 opp_budget=32 my_guard=0.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=0.9 my_budget=28 opp_budget=32 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.3 my_budget=26 opp_budget=41 my_guard=0.9","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.0 my_budget=39 opp_budget=30 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.3 my_budget=39 opp_budget=45 my_guard=0.6","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block dist=1.8 my_budget=49 opp_budget=30 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.2 my_budget=49 opp_budget=42 my_guard=1.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.8 my_budget=25 opp_budget=44 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross dist=0.9 my_budget=16 opp_budget=12 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=2.0 my_budget=29 opp_budget=24 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=1.0 my_budget=36 opp_budget=17 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.8 my_budget=35 opp_budget=5 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none dist=1.3 my_budget=48 opp_budget=11 my_guard=0.9","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.5 my_budget=30 opp_budget=47 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block dist=1.2 my_budget=42 opp_budget=37 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none dist=1.2 my_budget=46 opp_budget=41 my_guard=0.5","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.9 my_budget=40 opp_budget=21 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.5 my_budget=36 opp_budget=23 my_guard=0.9","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.1 my_budget=16 opp_budget=32 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab dist=2.0 my_budget=11 opp_budget=33 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=0.9 my_budget=20 opp_budget=34 my_guard=0.1","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab dist=1.2 my_budget=25 opp_budget=29 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none dist=1.4 my_budget=38 opp_budget=28 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=1.4 my_budget=40 opp_budget=28 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=1.0 my_budget=19 opp_budget=15 my_guard=0.9","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.8 my_budget=36 opp_budget=6 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.4 my_budget=22 opp_budget=5 my_guard=0.9","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none dist=1.2 my_budget=21 opp_budget=11 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.9 my_budget=46 opp_budget=26 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none dist=1.1 my_budget=42 opp_budget=45 my_guard=0.5","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab dist=1.7 my_budget=10 opp_budget=23 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=0.9 my_budget=16 opp_budget=32 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab dist=1.1 my_budget=39 opp_budget=32 my_guard=0.5","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=1.6 my_budget=15 opp_budget=41 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab dist=1.1 my_budget=13 opp_budget=42 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.3 my_budget=40 opp_budget=42 my_guard=0.7","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.4 my_budget=46 opp_budget=47 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab dist=1.0 my_budget=26 opp_budget=31 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.1 my_budget=31 opp_budget=14 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.2 my_budget=12 opp_budget=36 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block dist=1.0 my_budget=15 opp_budget=16 my_guard=0.8","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.3 my_budget=47 opp_budget=9 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=1.2 my_budget=37 opp_budget=11 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab dist=1.1 my_budget=19 opp_budget=15 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross dist=1.7 my_budget=30 opp_budget=33 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.4 my_budget=37 opp_budget=19 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.9 my_budget=19 opp_budget=42 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross dist=1.0 my_budget=28 opp_budget=24 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab dist=1.4 my_budget=49 opp_budget=36 my_guard=0.5","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=1.8 my_budget=29 opp_budget=8 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.6 my_budget=19 opp_budget=49 my_guard=0.5","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=0.9 my_budget=19 opp_budget=26 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block dist=2.1 my_budget=11 opp_budget=22 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=1.8 my_budget=13 opp_budget=27 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=0.9 my_budget=13 opp_budget=14 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=2.1 my_budget=40 opp_budget=39 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab dist=2.0 my_budget=45 opp_budget=12 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.0 my_budget=19 opp_budget=48 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab dist=1.5 my_budget=10 opp_budget=38 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block dist=1.7 my_budget=21 opp_budget=35 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.1 my_budget=32 opp_budget=45 my_guard=0.2","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross dist=1.9 my_budget=22 opp_budget=25 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block dist=1.6 my_budget=17 opp_budget=12 my_guard=0.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block dist=1.3 my_budget=18 opp_budget=33 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none dist=1.1 my_budget=45 opp_budget=10 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=1.3 my_budget=18 opp_budget=24 my_guard=0.8","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.8 my_budget=13 opp_budget=7 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross dist=1.1 my_budget=33 opp_budget=48 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.6 my_budget=12 opp_budget=41 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=0.9 my_budget=17 opp_budget=8 my_guard=0.6","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.7 my_budget=33 opp_budget=27 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.8 my_budget=34 opp_budget=20 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=1.3 my_budget=16 opp_budget=36 my_guard=0.7","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block dist=1.9 my_budget=41 opp_budget=7 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.8 my_budget=24 opp_budget=42 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=2.0 my_budget=20 opp_budget=45 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none dist=2.0 my_budget=24 opp_budget=11 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=1.4 my_budget=42 opp_budget=14 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=1.8 my_budget=20 opp_budget=43 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block dist=0.9 my_budget=16 opp_budget=23 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=1.1 my_budget=34 opp_budget=6 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.1 my_budget=23 opp_budget=13 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=1.4 my_budget=21 opp_budget=8 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.1 my_budget=16 opp_budget=37 my_guard=1.0","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.3 my_budget=33 opp_budget=5 my_guard=0.3","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.9 my_budget=29 opp_budget=19 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none dist=1.8 my_budget=16 opp_budget=28 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=2.0 my_budget=14 opp_budget=36 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=2.0 my_budget=22 opp_budget=31 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab dist=1.5 my_budget=47 opp_budget=18 my_guard=0.7","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=1.1 my_budget=31 opp_budget=12 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.0 my_budget=10 opp_budget=17 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.7 my_budget=31 opp_budget=33 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab dist=1.6 my_budget=15 opp_budget=26 my_guard=0.1","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.9 my_budget=17 opp_budget=30 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=1.2 my_budget=34 opp_budget=11 my_guard=0.7","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=1.5 my_budget=28 opp_budget=6 my_guard=0.5","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.0 my_budget=27 opp_budget=37 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.6 my_budget=25 opp_budget=46 my_guard=0.2","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab dist=0.9 my_budget=10 opp_budget=48 my_guard=0.4","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=1.1 my_budget=49 opp_budget=8 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.8 my_budget=22 opp_budget=48 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=2.0 my_budget=47 opp_budget=42 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.3 my_budget=13 opp_budget=37 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.0 my_budget=19 opp_budget=31 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=2.0 my_budget=45 opp_budget=19 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none dist=1.3 my_budget=11 opp_budget=31 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.5 my_budget=18 opp_budget=33 my_guard=0.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.5 my_budget=36 opp_budget=27 my_guard=0.9","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none dist=1.4 my_budget=21 opp_budget=36 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.9 my_budget=43 opp_budget=24 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none dist=1.8 my_budget=14 opp_budget=49 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=2.1 my_budget=11 opp_budget=49 my_guard=1.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross dist=1.5 my_budget=42 opp_budget=14 my_guard=0.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.9 my_budget=26 opp_budget=34 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab dist=1.5 my_budget=39 opp_budget=47 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross dist=1.4 my_budget=22 opp_budget=49 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.9 my_budget=37 opp_budget=10 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=0.9 my_budget=23 opp_budget=41 my_guard=0.7","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=0.9 my_budget=10 opp_budget=42 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross dist=1.2 my_budget=19 opp_budget=10 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block dist=1.9 my_budget=39 opp_budget=29 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none dist=1.3 my_budget=47 opp_budget=28 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none dist=2.1 my_budget=19 opp_budget=28 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.2 my_budget=45 opp_budget=24 my_guard=0.3","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block dist=1.6 my_budget=10 opp_budget=9 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.3 my_budget=17 opp_budget=16 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab dist=2.1 my_budget=12 opp_budget=17 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.0 my_budget=16 opp_budget=6 my_guard=0.5","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross dist=0.9 my_budget=14 opp_budget=49 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.7 my_budget=22 opp_budget=16 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none dist=1.0 my_budget=33 opp_budget=22 my_guard=0.1","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.4 my_budget=17 opp_budget=8 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none dist=1.6 my_budget=22 opp_budget=21 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross dist=1.4 my_budget=31 opp_budget=27 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=1.5 my_budget=25 opp_budget=5 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=1.3 my_budget=45 opp_budget=43 my_guard=1.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.6 my_budget=47 opp_budget=46 my_guard=0.8","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=1.4 my_budget=46 opp_budget=30 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none dist=2.0 my_budget=10 opp_budget=42 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab dist=1.3 my_budget=31 opp_budget=28 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.2 my_budget=28 opp_budget=5 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=1.0 my_budget=46 opp_budget=42 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.8 my_budget=11 opp_budget=33 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross dist=1.4 my_budget=19 opp_budget=44 my_guard=0.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=1.7 my_budget=35 opp_budget=18 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=1.5 my_budget=47 opp_budget=13 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=1.4 my_budget=31 opp_budget=28 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.7 my_budget=35 opp_budget=14 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=1.6 my_budget=35 opp_budget=27 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=1.4 my_budget=23 opp_budget=14 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.4 my_budget=19 opp_budget=32 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block dist=2.1 my_budget=20 opp_budget=15 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block dist=1.5 my_budget=25 opp_budget=48 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=1.6 my_budget=27 opp_budget=44 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.6 my_budget=20 opp_budget=35 my_guard=1.0","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab dist=1.0 my_budget=43 opp_budget=14 my_guard=0.4","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=1.3 my_budget=29 opp_budget=39 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab dist=1.0 my_budget=31 opp_budget=11 my_guard=0.9","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.9 my_budget=42 opp_budget=26 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.4 my_budget=28 opp_budget=20 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block dist=1.5 my_budget=48 opp_budget=5 my_guard=0.7","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=1.8 my_budget=46 opp_budget=22 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.9 my_budget=15 opp_budget=43 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross dist=1.3 my_budget=14 opp_budget=22 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross dist=1.3 my_budget=23 opp_budget=17 my_guard=0.9","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block dist=1.1 my_budget=23 opp_budget=43 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.6 my_budget=11 opp_budget=28 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none dist=1.4 my_budget=34 opp_budget=49 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block dist=1.2 my_budget=18 opp_budget=44 my_guard=0.1","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none dist=1.1 my_budget=35 opp_budget=24 my_guard=0.1","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.1 my_budget=10 opp_budget=32 my_guard=0.8","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross dist=1.6 my_budget=42 opp_budget=40 my_guard=0.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none dist=1.6 my_budget=24 opp_budget=33 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.6 my_budget=29 opp_budget=42 my_guard=0.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=1.3 my_budget=42 opp_budget=20 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.0 my_budget=30 opp_budget=36 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross dist=1.0 my_budget=31 opp_budget=43 my_guard=0.5","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.3 my_budget=15 opp_budget=44 my_guard=1.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.8 my_budget=36 opp_budget=46 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross dist=2.0 my_budget=26 opp_budget=32 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block dist=1.3 my_budget=38 opp_budget=17 my_guard=0.5","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=1.5 my_budget=25 opp_budget=30 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=1.7 my_budget=29 opp_budget=32 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=1.1 my_budget=37 opp_budget=29 my_guard=0.1","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.6 my_budget=33 opp_budget=34 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross dist=1.9 my_budget=37 opp_budget=47 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross dist=1.6 my_budget=12 opp_budget=15 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.8 my_budget=32 opp_budget=24 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=0.9 my_budget=31 opp_budget=46 my_guard=0.1","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none dist=1.5 my_budget=27 opp_budget=31 my_guard=0.3","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.3 my_budget=17 opp_budget=27 my_guard=0.1","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.5 my_budget=43 opp_budget=42 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab dist=1.4 my_budget=32 opp_budget=24 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none dist=1.4 my_budget=26 opp_budget=10 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.3 my_budget=17 opp_budget=22 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none dist=2.0 my_budget=29 opp_budget=23 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.1 my_budget=39 opp_budget=14 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block dist=1.0 my_budget=29 opp_budget=41 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.3 my_budget=32 opp_budget=48 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block dist=1.8 my_budget=37 opp_budget=41 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=0.9 my_budget=24 opp_budget=29 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.1 my_budget=37 opp_budget=21 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.3 my_budget=10 opp_budget=30 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=1.2 my_budget=14 opp_budget=26 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=1.9 my_budget=28 opp_budget=9 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.1 my_budget=12 opp_budget=20 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=1.8 my_budget=17 opp_budget=36 my_guard=0.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab dist=1.2 my_budget=40 opp_budget=42 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.8 my_budget=10 opp_budget=15 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.0 my_budget=27 opp_budget=20 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none dist=1.8 my_budget=48 opp_budget=44 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross dist=1.1 my_budget=19 opp_budget=32 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross dist=1.1 my_budget=11 opp_budget=33 my_guard=0.8","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=1.2 my_budget=47 opp_budget=44 my_guard=0.9","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.7 my_budget=36 opp_budget=14 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block dist=1.5 my_budget=33 opp_budget=14 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=2.0 my_budget=30 opp_budget=12 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.4 my_budget=14 opp_budget=12 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block dist=1.1 my_budget=21 opp_budget=46 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.2 my_budget=35 opp_budget=18 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross dist=1.6 my_budget=43 opp_budget=48 my_guard=1.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab dist=1.1 my_budget=32 opp_budget=19 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=1.0 my_budget=25 opp_budget=35 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=1.0 my_budget=49 opp_budget=13 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab dist=1.5 my_budget=31 opp_budget=29 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross dist=2.1 my_budget=24 opp_budget=41 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.3 my_budget=47 opp_budget=10 my_guard=0.9","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.8 my_budget=31 opp_budget=44 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross dist=1.4 my_budget=46 opp_budget=48 my_guard=0.8","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block dist=2.0 my_budget=26 opp_budget=19 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=1.0 my_budget=27 opp_budget=14 my_guard=0.8","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab dist=1.1 my_budget=12 opp_budget=42 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab dist=1.2 my_budget=37 opp_budget=28 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=0.9 my_budget=27 opp_budget=9 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross dist=1.0 my_budget=46 opp_budget=8 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block dist=2.0 my_budget=44 opp_budget=16 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=2.0 my_budget=39 opp_budget=45 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.0 my_budget=13 opp_budget=20 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=1.1 my_budget=30 opp_budget=38 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross dist=1.6 my_budget=26 opp_budget=39 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block dist=1.2 my_budget=11 opp_budget=33 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block dist=1.6 my_budget=43 opp_budget=17 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.5 my_budget=40 opp_budget=10 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.9 my_budget=23 opp_budget=25 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block dist=1.7 my_budget=31 opp_budget=34 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none dist=1.6 my_budget=37 opp_budget=44 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.5 my_budget=11 opp_budget=47 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=2.0 my_budget=12 opp_budget=11 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=1.6 my_budget=30 opp_budget=6 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.3 my_budget=17 opp_budget=22 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab dist=1.1 my_budget=27 opp_budget=31 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.3 my_budget=23 opp_budget=46 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.5 my_budget=42 opp_budget=38 my_guard=0.1","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.7 my_budget=20 opp_budget=38 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=2.0 my_budget=15 opp_budget=14 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab dist=1.9 my_budget=22 opp_budget=15 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.5 my_budget=36 opp_budget=15 my_guard=1.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab dist=1.0 my_budget=42 opp_budget=38 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.3 my_budget=31 opp_budget=44 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.1 my_budget=26 opp_budget=36 my_guard=0.4","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block dist=1.3 my_budget=35 opp_budget=28 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.3 my_budget=29 opp_budget=44 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.5 my_budget=38 opp_budget=30 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none dist=1.2 my_budget=41 opp_budget=24 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block dist=1.8 my_budget=19 opp_budget=24 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block dist=1.1 my_budget=30 opp_budget=5 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=2.0 my_budget=10 opp_budget=31 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=1.1 my_budget=49 opp_budget=14 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.0 my_budget=23 opp_budget=34 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none dist=1.0 my_budget=36 opp_budget=15 my_guard=0.1","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.0 my_budget=28 opp_budget=7 my_guard=0.6","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.1 my_budget=11 opp_budget=23 my_guard=0.5","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none dist=1.1 my_budget=13 opp_budget=17 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.7 my_budget=29 opp_budget=49 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=1.6 my_budget=31 opp_budget=11 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=0.9 my_budget=24 opp_budget=49 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=1.7 my_budget=44 opp_budget=23 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block dist=1.4 my_budget=27 opp_budget=39 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block dist=1.3 my_budget=32 opp_budget=48 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.9 my_budget=32 opp_budget=46 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.1 my_budget=19 opp_budget=48 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.7 my_budget=33 opp_budget=31 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab dist=1.5 my_budget=21 opp_budget=28 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.5 my_budget=27 opp_budget=42 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.8 my_budget=12 opp_budget=30 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.9 my_budget=48 opp_budget=16 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=0.9 my_budget=18 opp_budget=28 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=2.0 my_budget=12 opp_budget=10 my_guard=0.5","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.7 my_budget=27 opp_budget=28 my_guard=0.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=2.1 my_budget=12 opp_budget=43 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=1.9 my_budget=16 opp_budget=42 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none dist=1.1 my_budget=16 opp_budget=49 my_guard=0.8","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.9 my_budget=47 opp_budget=33 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none dist=1.7 my_budget=18 opp_budget=25 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.6 my_budget=18 opp_budget=32 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.1 my_budget=41 opp_budget=20 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=0.9 my_budget=34 opp_budget=31 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=0.9 my_budget=21 opp_budget=43 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.2 my_budget=14 opp_budget=8 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=1.3 my_budget=48 opp_budget=28 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=1.5 my_budget=43 opp_budget=48 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross dist=1.0 my_budget=35 opp_budget=38 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.5 my_budget=13 opp_budget=19 my_guard=1.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.5 my_budget=26 opp_budget=43 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none dist=1.8 my_budget=29 opp_budget=19 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=1.1 my_budget=12 opp_budget=22 my_guard=0.3","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none dist=1.4 my_budget=38 opp_budget=17 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=1.4 my_budget=44 opp_budget=44 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.7 my_budget=38 opp_budget=34 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross dist=2.0 my_budget=45 opp_budget=33 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none dist=1.9 my_budget=45 opp_budget=18 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross dist=2.1 my_budget=21 opp_budget=20 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.1 my_budget=49 opp_budget=34 my_guard=0.1","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=1.5 my_budget=17 opp_budget=18 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=1.6 my_budget=45 opp_budget=32 my_guard=0.8","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross dist=1.8 my_budget=47 opp_budget=23 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block dist=1.4 my_budget=10 opp_budget=24 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.1 my_budget=30 opp_budget=18 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab dist=1.5 my_budget=47 opp_budget=23 my_guard=0.9","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=1.9 my_budget=17 opp_budget=36 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none dist=1.5 my_budget=31 opp_budget=48 my_guard=0.2","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=0.9 my_budget=29 opp_budget=17 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.6 my_budget=34 opp_budget=13 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none dist=1.8 my_budget=38 opp_budget=46 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.9 my_budget=11 opp_budget=21 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab dist=1.7 my_budget=35 opp_budget=41 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none dist=1.5 my_budget=46 opp_budget=47 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab dist=1.6 my_budget=39 opp_budget=34 my_guard=0.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.1 my_budget=12 opp_budget=9 my_guard=0.3","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab dist=1.2 my_budget=11 opp_budget=35 my_guard=0.7","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.0 my_budget=45 opp_budget=29 my_guard=0.4","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=1.8 my_budget=27 opp_budget=15 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=2.0 my_budget=12 opp_budget=23 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=1.9 my_budget=18 opp_budget=42 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab dist=1.2 my_budget=27 opp_budget=7 my_guard=0.5","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.4 my_budget=45 opp_budget=34 my_guard=0.5","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.2 my_budget=29 opp_budget=8 my_guard=0.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block dist=1.4 my_budget=33 opp_budget=31 my_guard=0.3","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab dist=0.9 my_budget=40 opp_budget=48 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.0 my_budget=40 opp_budget=5 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=1.1 my_budget=47 opp_budget=36 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.5 my_budget=49 opp_budget=19 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.1 my_budget=44 opp_budget=23 my_guard=0.1","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.7 my_budget=21 opp_budget=39 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=1.8 my_budget=31 opp_budget=10 my_guard=0.0","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.6 my_budget=17 opp_budget=26 my_guard=0.0","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=1.8 my_budget=37 opp_budget=42 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none dist=1.4 my_budget=36 opp_budget=46 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab dist=1.9 my_budget=25 opp_budget=33 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.6 my_budget=34 opp_budget=41 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=2.0 my_budget=21 opp_budget=24 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.3 my_budget=20 opp_budget=41 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.9 my_budget=39 opp_budget=33 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross dist=1.6 my_budget=31 opp_budget=44 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=2.0 my_budget=37 opp_budget=11 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.8 my_budget=40 opp_budget=27 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.0 my_budget=48 opp_budget=34 my_guard=0.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block dist=2.1 my_budget=47 opp_budget=25 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block dist=1.7 my_budget=17 opp_budget=6 my_guard=0.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab dist=0.9 my_budget=15 opp_budget=21 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block dist=1.7 my_budget=39 opp_budget=43 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=0.9 my_budget=23 opp_budget=11 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.8 my_budget=10 opp_budget=24 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.3 my_budget=10 opp_budget=33 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab dist=1.9 my_budget=14 opp_budget=44 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=1.4 my_budget=45 opp_budget=17 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none dist=1.9 my_budget=28 opp_budget=21 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block dist=1.1 my_budget=12 opp_budget=37 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab dist=1.9 my_budget=11 opp_budget=13 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.3 my_budget=22 opp_budget=17 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=2.0 my_budget=19 opp_budget=42 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=1.9 my_budget=22 opp_budget=24 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none dist=0.9 my_budget=14 opp_budget=48 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none dist=1.7 my_budget=23 opp_budget=44 my_guard=0.1","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab dist=2.1 my_budget=37 opp_budget=35 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross dist=1.6 my_budget=17 opp_budget=20 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=2.1 my_budget=46 opp_budget=45 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block dist=1.5 my_budget=48 opp_budget=18 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=2.1 my_budget=23 opp_budget=37 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.6 my_budget=22 opp_budget=41 my_guard=0.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab dist=2.0 my_budget=42 opp_budget=49 my_guard=1.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block dist=2.0 my_budget=48 opp_budget=11 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.8 my_budget=33 opp_budget=5 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross dist=1.4 my_budget=47 opp_budget=10 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=1.6 my_budget=21 opp_budget=18 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block dist=1.9 my_budget=18 opp_budget=43 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=1.6 my_budget=49 opp_budget=13 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none dist=1.9 my_budget=25 opp_budget=28 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.4 my_budget=35 opp_budget=28 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross dist=1.1 my_budget=38 opp_budget=39 my_guard=0.8","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab dist=1.5 my_budget=11 opp_budget=9 my_guard=0.8","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=1.9 my_budget=36 opp_budget=31 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.2 my_budget=14 opp_budget=38 my_guard=1.0","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block dist=1.3 my_budget=31 opp_budget=41 my_guard=0.2","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.7 my_budget=47 opp_budget=19 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=1.7 my_budget=31 opp_budget=16 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none dist=1.8 my_budget=23 opp_budget=23 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=2.1 my_budget=13 opp_budget=25 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none dist=1.6 my_budget=28 opp_budget=21 my_guard=0.1","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none dist=1.1 my_budget=19 opp_budget=17 my_guard=1.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.6 my_budget=25 opp_budget=29 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block dist=1.5 my_budget=12 opp_budget=10 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=1.8 my_budget=44 opp_budget=40 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab dist=1.9 my_budget=22 opp_budget=11 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none dist=2.0 my_budget=26 opp_budget=38 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross dist=1.0 my_budget=11 opp_budget=30 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross dist=1.0 my_budget=46 opp_budget=40 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=2.0 my_budget=18 opp_budget=39 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.9 my_budget=30 opp_budget=33 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block dist=1.7 my_budget=36 opp_budget=32 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=2.0 my_budget=31 opp_budget=39 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.0 my_budget=31 opp_budget=48 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block dist=2.0 my_budget=37 opp_budget=45 my_guard=0.7","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.8 my_budget=43 opp_budget=40 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=1.7 my_budget=35 opp_budget=32 my_guard=0.2","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=1.7 my_budget=44 opp_budget=14 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross dist=1.2 my_budget=45 opp_budget=11 my_guard=0.9","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab dist=1.6 my_budget=42 opp_budget=17 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross dist=1.1 my_budget=20 opp_budget=13 my_guard=0.5","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none dist=1.4 my_budget=32 opp_budget=30 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab dist=1.7 my_budget=11 opp_budget=35 my_guard=0.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block dist=1.3 my_budget=22 opp_budget=45 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab dist=1.9 my_budget=11 opp_budget=42 my_guard=0.9","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.8 my_budget=40 opp_budget=40 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.6 my_budget=35 opp_budget=25 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=1.2 my_budget=46 opp_budget=10 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross dist=1.2 my_budget=16 opp_budget=36 my_guard=1.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block dist=0.9 my_budget=45 opp_budget=13 my_guard=0.3","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none dist=1.3 my_budget=17 opp_budget=7 my_guard=0.5","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab dist=1.7 my_budget=30 opp_budget=8 my_guard=0.7","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=0.9 my_budget=27 opp_budget=14 my_guard=0.6","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.4 my_budget=18 opp_budget=13 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.9 my_budget=27 opp_budget=12 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.0 my_budget=44 opp_budget=45 my_guard=0.9","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab dist=2.0 my_budget=30 opp_budget=6 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none dist=1.3 my_budget=19 opp_budget=16 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.2 my_budget=39 opp_budget=32 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross dist=1.8 my_budget=28 opp_budget=14 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block dist=1.1 my_budget=32 opp_budget=29 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross dist=1.1 my_budget=32 opp_budget=24 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross dist=0.9 my_budget=44 opp_budget=25 my_guard=0.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.1 my_budget=28 opp_budget=14 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross dist=1.2 my_budget=10 opp_budget=43 my_guard=0.4","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block dist=1.5 my_budget=25 opp_budget=33 my_guard=0.7","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross dist=1.5 my_budget=31 opp_budget=8 my_guard=0.8","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.5 my_budget=30 opp_budget=29 my_guard=0.2","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none dist=1.7 my_budget=16 opp_budget=47 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none dist=1.2 my_budget=47 opp_budget=21 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=1.3 my_budget=35 opp_budget=43 my_guard=0.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross dist=1.2 my_budget=28 opp_budget=40 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross dist=1.6 my_budget=38 opp_budget=7 my_guard=0.1","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block dist=1.6 my_budget=37 opp_budget=43 my_guard=0.3","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab dist=1.7 my_budget=48 opp_budget=27 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.4 my_budget=40 opp_budget=25 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross dist=1.7 my_budget=26 opp_budget=43 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.6 my_budget=47 opp_budget=15 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.2 my_budget=48 opp_budget=36 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block dist=1.3 my_budget=13 opp_budget=17 my_guard=0.4","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none dist=1.7 my_budget=21 opp_budget=15 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab dist=1.6 my_budget=33 opp_budget=41 my_guard=1.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.2 my_budget=45 opp_budget=45 my_guard=0.6","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.5 my_budget=17 opp_budget=14 my_guard=0.7","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none dist=1.4 my_budget=11 opp_budget=24 my_guard=0.8","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none dist=1.8 my_budget=48 opp_budget=10 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab dist=1.5 my_budget=32 opp_budget=44 my_guard=0.6","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.6 my_budget=34 opp_budget=7 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block dist=1.9 my_budget=26 opp_budget=14 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab dist=1.4 my_budget=12 opp_budget=15 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block dist=1.4 my_budget=22 opp_budget=36 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none dist=1.0 my_budget=11 opp_budget=45 my_guard=0.4","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross dist=1.8 my_budget=15 opp_budget=38 my_guard=0.1","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none dist=1.6 my_budget=33 opp_budget=37 my_guard=0.0","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.5 my_budget=28 opp_budget=33 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.1 my_budget=22 opp_budget=27 my_guard=0.6","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none dist=1.4 my_budget=33 opp_budget=14 my_guard=0.9","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block dist=1.3 my_budget=49 opp_budget=17 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.0 my_budget=23 opp_budget=37 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block dist=1.0 my_budget=10 opp_budget=16 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block dist=1.9 my_budget=49 opp_budget=7 my_guard=0.6","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross dist=1.7 my_budget=25 opp_budget=22 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=1.0 my_budget=34 opp_budget=23 my_guard=0.9","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none dist=1.7 my_budget=45 opp_budget=48 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab dist=1.0 my_budget=35 opp_budget=48 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block dist=1.8 my_budget=14 opp_budget=11 my_guard=0.3","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross dist=1.0 my_budget=43 opp_budget=23 my_guard=0.6","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none dist=1.4 my_budget=41 opp_budget=25 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.9 my_budget=45 opp_budget=32 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none dist=1.1 my_budget=21 opp_budget=23 my_guard=0.9","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.4 my_budget=11 opp_budget=28 my_guard=0.8","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab dist=1.0 my_budget=28 opp_budget=32 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab dist=2.1 my_budget=19 opp_budget=17 my_guard=0.2","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=0.9 my_budget=44 opp_budget=46 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.8 my_budget=26 opp_budget=47 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block dist=1.1 my_budget=16 opp_budget=41 my_guard=1.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none dist=1.2 my_budget=41 opp_budget=25 my_guard=0.3","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross dist=1.9 my_budget=22 opp_budget=47 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.6 my_budget=45 opp_budget=39 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block dist=1.7 my_budget=18 opp_budget=11 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.2 my_budget=39 opp_budget=43 my_guard=0.3","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block dist=1.2 my_budget=26 opp_budget=10 my_guard=0.2","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross dist=1.5 my_budget=24 opp_budget=22 my_guard=0.1","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross dist=1.9 my_budget=42 opp_budget=33 my_guard=0.9","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none dist=1.3 my_budget=17 opp_budget=20 my_guard=0.9","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab dist=1.4 my_budget=38 opp_budget=6 my_guard=1.0","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross dist=1.1 my_budget=36 opp_budget=47 my_guard=0.5","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab dist=1.5 my_budget=29 opp_budget=30 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.4 my_budget=30 opp_budget=43 my_guard=0.4","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block dist=1.3 my_budget=11 opp_budget=14 my_guard=0.5","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab dist=1.9 my_budget=17 opp_budget=30 my_guard=0.4","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross dist=1.4 my_budget=20 opp_budget=46 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross dist=1.7 my_budget=35 opp_budget=15 my_guard=0.8","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=1.9 my_budget=41 opp_budget=11 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.7 my_budget=41 opp_budget=46 my_guard=0.7","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block dist=1.3 my_budget=35 opp_budget=44 my_guard=0.5","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none dist=1.7 my_budget=38 opp_budget=44 my_guard=0.5","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block dist=1.8 my_budget=20 opp_budget=39 my_guard=0.4","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none dist=1.1 my_budget=28 opp_budget=17 my_guard=0.6","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none dist=1.5 my_budget=41 opp_budget=34 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none dist=1.7 my_budget=37 opp_budget=35 my_guard=0.9","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab dist=1.7 my_budget=27 opp_budget=35 my_guard=0.7","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block dist=1.2 my_budget=43 opp_budget=33 my_guard=0.6","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab dist=1.8 my_budget=21 opp_budget=29 my_guard=0.5","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.1 my_budget=33 opp_budget=47 my_guard=0.0","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none dist=1.3 my_budget=40 opp_budget=22 my_guard=0.7","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none dist=1.4 my_budget=49 opp_budget=35 my_guard=0.8","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.3 my_budget=44 opp_budget=11 my_guard=0.8","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block dist=1.9 my_budget=31 opp_budget=41 my_guard=0.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab dist=1.0 my_budget=11 opp_budget=41 my_guard=0.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none dist=1.3 my_budget=42 opp_budget=9 my_guard=0.3","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross dist=1.5 my_budget=20 opp_budget=13 my_guard=0.9","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab dist=1.9 my_budget=40 opp_budget=32 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=1.6 my_budget=47 opp_budget=28 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none dist=1.9 my_budget=39 opp_budget=18 my_guard=0.0","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab dist=1.0 my_budget=33 opp_budget=42 my_guard=0.5","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block dist=1.0 my_budget=31 opp_budget=10 my_guard=0.2","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab dist=2.1 my_budget=30 opp_budget=33 my_guard=0.1","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross dist=1.2 my_budget=24 opp_budget=31 my_guard=0.1","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none dist=1.3 my_budget=34 opp_budget=34 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block dist=1.7 my_budget=46 opp_budget=23 my_guard=0.4","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block dist=1.1 my_budget=27 opp_budget=30 my_guard=1.0","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab dist=2.0 my_budget=35 opp_budget=7 my_guard=0.5","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross dist=1.4 my_budget=10 opp_budget=27 my_guard=0.8","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross dist=1.2 my_budget=29 opp_budget=18 my_guard=0.8","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross dist=1.6 my_budget=41 opp_budget=10 my_guard=0.6","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab dist=1.8 my_budget=39 opp_budget=40 my_guard=0.8","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none dist=1.2 my_budget=38 opp_budget=14 my_guard=1.0","output":"block jab cross"}

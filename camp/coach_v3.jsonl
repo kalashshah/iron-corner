@@ -1,0 +1,900 @@
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=far my_money=low opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=mid my_money=almost_broke opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=close my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=close my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=mid my_money=almost_broke opp_money=almost_broke my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=close my_money=low opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=far my_money=low opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=close my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=close my_money=low opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=close my_money=low opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=mid my_money=almost_broke opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=low opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=mid my_money=almost_broke opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=close my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=close my_money=low opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=far my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=mid my_money=low opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=mid my_money=almost_broke opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=close my_money=low opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=almost_broke opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=close my_money=low opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=mid my_money=low opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=close my_money=low opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=almost_broke opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=close my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=close my_money=ok opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=close my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=mid my_money=low opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=far my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none distance=far my_money=low opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=close my_money=low opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=far my_money=almost_broke opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=mid my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=mid my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=far my_money=almost_broke opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=mid my_money=low opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=close my_money=low opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=mid my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=close my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=close my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=low opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=close my_money=almost_broke opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=mid my_money=low opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=mid my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=mid my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=close my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none distance=close my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=close my_money=almost_broke opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block distance=close my_money=almost_broke opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=close my_money=low opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=mid my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=far my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=close my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=close my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=mid my_money=low opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=far my_money=almost_broke opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=mid my_money=almost_broke opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=far my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=close my_money=ok opp_money=almost_broke my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=far my_money=low opp_money=almost_broke my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=close my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=mid my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block distance=far my_money=almost_broke opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=close my_money=almost_broke opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=close my_money=low opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=close my_money=ok opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=close my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=jab distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=close my_money=low opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=far my_money=almost_broke opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=mid my_money=almost_broke opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=mid my_money=almost_broke opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=block distance=mid my_money=almost_broke opp_money=almost_broke my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=mid my_money=low opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=far my_money=low opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=mid my_money=almost_broke opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=mid my_money=ok opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=far my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=close my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=almost_broke opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block distance=close my_money=low opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=none distance=close my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=close my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=close my_money=ok opp_money=low my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=block distance=mid my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=cross distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=close my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=close my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=mid my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none distance=mid my_money=low opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=jab my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=mid my_money=low opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=cross distance=far my_money=low opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=close my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=block distance=mid my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=none distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=jab distance=far my_money=almost_broke opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=block distance=close my_money=ok opp_money=low my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=close my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=far my_money=low opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=mid my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=none distance=mid my_money=low opp_money=ok my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=far my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=mid my_money=almost_broke opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=jab distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=cross distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=block distance=close my_money=ok opp_money=almost_broke my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=cross distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=block distance=mid my_money=low opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=cross distance=far my_money=almost_broke opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=none my_last=cross distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=none my_last=cross distance=far my_money=low opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=block my_last=jab distance=close my_money=low opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=jab distance=mid my_money=ok opp_money=almost_broke my_guard=low","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"body body hook_r"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=block my_last=block distance=close my_money=ok opp_money=low my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=jab my_last=none distance=far my_money=low opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=block my_last=jab distance=mid my_money=ok opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=far my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=cross distance=close my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=mid my_money=almost_broke opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=jab distance=far my_money=low opp_money=almost_broke my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=low my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=cross distance=close my_money=low opp_money=ok my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=close my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=mid my_money=low opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=block distance=mid my_money=ok opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=block distance=far my_money=low opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=jab distance=far my_money=ok opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=jab my_last=block distance=close my_money=almost_broke opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=far my_money=low opp_money=almost_broke my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=mid my_money=low opp_money=low my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=none my_last=jab distance=far my_money=ok opp_money=ok my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=jab distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=block distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=jab my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=far my_money=low opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=far my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=jab distance=far my_money=almost_broke opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=jab my_last=block distance=close my_money=ok opp_money=low my_guard=low","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=block distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=jab distance=far my_money=low opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=close my_money=ok opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=none distance=mid my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=jab my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=cross opp_prev=hook_l my_last=block distance=mid my_money=low opp_money=low my_guard=high","output":"dodge_l body"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=mid my_money=low opp_money=ok my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=mid my_money=ok opp_money=almost_broke my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=close my_money=low opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=close my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=cross distance=mid my_money=ok opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=hook_l my_last=jab distance=mid my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=cross distance=close my_money=almost_broke opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=none my_last=block distance=far my_money=low opp_money=low my_guard=low","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=block my_last=none distance=mid my_money=ok opp_money=low my_guard=high","output":"jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=none opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=almost_broke my_guard=high","output":"step_in jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=none distance=mid my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=jab my_last=cross distance=mid my_money=low opp_money=ok my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=cross distance=close my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=jab opp_prev=hook_l my_last=jab distance=close my_money=low opp_money=ok my_guard=high","output":"block jab cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=hook_l my_last=cross distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=block distance=mid my_money=ok opp_money=low my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=close my_money=ok opp_money=ok my_guard=low","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=cross distance=close my_money=ok opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=block my_last=cross distance=far my_money=ok opp_money=low my_guard=low","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=hook_l my_last=none distance=far my_money=ok opp_money=ok my_guard=low","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=block my_last=jab distance=mid my_money=ok opp_money=low my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=block distance=far my_money=ok opp_money=ok my_guard=high","output":"step_back jab"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_l opp_prev=none my_last=block distance=far my_money=low opp_money=low my_guard=high","output":"dodge_r uppercut"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=none distance=far my_money=ok opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=cross distance=far my_money=low opp_money=low my_guard=low","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=hook_r opp_prev=none my_last=block distance=close my_money=low opp_money=ok my_guard=high","output":"dodge_l hook_l"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=body opp_prev=block my_last=jab distance=mid my_money=low opp_money=ok my_guard=high","output":"block cross"}
+{"instruction":"Robot boxer: next moves for this fight state.","input":"opp_last=uppercut opp_prev=hook_l my_last=none distance=far my_money=low opp_money=low my_guard=low","output":"step_back jab"}
