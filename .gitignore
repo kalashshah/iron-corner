@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.env
+.DS_Store
+unity/Library/
+unity/Temp/
+unity/Logs/
+unity/obj/
+unity/UserSettings/
+unity/Builds/
+unity/Assets/ThirdParty/Mixamo/
+unity/Assets/ThirdParty/Mixamo.meta
+backend/data/
+unity/Captures/
+unity/Captures.meta
