@@ -3,7 +3,10 @@ import { env, modes, state, save, id, fail, type Approval } from "./state.ts";
 
 // Production issuer: World mocks proofs for the hackathon, so the sandbox app is no longer needed.
 const ISSUER = env.WORLD_ISSUER ?? "https://auth.world.org";
-const ACR = env.WORLD_ACR ?? "https://world.org/oidc/acr/orb-face";
+// WORLD_ACR unset: no acr claim is sent, so the app's portal default applies (Selfie Check or Orb, with Face Auth
+// on each new proof). Set it (e.g. .../orb-face) to require one level. Either way the token must show a fresh proof.
+const ACR = env.WORLD_ACR || null;
+const ACCEPT = (env.WORLD_ACCEPT_ACR ?? "https://world.org/oidc/acr/orb,https://world.org/oidc/acr/orb-face,https://world.org/oidc/acr/selfie,https://world.org/oidc/acr/selfie-face").split(",");
 const MOCK_APPROVE_MS = Number(env.MOCK_APPROVE_MS ?? 3000);
 const running = new Map<string, AbortController>();
 
@@ -34,7 +37,7 @@ export async function create(botId: string, action: Approval["action"]): Promise
     const { oc, c } = await config();
     const da = await oc.initiateDeviceAuthorization(c, {
       scope: "openid",
-      claims: JSON.stringify({ id_token: { acr: { essential: true, values: [ACR] } } }),
+      ...(ACR ? { claims: JSON.stringify({ id_token: { acr: { essential: true, values: [ACR] } } }) } : {}),
     });
     a = { approvalId, botId, action, status: "pending", qrUri: da.verification_uri_complete ?? da.verification_uri,
       userCode: da.user_code, expiresAt: new Date(Date.now() + da.expires_in * 1000).toISOString(), startedAt };
@@ -56,7 +59,7 @@ async function poll(a: Approval, oc: any, c: any, da: any, signal: AbortSignal) 
     const problem =
       !cl ? "no id_token" :
       cl.iss !== c.serverMetadata().issuer ? "wrong issuer" :
-      cl.acr !== ACR ? `acr ${cl.acr}` :
+      (ACR ? cl.acr !== ACR : !ACCEPT.includes(String(cl.acr))) ? `acr ${cl.acr ?? "missing (unverified account)"}` :
       !amr.includes("pop") ? "amr lacks pop" :
       typeof cl.auth_time !== "number" || cl.auth_time < a.startedAt - 5 ? "stale auth_time" :
       bot.ownerSub && bot.ownerSub !== cl.sub ? "not this bot's owner" : null;
