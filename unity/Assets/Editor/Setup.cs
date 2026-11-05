@@ -13,7 +13,7 @@ using UnityEngine.Rendering.Universal;
 // root motion baked into the pose (the Fighter script moves the transform itself).
 public class MixamoImport : AssetPostprocessor
 {
-    bool Ours => assetPath.Contains("ThirdParty/Mixamo/");
+    bool Ours => assetPath.Contains("ThirdParty/Mixamo/") || assetPath.Contains("ThirdParty/Robots/");
     bool IsClip => assetPath.Contains("/Clips/");
 
     void OnPreprocessModel()
@@ -157,8 +157,13 @@ public static class Setup
     }
 
     // One prefab per bot. To swap in another robot mesh later, change `model` (any humanoid rig works).
+    // A bot uses its own robot model (Assets/ThirdParty/Robots/<id>.fbx, keeps its textures, tinted) when present,
+    // otherwise the metal-skinned Mixamo Vanguard.
     static GameObject Bot(string id, string label, AnimatorController ctrl, Color body, Color accent, Color eye)
     {
+        var robotPath = $"Assets/ThirdParty/Robots/{id}.fbx";
+        var robot = AssetDatabase.LoadAssetAtPath<GameObject>(robotPath);
+        if (robot != null) return RobotBot(id, label, ctrl, robot, body, eye);
         var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{Mixamo}/Chars/vanguard.fbx");
         var diffuse = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Mixamo}/Chars/vanguard_tex/vanguard_diffuse1.png");
         var normal = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Mixamo}/Chars/vanguard_tex/vanguard_normal.png");
@@ -198,6 +203,48 @@ public static class Setup
         var path = $"{Out}/{id}.prefab";
         Debug.Log($"[setup] {id}: renderers={body3d.GetComponentsInChildren<Renderer>().Length} head={(head != null ? head.position.ToString("F2") : "none")}");
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        return prefab;
+    }
+
+    static GameObject RobotBot(string id, string label, AnimatorController ctrl, GameObject model, Color tint, Color eye)
+    {
+        var root = new GameObject(id);
+        var body3d = (GameObject)Object.Instantiate(model, root.transform);
+        body3d.name = "model";
+        foreach (var r in body3d.GetComponentsInChildren<Renderer>())
+            r.sharedMaterials = r.sharedMaterials.Select((m, i) =>
+            {
+                var path = $"{Out}/{id}_robot_{i}.mat";
+                var mat = new Material(m != null ? m : new Material(Shader.Find("Universal Render Pipeline/Lit")));
+                mat.shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (m != null && m.HasProperty("_MainTex") && m.GetTexture("_MainTex") != null) mat.SetTexture("_BaseMap", m.GetTexture("_MainTex"));
+                mat.SetColor("_BaseColor", tint);
+                mat.SetFloat("_Metallic", 0.85f); mat.SetFloat("_Smoothness", 0.55f);
+                if (mat.IsKeywordEnabled("_EMISSION") == false) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Color.black); }
+                AssetDatabase.CreateAsset(mat, path);
+                return mat;
+            }).ToArray();
+        if (!body3d.TryGetComponent<Animator>(out var anim)) anim = body3d.AddComponent<Animator>();
+        anim.runtimeAnimatorController = ctrl;
+        anim.applyRootMotion = false;
+        anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        var head = anim.GetBoneTransform(HumanBodyBones.Head);
+        if (head != null)
+        {
+            var e = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Object.DestroyImmediate(e.GetComponent<Collider>());
+            e.name = "eye";
+            e.GetComponent<Renderer>().sharedMaterial = Lit(id + "_eye", Color.black, 0f, 0.9f, null, null, eye);
+            e.transform.position = head.position + new Vector3(0, 0.05f, 0.12f);
+            e.transform.localScale = new Vector3(0.09f, 0.03f, 0.03f);
+            e.transform.SetParent(head, true);
+        }
+        else Debug.LogError("[setup] no head bone on robot " + id);
+        var f = root.AddComponent<Fighter>();
+        f.botId = id; f.displayName = label; f.anim = anim;
+        Debug.Log($"[setup] {id}: robot model {model.name}, renderers={body3d.GetComponentsInChildren<Renderer>().Length}");
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, $"{Out}/{id}.prefab");
         Object.DestroyImmediate(root);
         return prefab;
     }
