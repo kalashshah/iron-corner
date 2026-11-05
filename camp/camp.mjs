@@ -28,34 +28,42 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // State → one compact line. The same function formats prompts at fight time, so train and serve match.
 export function stateLine(s) {
-  return `opp_last=${s.o1 ?? "none"} opp_prev=${s.o2 ?? "none"} my_last=${s.m1 ?? "none"} dist=${(+s.dist).toFixed(1)} ` +
-    `my_budget=${s.mine} opp_budget=${s.theirs} my_guard=${(+s.guard).toFixed(1)}`;
+  // Words, not numbers: a 0.5B model can't compare digits reliably (camp v2 got 0/3 on "dist > 1.6"),
+  // and a coach thinks in "he's far" / "he's almost broke" anyway. The fight server formats states the same way.
+  const dist = s.dist > 1.6 ? "far" : s.dist < 1.1 ? "close" : "mid";
+  const money = (v) => (v < 12 ? "almost_broke" : v < 25 ? "low" : "ok");
+  return `opp_last=${s.o1 ?? "none"} opp_prev=${s.o2 ?? "none"} my_last=${s.m1 ?? "none"} distance=${dist} ` +
+    `my_money=${money(s.mine)} opp_money=${money(s.theirs)} my_guard=${s.guard < 0.4 ? "low" : "high"}`;
 }
 
-function synthetic(n = 150) {
-  // A recognisable coaching style: counter hooks with slip-uppercut, jab-cross when far, block body shots, finish with body.
+function coachMove(s) {
+  // One fixed coaching style, so every label is learnable from the state.
+  if (s.o1 === "hook_l") return "dodge_r uppercut";
+  if (s.o1 === "hook_r") return "dodge_l hook_l";
+  if (s.o1 === "body") return "block cross";
+  if (s.o1 === "uppercut") return "step_back jab";
+  if (s.dist > 1.6) return "step_in jab cross";
+  if (s.theirs < 12) return "body body hook_r";
+  if (s.o1 === "jab") return "block jab cross";
+  if (s.o1 === "cross") return "dodge_l body";
+  return "jab cross";
+}
+function synthetic(n = 900) {
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
   const out = [];
   for (let i = 0; i < n; i++) {
     const s = { o1: rnd([null, "jab", "cross", "hook_l", "hook_r", "body", "uppercut"]), o2: rnd([null, "jab", "hook_l", "block"]),
       m1: rnd([null, "jab", "block", "cross"]), dist: 0.9 + Math.random() * 1.2, mine: 10 + Math.floor(Math.random() * 40),
       theirs: 5 + Math.floor(Math.random() * 45), guard: Math.random() };
-    let a;
-    if (s.o1 === "hook_l") a = "dodge_r uppercut";
-    else if (s.o1 === "hook_r") a = "dodge_l hook_l";
-    else if (s.o1 === "body") a = "block cross";
-    else if (s.dist > 1.6) a = "step_in jab cross";
-    else if (s.theirs < 12) a = "body body hook_r";
-    else if (s.o1 === "jab") a = "block jab cross";
-    else a = rnd(["jab cross", "jab jab cross", "body hook_l"]);
-    out.push({ s, a });
+    out.push({ s, a: coachMove(s) });
   }
   return out;
 }
 
+const INSTRUCTION = "Robot boxer: next moves for this fight state.";
 function toJsonl(examples) {
-  return examples.map(({ s, a }) => JSON.stringify({ messages: [
-    { role: "system", content: SYSTEM }, { role: "user", content: stateLine(s) }, { role: "assistant", content: a }] })).join("\n") + "\n";
+  // instruction/input/output: the trainer scores the output, so loss reflects the moves, not a repeated prompt.
+  return examples.map(({ s, a }) => JSON.stringify({ instruction: INSTRUCTION, input: stateLine(s), output: a })).join("\n") + "\n";
 }
 
 async function broker() {
@@ -90,7 +98,7 @@ if (cmd === "dataset") {
 } else if (cmd === "start") {
   const { b } = await broker();
   const p = await provider(b);
-  fs.writeFileSync("training.json", JSON.stringify({ neftune_noise_alpha: 5, num_train_epochs: 3, per_device_train_batch_size: 2, learning_rate: 0.0002, max_steps: 120 }));
+  fs.writeFileSync("training.json", JSON.stringify({ neftune_noise_alpha: 5, num_train_epochs: 3, per_device_train_batch_size: 2, learning_rate: 0.0002, max_steps: 400 }));
   log("provider", p); log("acknowledging provider signer");
   await b.fineTuning.acknowledgeProviderSigner(p).catch((e) => log("ack signer:", e.message.slice(0, 160)));
   const acct = await b.fineTuning.getAccount(p).catch(() => null);

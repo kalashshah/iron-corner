@@ -23,6 +23,8 @@ What we hit while building Iron Corner on 0G at ETHGlobal Mumbai (5 to 7 Nov 202
 13. **`decryptModel` right after acknowledging fails** with "second arg must be public key"; the same call works a few minutes later. Helpful: wait/poll for the provider's key, or an error that says "secret not published yet, retry".
 14. **`downloadLoRAFromTEE` saves the file, then throws** "Cannot read properties of undefined (reading 'slice')" (the return value is undefined).
 15. **Serving an adapter needs 2 0G in the ledger.** `deployAdapter` auto-funds the provider sub-account with 2 0G and times out after 120 s ("adapter not found") when the ledger can't cover it. The docs don't mention this amount. Helpful: state the serving minimum, and fail fast instead of waiting 120 s.
+16. **The prompt layout used for instruction/input/output training isn't documented.** We had to test layouts against our own adapter: the Alpaca template ("### Instruction / ### Input / ### Response") scored 13/24, the Qwen chat template 8–10/24 with empty answers. Serving with the wrong layout silently degrades a fine-tune. Helpful: one line in the docs, and `chatWithFineTunedModel` applying the same layout automatically.
+17. **Chat-format datasets train mostly on the prompt.** Our first adapter (chat format, long system prompt) reached loss 0.034 but learned nothing usable (1/24); the loss was dominated by the repeated system prompt. Helpful: a note recommending instruction/input/output or saying whether prompt tokens are masked.
 
 ## Next to test
 
