@@ -5,13 +5,21 @@
 //   node camp.mjs status [taskId]                               task progress / logs
 //   node camp.mjs ack <taskId>                                  acknowledge the delivered adapter
 //   node camp.mjs deploy <taskId> | chat <adapter> "<state>"   serve the adapter and ask it for a move
-// Runs with ZG_DEV_MODE=true (the testnet fine-tuning provider lives on the dev contracts).
+// Uses the regular Galileo testnet contracts (a fine-tuning provider is listed there too).
 import fs from "node:fs";
 import os from "node:os";
 import { ethers } from "ethers";
-import { createZGComputeNetworkBroker } from "@0gfoundation/0g-compute-ts-sdk";
+import { createRequire } from "node:module";
+// The SDK's ESM build takes browser code paths (window) for TEE uploads; its CommonJS build is the Node one.
+const require = createRequire(import.meta.url);
+const { createZGComputeNetworkBroker } = require("@0gfoundation/0g-compute-ts-sdk");
+// The broker only builds its fine-tuning client when `signer instanceof ethers.Wallet` for the SDK's own (CommonJS)
+// ethers, so the wallet must come from that same copy, not from the ESM import above.
+const ethersCjs = require("ethers");
 
-process.env.ZG_DEV_MODE ??= "true";
+// Regular testnet: its ledger contract needs 0.1 0G to open an account. (The dev contracts need 3 0G, and the SDK's
+// addLedger() hard-codes 3 0G for both networks, so we open the account on the contract directly.)
+process.env.ZG_DEV_MODE ??= "false";
 const MODEL = "Qwen2.5-0.5B-Instruct";
 const MOVES = ["jab", "cross", "hook_l", "hook_r", "uppercut", "body", "block", "dodge_l", "dodge_r", "step_in", "step_back"];
 const SYSTEM = "You are a robot boxer's trained instincts. Given the fight state, reply with your next 1-3 moves, space separated, from: " + MOVES.join(" ") + ".";
@@ -53,7 +61,7 @@ function toJsonl(examples) {
 async function broker() {
   const env = Object.fromEntries(fs.readFileSync(os.homedir() + "/.iron-corner/wallets.env", "utf8").split("\n")
     .filter((l) => l.includes("=") && !l.startsWith("#")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
-  const w = new ethers.Wallet(env.OG_OPS_PRIVATE_KEY, new ethers.JsonRpcProvider("https://evmrpc-testnet.0g.ai"));
+  const w = new ethersCjs.Wallet(env.OG_OPS_PRIVATE_KEY, new ethersCjs.JsonRpcProvider("https://evmrpc-testnet.0g.ai"));
   return { b: await createZGComputeNetworkBroker(w), w };
 }
 async function provider(b) {
@@ -70,7 +78,14 @@ if (cmd === "dataset") {
 } else if (cmd === "account") {
   const { b, w } = await broker();
   try { log("ledger exists", j(await b.ledger.getLedger()).slice(0, 300)); }
-  catch { log("creating ledger with 0.3 0G"); await b.ledger.addLedger(0.3); log("ledger", j(await b.ledger.getLedger()).slice(0, 300)); }
+  catch {
+    const proc = b.ledger.ledger ?? b.ledger.processor ?? b.ledger;
+    const lc = proc.ledgerContract;
+    if (!lc) throw new Error("ledger contract handle not found on broker: " + Object.keys(b.ledger));
+    log("creating ledger with 0.3 0G directly on the contract");
+    await lc.addLedger(ethers.parseEther("0.3"), "");
+    log("ledger", j(await b.ledger.getLedger()).slice(0, 300));
+  }
   log("wallet balance", ethers.formatEther(await w.provider.getBalance(w.address)));
 } else if (cmd === "start") {
   const { b } = await broker();
@@ -78,11 +93,16 @@ if (cmd === "dataset") {
   fs.writeFileSync("training.json", JSON.stringify({ neftune_noise_alpha: 5, num_train_epochs: 3, per_device_train_batch_size: 2, learning_rate: 0.0002, max_steps: 120 }));
   log("provider", p); log("acknowledging provider signer");
   await b.fineTuning.acknowledgeProviderSigner(p).catch((e) => log("ack signer:", e.message.slice(0, 160)));
-  log("transferring 0.15 0G to the provider's fine-tuning account");
-  await b.ledger.transferFund(p, "fine-tuning", ethers.parseEther("0.15")).catch((e) => log("transfer:", e.message.slice(0, 200)));
-  log("uploading dataset", a1);
-  const dataRoot = await b.fineTuning.uploadDataset(a1);
-  log("dataset root (0G Storage)", dataRoot);
+  const acct = await b.fineTuning.getAccount(p).catch(() => null);
+  if (!acct || BigInt(acct.balance ?? 0) === 0n) {
+    log("transferring 0.15 0G to the provider's fine-tuning account");
+    await b.ledger.transferFund(p, "fine-tuning", ethers.parseEther("0.15")).catch((e) => log("transfer:", e.message.slice(0, 200)));
+  } else log("provider account balance", ethers.formatEther(BigInt(acct.balance)));
+  // uploadDataset() shells out to a Linux storage binary; the TEE path uploads straight into the provider's enclave.
+  log("uploading dataset to the provider TEE", a1);
+  const up = await b.fineTuning.uploadDatasetToTEE(p, a1);
+  const dataRoot = up.datasetHash;
+  log("dataset hash", dataRoot, up.message ?? "");
   const taskId = await b.fineTuning.createTask(p, MODEL, dataRoot, "training.json");
   log("TASK", taskId);
   fs.writeFileSync("last-task.json", j({ provider: p, taskId, dataRoot, at: new Date().toISOString() }));
