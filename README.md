@@ -28,7 +28,7 @@ flowchart LR
 2. Coach: you hold the mic and coach ("when he throws a left hook, slip right and uppercut"). 0G's `qwen3-omni-flash` transcribes it, and `qwen-flash` on 0G turns it into one brain rule: a counter, an opener or finisher combo, a style nudge, or a catchphrase. The game shows what it learned ("Learned counter: hook_l → dodge_r, uppercut") with the 0G request id. The sparring dummy then throws that left hook so you can watch the counter land. Three drills a day keeps a streak going.
 3. Remember: saving the brain encrypts it with a per-bot AES-256 key and stores it on 0G Storage. Each save is a new version with its own root hash.
 4. Approve: entering a high-stakes fight or reviving a knocked-out bot needs a fresh World ID approval from the owner. A denied, expired or cancelled request means the action does not happen.
-5. Fight: you can't coach during a fight. Every 1.5 s each bot sends the fight state to the backend, and 0G picks a stance and a combo from that bot's brain, naming the rule it followed. The bubble shows "Using: counter: hook_l → dodge_r, uppercut (learned in training)". Unity plays the moves and detects hits. Each clean hit makes the defender's agent pay the attacker through an x402-protected endpoint that settles on Hedera.
+5. Fight: you can't coach during a fight. Every 1.5 s each bot sends the fight state to the backend, and 0G picks a stance and a combo from that bot's brain, naming the rule it followed. The bubble shows "Using: counter: hook_l → dodge_r, uppercut (learned in training)". The server resolves every exchange (so nobody can cheat from their phone) and Unity plays the result. Each clean hit makes the defender's agent pay the attacker through an x402-protected endpoint that settles on Hedera.
 6. Learn: after the fight, 0G writes 1 to 3 lessons per bot into its brain. The whole fight (every decision with its 0G request id, every hit and payment) is uploaded to 0G Storage as an episode log, and the game can replay the fight from that log.
 
 If 0G fails or is slow (over 4 s), the bot covers up and holds still until a real plan arrives. It never makes up a move.
@@ -38,6 +38,21 @@ Without 0G the bot can't hear you, can't decide, and forgets everything it learn
 ## Growth and fairness
 
 Your bot gets better the more you train it, and it shows on the home screen as a level and five stats: reflexes, accuracy, defense, ring IQ and experience. All five are worked out from the demo library and fight history, so the only way to raise them is to practise. You get 5 sparring rounds of energy a day, refilled at 00:00 UTC. After that, training still teaches the bot but earns no XP. XP also shrinks with each round or fight on the same day, and moves you stop practising lose weight after two days. Every bot has the same body: damage, speed and reach are identical, and no stat or level changes them. Only the brain differs. Each brain save on 0G Storage includes the demo library and a snapshot of the level and stats, so every version is a record of how good the bot was at that point.
+
+## A new player's first session
+
+1. **Create** a fighter: a name and one of six paint schemes. The server gives it its own Hedera testnet account and mints it a 0G Agentic ID (ERC-7857-style token on Galileo, contract `0x4Ed79445a389C9442657773138e2ffFabb25d170`).
+2. **Connect World ID**, or skip. Verified humans fight in the Verified league, where each person owns at most one fighter. Skipping puts you in the Open league.
+3. **Train one round first.** The queue refuses untrained fighters. Spar a 30-second round on the move pad and teach at least one line.
+4. **Add test funds** (testnet HBAR from the house faucet, capped once a day).
+5. **Find a fight**: pick a stake and join the queue. Every 2 seconds the matcher pairs fighters in the same league and stake, never two fighters of the same owner, inside a rating window that widens the longer you wait. It picks at random (`crypto.randomInt`) among the 3 closest ratings, so the pairing is fair but not predictable. After 25 seconds with no human opponent you get a house sparring bot of your level.
+6. **Watch the fight.** The server runs it: both bots decide on 0G every 1.5 seconds, every random roll comes from a seed whose SHA-256 is published when the fight starts and whose value is revealed when it ends, so anyone can replay the fight from its 0G episode log and check it. Ratings use Elo.
+
+A live matched fight between two newly created fighters, `f_1e4257a3d1`: seed hash `c7cae7b6…455c` published at the start, seed `06412dde…ddcd` revealed at the end, 5 settled x402 payments (e.g. `0.0.9185802@1793914960.945634213`), episode root on 0G Storage `0x998af99e…73fe`, ratings 984 / 1016.
+
+## Fight camp: each fighter gets its own fine-tuned model
+
+"Send to camp" turns a fighter's sparring demos into a training set (the moves that worked, weighted up) and runs a real LoRA fine-tune of Qwen2.5-0.5B on 0G Compute. Each camp is a new adapter version, recorded on the fighter's Agentic ID. On 24 fight situations it never saw, the base model matched the coach 0/24 times; our third camp matched 17/24, including 10/10 on hook counters. Task ids, fees and what made the difference are in [`camp/RESULTS.md`](camp/RESULTS.md). Serving the adapter inside fights needs a larger 0G balance than we had, so fights currently use 0G's `qwen-flash` with recall of the owner's demos.
 
 ## Sponsor integrations
 

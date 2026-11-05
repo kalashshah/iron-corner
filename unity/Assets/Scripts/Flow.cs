@@ -623,6 +623,7 @@ public partial class Game
         yield return Until(() => modal.activeSelf, 15f);
         yield return Wait(1.2f);
         yield return shot("03_world");
+        if (!Api.Offline) CloseModal(true); // same as tapping Skip: live World needs an Orb-verified account (Open league)
         yield return Until(() => mode == Mode.Train, 20f); // offline sim approves after ~6 s
         yield return Wait(2f);
         yield return shot("04_train_guide");
@@ -665,7 +666,7 @@ public partial class Game
         yield return Wait(2.2f);
         yield return shot("11_searching");
 
-        yield return Until(() => mode == Mode.Fight, 30f);
+        yield return Until(() => mode == Mode.Fight, 60f); // house fallback after 25 s + matcher tick
         yield return Wait(0.4f);
         yield return shot("12_live_start");
         yield return Until(() => bubA.root.gameObject.activeSelf || bubB.root.gameObject.activeSelf, 8f);
