@@ -46,11 +46,20 @@ async function interpret(b: Bot, text: string, learn: boolean) {
   return { command: learn ? null : learned?.moves[0] ?? null, moves: learned?.moves ?? [], learned, requestId, ...(mock ? { mock } : {}) };
 }
 
+// A normal-fight KO repairs itself after REPAIR_MS; a high-stakes KO needs a World ID revive.
+const REPAIR_MS = Number(process.env.REPAIR_MS ?? 30_000);
+function repairIfDue(b: Bot) {
+  if (!b.alive && (b.house || (b.koStakes !== "high" && Date.now() - (b.koAt ?? 0) >= REPAIR_MS))) { b.alive = true; save(); }
+}
+const repairIn = (b: Bot) => b.alive || b.koStakes === "high" ? null : Math.max(0, Math.ceil((REPAIR_MS - (Date.now() - (b.koAt ?? 0))) / 1000));
+
 async function botView(b: Bot) {
+  repairIfDue(b);
   const bal = b.accountId ? await hedera.balance(b.accountId).catch(() => ({ hbar: null, usdc: null })) : { hbar: null, usdc: null };
   const last = b.brainHistory.at(-1);
   return { botId: b.botId, name: b.name, house: b.house, accountId: b.accountId, evmAddress: b.evmAddress, ...bal,
-    payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, brainRoot: last?.root ?? null, alive: b.alive };
+    payAsset: hedera.PAY_ASSET, brainVersion: b.brain.version, brainRoot: last?.root ?? null, alive: b.alive,
+    koStakes: b.alive ? null : b.koStakes ?? null, repairIn: repairIn(b), needsRevive: !b.alive && b.koStakes === "high" };
 }
 
 // ---- health / bots ----
@@ -98,7 +107,8 @@ app.post("/fights", async (req, res) => {
   const cents = Math.round(Number(budgetUsd) * 100);
   if (!(cents >= 5 && cents <= 500)) fail(400, "budgetUsd must be 0.05..5");
   for (const x of [a, b]) {
-    if (!state.bots[x].alive) { if (state.bots[x].house) state.bots[x].alive = true; else fail(409, `${x} is knocked out; revive needs an approval`); }
+    const kb = state.bots[x]; repairIfDue(kb);
+    if (!kb.alive) fail(409, kb.koStakes === "high" ? `${x} was knocked out in a high-stakes fight; revive needs a World ID approval` : `${x} is repairing (${repairIn(kb)} s)`);
   }
   if (stakes === "high") world.consume(approvalId, owned({ a, b }), "high_stakes"); // marks it used in this same step
   const f: Fight = { fightId: id("f"), a, b, stakes, status: "live", budgets: { [a]: cents, [b]: cents }, startBudget: cents,
@@ -117,7 +127,7 @@ const opponent = (f: Fight, x: string) => (x === f.a ? f.b : f.a);
 function knockout(f: Fight, loser: string) {
   if (f.status !== "live") return;
   f.budgets[loser] = 0; f.status = "over"; f.winner = opponent(f, loser);
-  state.bots[loser].alive = false;
+  Object.assign(state.bots[loser], { alive: false, koStakes: f.stakes, koAt: Date.now() });
   hedera.ledger({ t: "ko", fight: f.fightId, loser, winner: f.winner });
   save();
 }

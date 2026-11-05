@@ -37,6 +37,7 @@ export type Bot = {
   botId: string; name: string; house: boolean;
   accountId: string | null; evmAddress: string | null;
   alive: boolean; ownerSub: string | null;
+  koStakes?: "normal" | "high"; koAt?: number;
   brain: Brain;
   brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean }[];
 };

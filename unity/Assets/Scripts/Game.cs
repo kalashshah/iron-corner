@@ -28,7 +28,7 @@ public class Game : MonoBehaviour
     GameObject home, train, fight, brain, modal, koPanel;
     Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, serverStatus, brainList;
     InputField serverField, trainField, fightField;
-    Button fightBtn, highBtn; bool aAlive = true;
+    Button fightBtn, highBtn; bool aAlive = true, aNeedsRevive;
     Text trainTranscript, trainSaved, fightTranscript, fightTitle;
     Text[] barName = new Text[2], barMoney = new Text[2];
     RectTransform[] barFill = new RectTransform[2];
@@ -87,11 +87,23 @@ public class Game : MonoBehaviour
                     : $"${(double?)bot["usdc"] ?? 0:0.00} <size=26><color=#9EA5B0>USDC · Hedera testnet</color></size>";
                 cardBrain.text = $"Brain v{bot["brainVersion"]}  <color=#9EA5B0>root {UI.Short((string)bot["brainRoot"])}</color>";
                 aAlive = (bool?)bot["alive"] != false;
-                cardAcct.text = $"{bot["accountId"]}{(aAlive ? "" : "  <color=#F2523F>KNOCKED OUT — revive to fight</color>")}";
-                fightBtn.SetLabel(aAlive ? "FIGHT" : "REVIVE  <size=24><color=#9EA5B0>World ID</color></size>");
+                aNeedsRevive = (bool?)bot["needsRevive"] == true;
+                int repair = (int?)bot["repairIn"] ?? 0;
+                cardAcct.text = $"{bot["accountId"]}" + (aAlive ? "" : aNeedsRevive
+                    ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
+                    : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
+                fightBtn.SetLabel(aAlive ? "FIGHT" : aNeedsRevive ? "REVIVE  <size=24><color=#9EA5B0>World ID</color></size>" : $"REPAIRING · {repair} s");
                 highBtn.gameObject.SetActive(aAlive);
+                if (!aAlive && !aNeedsRevive) StartCoroutine(RefreshSoon(Mathf.Clamp(repair, 1, 5)));
             }
         }, e => cardAcct.text = "<color=#F2523F>" + e + "</color>");
+    }
+
+    IEnumerator RefreshSoon(float s)
+    {
+        int sess = session;
+        yield return new WaitForSecondsRealtime(s);
+        if (sess == session && mode == Mode.Home) yield return RefreshHome();
     }
 
     // ---------------------------------------------------------------- modes
@@ -584,7 +596,7 @@ public class Game : MonoBehaviour
         cardAcct = UI.Label(col.transform, "", 24, UI.Dim).H(30);
         UI.Box(col.transform, UI.Line, false, "rule").H(2);
         UI.Btn(col.transform, "TRAIN", UI.Accent, Color.black, StartTrain, 40).H(96);
-        fightBtn = UI.Btn(col.transform, "FIGHT", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; if (aAlive) StartFight("normal", null); else Revive(); }, 40).H(96);
+        fightBtn = UI.Btn(col.transform, "FIGHT", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; if (aAlive) StartFight("normal", null); else if (aNeedsRevive) Revive(); else Toast("Still repairing — a few seconds"); }, 40).H(96);
         highBtn = UI.Btn(col.transform, "HIGH-STAKES FIGHT  <size=24><color=#9EA5B0>World ID</color></size>", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 34).H(84);
         UI.Btn(col.transform, "BRAIN", UI.Steel, UI.Ink, OpenBrain, 34).H(84);
 

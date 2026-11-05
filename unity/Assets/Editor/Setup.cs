@@ -64,7 +64,7 @@ public static class Setup
         ReimportIfNeeded();
         Player();
         var ctrl = Controller();
-        var a = Bot("bot_a", "Brass Knuckle", ctrl, new Color(1.0f, 0.86f, 0.62f), new Color(0.45f, 0.3f, 0.12f), new Color(1f, 0.75f, 0.25f) * 6f);
+        var a = Bot("bot_a", "Brass Knuckle", ctrl, new Color(0.95f, 0.72f, 0.38f), new Color(0.45f, 0.3f, 0.12f), new Color(1f, 0.75f, 0.25f) * 6f);
         var b = Bot("bot_b", "Rustbucket", ctrl, new Color(1.0f, 1.0f, 1.05f), new Color(0.95f, 0.38f, 0.1f), new Color(1f, 0.15f, 0.05f) * 6f);
         Scene(a, b);
         AssetDatabase.SaveAssets();
