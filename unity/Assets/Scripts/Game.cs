@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using TMPro;
 using UnityEngine.UI;
 
 // One scene, four modes. Owns the camera, the decision/poll loops, and all screens.
@@ -27,33 +28,36 @@ public partial class Game : MonoBehaviour
 
     // UI
     Transform canvas;
-    GameObject home, train, fight, brain, modal, koPanel, campDot;
-    Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
-    InputField serverField, trainField;
+    GameObject home, train, fight, brain, modal, koPanel, campDot, tabs;
+    TMP_Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
+    TMP_InputField serverField, trainField;
     readonly List<string> counterAttacks = new(); // attacks your bot has a taught counter for; the sparring dummy throws these
     Button fightBtn, highBtn; bool aAlive = true, aNeedsRevive;
-    Text trainTranscript, trainSaved, fightTranscript, fightTitle;
-    Text[] barName = new Text[2], barMoney = new Text[2];
+    TMP_Text trainTranscript, trainSaved, fightTranscript, fightTitle;
+    TMP_Text[] barName = new TMP_Text[2], barMoney = new TMP_Text[2];
     RectTransform[] barFill = new RectTransform[2];
     Transform ticker;
     Bubble bubA, bubB;
-    Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn, modalOpenBtn; string approvalId, approvalUri; bool approvalOpen;
-    Text koTitle, koSub, koLessons; Button koLedger;
-    readonly List<(Text t, float born, Vector3 world)> popups = new();
+    TMP_Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn, modalOpenBtn; string approvalId, approvalUri; bool approvalOpen;
+    TMP_Text koTitle, koWin, koSub, koLessons; Button koLedger; GameObject koDetails;
+    TMP_Text summaryXp, fightTag, brainVer, brainDemos, brainLearned; Transform brainRows; GameObject fightDetails;
+    readonly List<(TMP_Text t, float born, Vector3 world)> popups = new();
     float toastUntil;
     string captureDir;
 
     // feel: hit-stop, slow-mo, camera trauma, KO cam, post pulses, combo counter, banner, health-bar damage trail
     Fx fx;
-    float hitStopUntil, slowmoUntil, koCamUntil, fovKick, baseFov, pulse;
+    float hitStopUntil, slowmoUntil, koCamUntil, fovKick, baseFov, pulse, slowScale = 0.3f;
     Fighter koTarget;
+    // Special impacts: big clean hits get a slow-mo close-up (rate-limited so it stays special).
+    float impactCamUntil, lastSpecial = -99f; Vector3 impactAt;
     Quaternion camRot = Quaternion.identity; bool camSnap;
     ChromaticAberration chroma; Vignette vignette; float baseVignette;
     RectTransform[] barGroup = new RectTransform[2]; Vector2[] barPos = new Vector2[2];
     RectTransform[] barTrail = new RectTransform[2]; float[] trailK = { 1, 1 }, trailHold = new float[2], barShake = new float[2];
-    Text[] comboText = new Text[2], portrait = new Text[2]; int[] combo = new int[2]; float[] comboAt = new float[2];
-    Text vsClock;
-    Text banner; float bannerAt = -9f;
+    TMP_Text[] comboText = new TMP_Text[2], portrait = new TMP_Text[2]; int[] combo = new int[2]; float[] comboAt = new float[2];
+    TMP_Text vsClock;
+    TMP_Text banner; float bannerAt = -9f;
 
     // Shadow sparring: the owner boxes with the move pad; each move becomes a demo (state, action, outcome) for the backend.
     class Demo { public JObject state; public string action; public float at; public string outcome; public bool gotHit; }
@@ -62,13 +66,13 @@ public partial class Game : MonoBehaviour
     readonly List<string> drilling = new(); // attacks the owner has been defending against; the dummy throws more of them
     bool roundOn; float roundEnds, lastFlush, roundSeconds = 30f; string roundId; int roundMoves, unsavedRounds;
     float aAttackAt = -99f, bAttackAt = -99f, bSwingAt = -99f; string aCur, bCur;
-    Text roundTimer, roundInfo, energyPips, padFeed, summaryTitle, summaryBody; GameObject summary;
-    Text cardLevel, cardXp, cardEnergy; RectTransform xpFill;
-    readonly Text[] statVal = new Text[5]; readonly RectTransform[] statFill = new RectTransform[5];
+    TMP_Text roundTimer, roundInfo, energyPips, padFeed, summaryTitle, summaryBody; GameObject summary;
+    TMP_Text cardLevel, cardXp, cardEnergy; RectTransform xpFill;
+    readonly TMP_Text[] statVal = new TMP_Text[5]; readonly RectTransform[] statFill = new RectTransform[5];
     static readonly string[] StatKeys = { "reflexes", "accuracy", "defense", "ring_iq", "experience" };
     static readonly string[] StatNames = { "Reflexes", "Accuracy", "Defense", "Ring IQ", "Experience" };
 
-    class Bubble { public RectTransform root; public Text say, meta; public float until; public Fighter f; }
+    class Bubble { public RectTransform root; public TMP_Text say, meta; public float until; public Fighter f; }
 
     void Start()
     {
@@ -131,7 +135,7 @@ public partial class Game : MonoBehaviour
             cardAcct.text = $"{bot["accountId"]}" + ((bot["agentId"] is JObject ag && (ag["tokenId"]?.Type is JTokenType.Integer or JTokenType.String)) ? $"  ·  Agentic ID #{ag["tokenId"]}" : "") + (aAlive ? "" : aNeedsRevive
                 ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
                 : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
-            fightBtn.SetLabel(!aAlive ? (aNeedsRevive ? "REVIVE" : $"REPAIR {repair}s") : "FIGHT");
+            fightBtn.SetLabel(!aAlive ? (aNeedsRevive ? "Revive" : $"Repair {repair}s") : "Fight");
             campDot.SetActive(((int?)bot["progress"]?["demos"] ?? 0) >= 40 && bot["adapter"]?.Type != JTokenType.Object);
             highBtn.interactable = aAlive;
             if (!aAlive && !aNeedsRevive) StartCoroutine(RefreshSoon(Mathf.Clamp(repair, 1, 5)));
@@ -142,7 +146,7 @@ public partial class Game : MonoBehaviour
     {
         if (d == null || d.Type != JTokenType.Object) return;
         int streak = (int?)d["streak"] ?? 0;
-        string txt = ((bool?)d["done"] == true ? "<color=#5CDB85>✓ Daily training done</color>" : $"Daily goal: <b>{d["drills"]}/{d["goal"]}</b> drills")
+        string txt = ((bool?)d["done"] == true ? "<color=#5CDB85>\ue5ca Daily training done</color>" : $"Daily goal: <b>{d["drills"]}/{d["goal"]}</b> drills")
             + $"  <color=#8E8E93>·  {(streak > 0 ? $"{streak}-day streak" : "start a streak today")}</color>";
         cardDaily.text = txt; trainDaily.text = txt;
     }
@@ -159,9 +163,10 @@ public partial class Game : MonoBehaviour
     {
         session++;
         mode = m;
-        camSnap = true; Time.timeScale = 1f; hitStopUntil = slowmoUntil = koCamUntil = 0; koTarget = null; bannerAt = -9f;
+        camSnap = true; Time.timeScale = 1f; hitStopUntil = slowmoUntil = koCamUntil = impactCamUntil = 0; koTarget = null; bannerAt = -9f;
         for (int i = 0; i < 2; i++) { combo[i] = 0; trailK[i] = 1; }
-        if (fx != null) fx.SetCrowd(m == Mode.Fight ? 0.35f : m == Mode.Train ? 0.08f : 0.15f);
+        // Crowd only really comes alive in fights; the lobby is quiet. Music follows the screen.
+        if (fx != null) { fx.SetCrowd(m == Mode.Fight ? 0.32f : m == Mode.Train ? 0.06f : 0.02f); fx.SetMusic(m == Mode.Fight ? Music.Kind.Fight : m == Mode.Train ? Music.Kind.Train : Music.Kind.Lobby); }
         home.SetActive(m == Mode.Home);
         train.SetActive(m == Mode.Train);
         fight.SetActive(m == Mode.Fight);
@@ -206,7 +211,7 @@ public partial class Game : MonoBehaviour
         trainTranscript.text = "Talk or type a rule: “when he throws a left hook, slip right and uppercut”.";
         trainSaved.text = "";
         roundOn = false; demoPending.Clear(); demoBatch.Clear(); drilling.Clear(); summary.SetActive(false);
-        roundTimer.text = "Ready to spar"; roundInfo.text = $"Tap a move to start a {roundSeconds:0} s round · every move is a lesson"; padFeed.text = "";
+        roundTimer.text = "Ready"; roundInfo.text = "Tap a move to start"; padFeed.text = "";
         StartCoroutine(LoadBrainRules());
         StartCoroutine(SparLoop(session));
         StartCoroutine(DummyLoop(session));
@@ -380,8 +385,10 @@ public partial class Game : MonoBehaviour
             barShake[1 - side] = 1f; trailHold[1 - side] = Time.unscaledTime + 0.45f;
             combo[side] = Time.unscaledTime - comboAt[side] < 1.8f ? combo[side] + 1 : 1; comboAt[side] = Time.unscaledTime;
             combo[1 - side] = 0;
-            if (combo[side] >= 2) ShowCombo(side);
+            if (combo[side] >= 2) { ShowCombo(side); fx.Combo(combo[side]); }
             if (combo[side] == 4) fx.Cheer(0.55f);
+            bool big = move == "uppercut" || (dmg >= 3 && combo[side] >= 2) || combo[side] >= 3;
+            if (mode == Mode.Fight && big && !over && Time.unscaledTime - lastSpecial > 5f) Special(at, move, combo[side]);
         }
         else if (result == "blocked") hitStopUntil = Time.unscaledTime + 0.02f;
         if (mode != Mode.Fight || over || replaying || live) return;
@@ -410,11 +417,11 @@ public partial class Game : MonoBehaviour
 
     IEnumerator KOSequence(int s, Fighter loser, Fighter winner)
     {
-        slowmoUntil = Time.unscaledTime + 1.6f;
+        slowmoUntil = Time.unscaledTime + 1.6f; slowScale = 0.3f;
         yield return new WaitForSecondsRealtime(2.2f);
         if (s != session) yield break;
-        koTitle.color = loser == a ? UI.Red : UI.Ink; koTitle.text = loser == a ? "DEFEAT" : "VICTORY";
-        koSub.text = $"K.O.  ·  {winner.displayName} wins. {loser.displayName}'s wallet is empty: its fight budget can't cover the next hit.";
+        koTitle.color = UI.Amber; koTitle.text = "K.O."; koWin.text = $"{winner.displayName} Wins";
+        koSub.text = $"{loser.displayName}'s fight budget is empty: it can't cover the next hit.";
         koLessons.text = "Saving lessons to 0G…";
         koLedger.gameObject.SetActive(!Api.Offline && !string.IsNullOrEmpty(ledgerTopic) && ledgerTopic != "offline");
         koPanel.SetActive(true);
@@ -437,7 +444,7 @@ public partial class Game : MonoBehaviour
             portrait[i].text = string.IsNullOrEmpty(f.displayName) ? "" : f.displayName.Substring(0, 1).ToUpperInvariant();
             barMoney[i].text = UI.Usd(f.budget);
             if (i == 0) barFill[i].anchorMax = new Vector2(k, 1); else barFill[i].anchorMin = new Vector2(1 - k, 0);
-            barFill[i].GetComponent<Image>().color = k > 0.35f ? UI.Brass : UI.Red;
+            barFill[i].GetComponent<Image>().color = k <= 0.35f ? UI.Red : i == 0 ? UI.Accent : UI.Brass;
             if (k > trailK[i] || mode != Mode.Fight) { trailK[i] = k; SetTrail(i); }
         }
     }
@@ -450,13 +457,13 @@ public partial class Game : MonoBehaviour
         foreach (var p in pays.Reverse().Take(4))
         {
             string st = (string)p["status"];
-            string mark = st == "settled" ? "<color=#5CDB85>✓ settled</color>" : st == "failed" ? "<color=#F2523F>✗ failed</color>" : "<color=#F2A33A>… pending</color>";
+            string mark = st == "settled" ? "<color=#5CDB85>\ue5ca settled</color>" : st == "failed" ? "<color=#F2523F>\ue5cd failed</color>" : "<color=#F2A33A>… pending</color>";
             string url = (string)p["hashscan"];
             var row = UI.Btn(ticker, "", UI.Card, UI.Ink, string.IsNullOrEmpty(url) ? null : () => Application.OpenURL(url)).H(62);
-            var lbl = row.GetComponentInChildren<Text>();
-            lbl.alignment = TextAnchor.MiddleLeft; lbl.fontStyle = FontStyle.Normal; lbl.fontSize = lbl.resizeTextMaxSize = 22; lbl.lineSpacing = 0.95f;
+            var lbl = row.GetComponentInChildren<TMP_Text>();
+            lbl.SetAlign(TextAnchor.MiddleLeft); lbl.font = UI.Font; lbl.fontSize = lbl.fontSizeMax = 22;
             lbl.rectTransform.offsetMin = new Vector2(18, 0);
-            lbl.text = $"<b><color=#F2523F>-{UI.Usd((double)p["cents"]).TrimStart('-')}</color></b>  {NameOf((string)p["from"])} → {NameOf((string)p["to"])}  {mark}\n<size=16><color=#8E8E93>tx {p["txId"]}{(string.IsNullOrEmpty(url) ? "" : "  ↗ HashScan")}</color></size>";
+            lbl.text = $"<b><color=#F2523F>-{UI.Usd((double)p["cents"]).TrimStart('-')}</color></b>  {NameOf((string)p["from"])} → {NameOf((string)p["to"])}  {mark}\n<size=16><color=#8E8E93>tx {p["txId"]}{(string.IsNullOrEmpty(url) ? "" : "  \ue89e HashScan")}</color></size>";
         }
     }
 
@@ -475,7 +482,7 @@ public partial class Game : MonoBehaviour
     {
         roundOn = true; roundId = "r" + DateTime.UtcNow.Ticks.ToString("x"); roundMoves = 0;
         fightStart = Time.time; roundEnds = Time.time + roundSeconds; lastFlush = Time.time;
-        summary.SetActive(false); padFeed.text = ""; roundInfo.text = "0 moves recorded";
+        summary.SetActive(false); padFeed.text = ""; roundInfo.text = "0 moves";
         a.holdBlock = false; a.SetQueue(Array.Empty<string>());
         StartCoroutine(Api.Call("POST", $"/train/{a.botId}/demos", new JObject { ["round"] = roundId, ["demos"] = new JArray() }, ShowProgress));
     }
@@ -513,7 +520,7 @@ public partial class Game : MonoBehaviour
         }
         if (demoBatch.Count >= 10 || (demoBatch.Count > 0 && Time.time - lastFlush > 4f)) Flush(false);
         float left = roundEnds - Time.time;
-        roundTimer.text = $"Round  <color=#FFFFFF>0:{Mathf.CeilToInt(Mathf.Max(0, left)):00}</color>";
+        roundTimer.text = $"Round  ·  00:{Mathf.CeilToInt(Mathf.Max(0, left)):00}";
         if (left <= 0) EndRound();
     }
 
@@ -524,9 +531,9 @@ public partial class Game : MonoBehaviour
         var o1 = (string)(d.state["oppLastMoves"] as JArray)?.LastOrDefault();
         if (!atk && Fighter.IsAttack(o1)) { drilling.Add(o1); if (drilling.Count > 8) drilling.RemoveAt(0); }
         roundMoves++;
-        string mark = ok ? "<color=#5CDB85>✓</color>" : d.outcome == "got_hit" ? "<color=#F2523F>✗</color>" : "<color=#8E8E93>·</color>";
+        string mark = ok ? "<color=#5CDB85>\ue5ca</color>" : d.outcome == "got_hit" ? "<color=#F2523F>\ue5cd</color>" : "<color=#8E8E93>·</color>";
         padFeed.text = $"{mark} {char.ToUpperInvariant(UI.Nice(d.action)[0])}{UI.Nice(d.action).Substring(1)} · {d.outcome.Replace('_', ' ')}   <color=#8E8E93>demo recorded</color>";
-        roundInfo.text = $"{roundMoves} moves recorded";
+        roundInfo.text = $"{roundMoves} moves";
     }
 
     void Flush(bool end)
@@ -547,7 +554,7 @@ public partial class Game : MonoBehaviour
         a.SetQueue(Array.Empty<string>());
         if (roundMoves > 0) unsavedRounds++;
         roundTimer.text = "Round over";
-        roundInfo.text = "Your bot spars on its own now, copying what worked"; padFeed.text = "";
+        roundInfo.text = "Your bot spars on its own"; padFeed.text = "";
         Flush(true);
     }
 
@@ -556,9 +563,9 @@ public partial class Game : MonoBehaviour
         summary.SetActive(true);
         var rd = r?["round"];
         if (rd != null) { guideRound = true; GuideCheck(); }
-        if (rd == null) { summaryTitle.text = "ROUND OVER"; summaryBody.text = "<color=#F2523F>Couldn't send the round: " + err + "</color>"; return; }
+        if (rd == null) { summaryTitle.text = "Round over"; summaryXp.text = ""; summaryBody.text = "<color=#F2523F>Couldn't send the round: " + err + "</color>"; return; }
         int xp = (int?)rd["xpGained"] ?? 0;
-        summaryTitle.text = xp > 0 ? $"ROUND COMPLETE  <color=#66DB8C>+{xp} XP</color>" : "ROUND COMPLETE";
+        summaryTitle.text = "Round Complete"; summaryXp.text = xp > 0 ? $"+{xp} XP" : "";
         var lines = new List<string> { $"<b>{rd["moves"]} moves recorded</b>" + (rd["highlight"]?.Type == JTokenType.String ? $"  ·  {rd["highlight"]}" : "") };
         if (rd["reason"]?.Type == JTokenType.String) lines.Add($"<color=#F2A33A>{rd["reason"]}</color>");
         lines.Add($"<size=24><color=#8E8E93>Energy {r["energy"]?["left"]}/{r["energy"]?["max"]}  ·  level {r["xp"]?["level"]}  ·  {r["total"]} demos in the brain</color></size>");
@@ -574,7 +581,7 @@ public partial class Game : MonoBehaviour
         if (lv["level"] != null)
         {
             int into = (int?)lv["into"] ?? 0, next = Math.Max(1, (int?)lv["next"] ?? 100);
-            cardLevel.text = $"{lv["level"]}";
+            cardLevel.text = $"LV {lv["level"]}";
             cardXp.text = $"{into}/{next} XP";
             SetFill(xpFill, (float)into / next);
         }
@@ -584,8 +591,8 @@ public partial class Game : MonoBehaviour
         {
             int left = (int?)en["left"] ?? 0, max = (int?)en["max"] ?? 5;
             string pips = "<color=#FFFFFF>" + new string('●', left) + "</color><color=#3A3A40>" + new string('●', Math.Max(0, max - left)) + "</color>";
-            cardEnergy.text = $"{pips}  {left}/{max}";
-            energyPips.text = $"<color=#FFFFFF>⚡</color> {pips}";
+            cardEnergy.text = $"Energy  <b>{left}/{max}</b>  <color=#A8A399>rounds today</color>";
+            energyPips.text = $"<color=#FFFFFF>\uea0b</color> {pips}";
         }
     }
 
@@ -593,15 +600,17 @@ public partial class Game : MonoBehaviour
 
     // ---------------------------------------------------------------- coaching
     bool recording;
-    void MicDown(Text transcript)
+    void MicDown(TMP_Text transcript)
     {
         recording = Mic.Start();
+        if (fx != null) fx.musicVolume = 0.05f; // keep the beat out of the speech-to-text
         transcript.text = recording ? "<color=#FFFFFF>● Listening…</color> release to send" : (Api.Offline ? "No mic — offline sim will pretend you taught a left-hook counter." : "No microphone — type instead.");
         if (!recording && Api.Offline) recording = true;
     }
 
-    void MicUp(Text transcript)
+    void MicUp(TMP_Text transcript)
     {
+        if (fx != null) fx.musicVolume = 0.5f;
         if (!recording) return;
         recording = false;
         var wav = Mic.Stop();
@@ -611,7 +620,7 @@ public partial class Game : MonoBehaviour
         if (mode == Mode.Train) StartCoroutine(Api.Upload($"/train/{a.botId}/coach", wav, null, r => OnCoach(r, transcript), e => transcript.text = "Coach failed: " + e));
     }
 
-    void SendTyped(InputField field, Text transcript)
+    void SendTyped(TMP_InputField field, TMP_Text transcript)
     {
         var text = field.text.Trim();
         if (text.Length == 0) return;
@@ -621,7 +630,7 @@ public partial class Game : MonoBehaviour
     }
 
     // Training only: show what the brain learned (diff + 0G id), drill it right away, track the daily goal.
-    void OnCoach(JToken r, Text transcript)
+    void OnCoach(JToken r, TMP_Text transcript)
     {
         string req = (string)r["requestId"], diff = (string)r["diff"];
         guideCoach = true; GuideCheck();
@@ -711,7 +720,7 @@ public partial class Game : MonoBehaviour
             if (!approvalOpen || approvalId != id) yield break;
             if (status == "approved")
             {
-                modalStatus.text = "<color=#5CDB85>Approved ✓</color>";
+                modalStatus.text = "<color=#5CDB85>Approved \ue5ca</color>";
                 yield return new WaitForSecondsRealtime(0.8f);
                 modalClosed = null;
                 CloseModal(false);
@@ -740,56 +749,26 @@ public partial class Game : MonoBehaviour
     // ---------------------------------------------------------------- brain screen
     void OpenBrain()
     {
-        Show(Mode.Brain);
+        ShowPanel(brain);
         brainList.text = "Loading…";
+        foreach (Transform t in brainRows) Destroy(t.gameObject);
         StartCoroutine(Api.Call("GET", $"/bots/{a.botId}", null, r =>
         {
-            var sb = new System.Text.StringBuilder();
-            sb.Append($"<size=30><b>{r["name"]}</b></size>   <color=#8E8E93>current v{r["brainVersion"]} · root {UI.Short((string)r["brainRoot"], 10)}</color>\n\n");
-            sb.Append(Sec("Version history"));
-            var hist = r["brainHistory"] as JArray;
-            if (hist == null || hist.Count == 0) sb.Append("<color=#8E8E93>No saves yet. Train and press Save Brain.</color>\n");
-            else foreach (var h in hist.Reverse().Take(5))
-            {
-                sb.Append($"<b>v{h["version"]}</b>" + (h["level"] != null ? $"  <color=#FFFFFF>Level {h["level"]}</color> · {h["demos"]} demos" : "")
-                    + $"   <color=#8E8E93>root {UI.Short((string)h["root"], 10)}   {FormatAt(h["at"])}</color>\n");
-                if (h["stats"] is JObject st)
-                    sb.Append($"<size=20><color=#8E8E93>      reflexes {st["reflexes"]} · accuracy {st["accuracy"]} · defense {st["defense"]} · ring IQ {st["ring_iq"]} · experience {st["experience"]}</color></size>\n");
-            }
-            var brainObj = r["brain"];
-            string Ms(JToken m) => string.Join(" ", (m as JArray ?? new JArray()).Select(x => (string)x));
-            if (brainObj?["counters"] is JArray cs && cs.Count > 0)
-            {
-                sb.Append("\n" + Sec("Counters"));
-                foreach (var c in cs.Take(4)) sb.Append($"when he throws <b>{c["when"]}</b>  →  {Ms(c["moves"])}\n");
-            }
-            if (brainObj?["combos"] is JArray co && co.Count > 0)
-            {
-                sb.Append("\n" + Sec("Combos"));
-                foreach (var c in co.Take(5)) sb.Append($"<b>{c["use"]}</b>  {Ms(c["moves"])}\n");
-            }
-            if (brainObj?["phrases"] is JArray ph && ph.Count > 0)
-            {
-                sb.Append("\n" + Sec("Phrases"));
-                foreach (var p in ph.Take(4)) sb.Append($"“{p["say"]}”  <color=#FFFFFF>→</color>  {p["means"]}  <color=#8E8E93>({string.Join(" ", (p["moves"] as JArray ?? new JArray()).Select(x => (string)x))})</color>\n");
-            }
-            if (brainObj?["lessons"] is JArray le && le.Count > 0)
-            {
-                sb.Append("\n" + Sec("Lessons"));
-                foreach (var l in le.Take(3)) sb.Append("• " + l + "\n");
-            }
-            brainList.text = sb.ToString();
+            var b = r["brain"];
+            string Ms(JToken m) => string.Join(" · ", (m as JArray ?? new JArray()).Select(x => Cap(UI.Nice((string)x))));
+            int learned = 0;
+            foreach (var c in b?["counters"] as JArray ?? new JArray()) { if (learned < 4) BrainRow(Cap(UI.Nice((string)c["when"])), Ms(c["moves"])); learned++; }
+            foreach (var c in b?["combos"] as JArray ?? new JArray()) { if (learned < 4) BrainRow(Cap((string)c["use"]), Ms(c["moves"])); learned++; }
+            foreach (var p in b?["phrases"] as JArray ?? new JArray()) { if (learned < 4) BrainRow($"“{p["say"]}”", Ms(p["moves"])); learned++; }
+            if (learned == 0) BrainRow("Nothing learned yet", "spar a round or teach it a line in Training");
+            brainVer.text = $"v{r["brainVersion"]}";
+            brainDemos.text = $"{(int?)r["progress"]?["demos"] ?? 0}";
+            brainLearned.text = learned.ToString();
+            brainList.text = $"Encrypted on 0G Storage · root {UI.Short((string)r["brainRoot"], 10)}";
         }, e => brainList.text = "<color=#F2523F>" + e + "</color>"));
     }
 
-    static string Sec(string t) => $"<size=21><color=#FFFFFF><b>{t.ToUpperInvariant()}</b></color></size>\n";
-
-    static string FormatAt(JToken at)
-    {
-        if (at == null) return "";
-        if (at.Type == JTokenType.Date) return ((DateTime)at).ToLocalTime().ToString("MMM d HH:mm");
-        return DateTime.TryParse((string)at, out var d) ? d.ToLocalTime().ToString("MMM d HH:mm") : (string)at;
-    }
+    static string Cap(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
 
     // ---------------------------------------------------------------- per-frame
     void LateUpdate()
@@ -800,7 +779,7 @@ public partial class Game : MonoBehaviour
         UpdateCamera();
         foreach (var bub in new[] { bubA, bubB })
         {
-            bool on = (mode == Mode.Fight || (mode == Mode.Train && bub.f == a)) && Time.unscaledTime < bub.until && !koPanel.activeSelf;
+            bool on = ((mode == Mode.Fight && fightDetails.activeSelf) || (mode == Mode.Train && bub.f == a)) && Time.unscaledTime < bub.until && !koPanel.activeSelf && !summary.activeSelf;
             // Pinned under each health bar (A left, B right) so the two thoughts never overlap each other or the ticker.
             bub.root.gameObject.SetActive(on);
             if (on) bub.root.position = new Vector3(Screen.width * (bub.f == a ? 0.17f : 0.83f), Screen.height * 0.70f, 0);
@@ -814,15 +793,15 @@ public partial class Game : MonoBehaviour
             t.transform.position = new Vector3(sp.x, sp.y + age * 90f, 0);
             t.color = new Color(t.color.r, t.color.g, t.color.b, 1f - age / 1.1f);
         }
-        toast.transform.parent.gameObject.SetActive(Time.unscaledTime < toastUntil);
-        UpdateHud();
+        toast.transform.parent.gameObject.SetActive(Time.unscaledTime < toastUntil && !summary.activeSelf);
+        UpdateHud(); UpdateTabs();
     }
 
     // Time scale, post pulses and smoke from damaged bots. Hit-stop beats slow-mo beats normal.
     void Update()
     {
         float now = Time.unscaledTime;
-        Time.timeScale = now < hitStopUntil ? 0.06f : now < slowmoUntil ? 0.3f : 1f;
+        Time.timeScale = now < hitStopUntil ? 0.06f : now < slowmoUntil ? slowScale : 1f;
         pulse = Mathf.Max(0, pulse - Time.unscaledDeltaTime * 3f);
         if (chroma != null) chroma.intensity.value = Mathf.Clamp01(pulse * 0.8f);
         if (vignette != null) vignette.intensity.value = baseVignette + Mathf.Clamp01(pulse) * 0.15f;
@@ -846,6 +825,8 @@ public partial class Game : MonoBehaviour
             comboText[i].gameObject.SetActive(comboOn);
             if (comboOn) comboText[i].transform.localScale = Vector3.one * (1f + Mathf.Max(0, 0.35f - (now - comboAt[i])) * 1.4f);
         }
+        fightTag.text = replaying ? "REPLAY" : Api.Offline ? "OFFLINE" : "LIVE";
+        fightTag.color = replaying || Api.Offline ? UI.Dim : UI.Green;
         int secs = Mathf.Max(0, Mathf.FloorToInt(Time.time - fightStart));
         vsClock.text = $"{secs / 60:00}:{secs % 60:00}";
         float age = now - bannerAt;
@@ -861,6 +842,18 @@ public partial class Game : MonoBehaviour
     void SetTrail(int i)
     {
         if (i == 0) barTrail[i].anchorMax = new Vector2(trailK[i], 1); else barTrail[i].anchorMin = new Vector2(1 - trailK[i], 0);
+    }
+
+    // Slow-mo close-up on a big hit: time to 22 %, camera in on the contact, a spark burst and a callout.
+    void Special(Vector3 at, string move, int comboCount)
+    {
+        lastSpecial = Time.unscaledTime;
+        slowmoUntil = Time.unscaledTime + 0.85f; slowScale = 0.22f;
+        impactAt = at; impactCamUntil = Time.unscaledTime + 0.9f;
+        fovKick = Mathf.Max(fovKick, 10f); pulse = Mathf.Max(pulse, 1.1f);
+        fx.Special(at);
+        var call = comboCount >= 3 ? $"COMBO x{comboCount}" : move == "uppercut" ? "UPPERCUT!" : move.StartsWith("hook") ? "HAYMAKER!" : "CRUSHED!";
+        Banner($"<size=60%><voffset=1.3em>{call}</voffset></size>", UI.Accent); // smaller and above the contact point
     }
 
     void ShowCombo(int side) => comboText[side].text = $"<size=110><color=#FFFFFF>{combo[side]}</color></size> HIT COMBO";
@@ -883,7 +876,7 @@ public partial class Game : MonoBehaviour
             var fwd = a.transform.forward;
             var yaw = Quaternion.Euler(0, -18f + Mathf.Sin(tt * 0.2f) * 10f, 0);
             pos = pa + yaw * fwd * 3.6f + Vector3.up * 1.55f;
-            look = pa + Vector3.up * 1.05f - a.transform.right * (mode == Mode.Brain ? 0.95f : 0.12f) * (cam.aspect / 1.78f);
+            look = pa + Vector3.up * 1.05f - a.transform.right * (mode == Mode.Brain || !home.activeSelf ? 0.95f : 0.12f) * (cam.aspect / 1.78f);
         }
         else
         {
@@ -898,6 +891,13 @@ public partial class Game : MonoBehaviour
             look = mid + Vector3.up * 0.95f;
         }
         float rate = 3f;
+        if (Time.unscaledTime < impactCamUntil && koTarget == null)
+        {
+            // Special impact: cut in close from the camera's side of the fight, slightly low, right on the contact point.
+            var axis = new Vector3(pb.x - pa.x, 0, pb.z - pa.z).normalized;
+            var sideDir = Vector3.Cross(Vector3.up, axis);
+            pos = impactAt + sideDir * 2.1f - axis * 0.35f + Vector3.up * 0.15f; look = impactAt; rate = 9f;
+        }
         if (koTarget != null && Time.unscaledTime < koCamUntil)
         {
             // KO cam: low and close on the falling bot, slowly orbiting
@@ -935,7 +935,7 @@ public partial class Game : MonoBehaviour
         var t = UI.Label(canvas, s, Mathf.RoundToInt(54 * scale), c, TextAnchor.MiddleCenter, FontStyle.Bold);
         t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         t.rectTransform.sizeDelta = new Vector2(400, 80);
-        t.gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0.8f);
+        Stroke(t, 0.2f);
         popups.Add((t, Time.unscaledTime, world));
     }
 
@@ -953,7 +953,7 @@ public partial class Game : MonoBehaviour
 
         BuildHome(root); BuildTrain(root); BuildFight(root); BuildBrain(root); BuildFlow(root);
         bubA = BuildBubble(root, a); bubB = BuildBubble(root, b);
-        BuildModal(root); BuildKO(root);
+        BuildTabs(root); BuildModal(root); BuildKO(root);
 
         var tb = UI.Panel(UI.Box(root, UI.Card, true, "toast"), new Color(1, 1, 1, 0.22f)).At(0.5f, 1, 0.5f, 1, -440, -262, 440, -192);
         toast = UI.Label(tb.transform, "", 28, UI.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
@@ -968,141 +968,196 @@ public partial class Game : MonoBehaviour
     {
         home = UI.Go(root, "Home");
         ((RectTransform)home.transform).At(0, 0, 1, 1);
-        UI.Fade(home.transform, 1000); // dark wash on the left so text never sits on bright ropes
+        UI.Fade(home.transform, 900);
+        UI.FadeUp(home.transform, 260);
 
-        // Player card, top left: level badge, name, league, XP.
-        var pc = UI.Rt(home.transform, "player").At(0, 1, 0, 1, 48, -230, 900, -40);
-        var lvl = UI.Go(pc, "level").AddComponent<Image>(); lvl.sprite = UI.Circle; lvl.color = new Color(0.06f, 0.06f, 0.07f, 0.95f); lvl.raycastTarget = false;
-        lvl.At(0, 1, 0, 1, 0, -150, 150, 0); lvl.gameObject.AddComponent<SoftShadow>();
-        var lr = UI.Go(lvl.transform, "ring").AddComponent<Image>(); lr.sprite = UI.CircleRing; lr.color = UI.Ink; lr.raycastTarget = false; lr.At(0, 0, 1, 1);
-        UI.Label(lvl.transform, "LV", 18, UI.Dim, TextAnchor.UpperCenter, FontStyle.Bold).At(0, 0, 1, 1, 0, 0, 0, -24);
-        cardLevel = UI.Title(lvl.transform, "1", 64, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 0, -16, 0, 0);
-        cardName = UI.Title(pc, "BRASS KNUCKLE", 62, UI.Ink).At(0, 1, 1, 1, 176, -84, 0, 0);
-        cardLeague = UI.Label(pc, "", 20, UI.Dim, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 1, 1, 1, 180, -118, 0, -86);
-        xpFill = UI.Meter(UI.Rt(pc, "xp").At(0, 1, 0, 1, 180, -146, 560, -134));
-        cardXp = UI.Label(pc, "0/100 XP", 18, UI.Dim, TextAnchor.MiddleLeft).At(0, 1, 0, 1, 576, -154, 800, -126);
+        // Top left: the big amber FIGHT block, flush to the edge, then the lobby's mode rows under it.
+        fightBtn = UI.Big(home.transform, UI.I("play") + "  Fight", true, FindClicked, 66, pulse: true);
+        fightBtn.At(0, 1, 0, 1, -20, -184, 560, -36);
+        cardLeague = LobbyRow(home.transform, -204, "medal", null);
+        cardEnergy = LobbyRow(home.transform, -276, "bolt", null);
+        cardDaily = LobbyRow(home.transform, -348, "fire", null);
+        UI.Big(home.transform, UI.I("camp") + "  Train", false, StartTrainGuided, 42).At(0, 1, 0, 1, -20, -540, 480, -436);
+        highBtn = UI.Btn(home.transform, "", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 24);
+        highBtn.At(0, 1, 0, 1, -20, -626, 480, -556);
+        highBtn.GetComponent<Image>().sprite = UI.Ramp; highBtn.GetComponent<Image>().type = Image.Type.Simple;
+        var ht = highBtn.GetComponentInChildren<TMP_Text>(); ht.SetAlign(TextAnchor.MiddleLeft); ht.text = $"<color=#FFA33D>{UI.I("shield")}</color>  High Stakes  <color=#A8A399>· World ID</color>";
+        ht.At(0, 0, 1, 1, 40, 0, -12, 0);
 
-        // Stats card under it: the five brain stats as rows with bars.
-        var sc = UI.Box(home.transform, UI.Card, true, "stats").At(0, 1, 0, 1, 48, -700, 620, -270);
-        UI.Caption(sc.transform, "BRAIN STATS").At(0, 1, 1, 1, 32, -52, -32, -18);
+        // Bottom strip: player plate left, brain line centre, wallet + stats right.
+        var plate = UI.Rt(home.transform, "plate").At(0, 0, 0, 0, 40, 26, 760, 156);
+        cardName = UI.Label(plate, "Brass Knuckle", 46, UI.Ink, TextAnchor.LowerLeft, FontStyle.BoldAndItalic).At(0, 0.42f, 1, 1);
+        cardLevel = UI.Label(plate, "LV 1", 24, UI.Amber, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 0, 0.42f, 0, 0, 80, 0);
+        xpFill = UI.Meter(UI.Rt(plate, "xp").At(0, 0, 0, 0, 84, 20, 400, 28));
+        cardXp = UI.Label(plate, "0/100 XP", 18, UI.Dim, TextAnchor.MiddleLeft).At(0, 0, 0, 0.42f, 414, 0, 640, 0);
+        cardBrain = UI.Label(home.transform, "", 20, UI.Dim, TextAnchor.MiddleCenter).At(0.5f, 0, 0.5f, 0, -420, 40, 420, 90);
+        cardAcct = UI.Label(home.transform, "", 17, UI.Dim, TextAnchor.MiddleCenter).At(0.5f, 0, 0.5f, 0, -420, 14, 420, 44);
+        var wallet = UI.Btn(home.transform, "", new Color(0, 0, 0, 0), UI.Ink, OpenFund, 30).At(1, 0, 1, 0, -760, 44, -300, 120);
+        cardMoney = wallet.GetComponentInChildren<TMP_Text>(); cardMoney.SetAlign(TextAnchor.MiddleRight);
+        var stats = UI.Btn(home.transform, UI.I("stats") + "  Stats", UI.Steel, UI.Ink, null, 30).At(1, 0, 1, 0, -270, 44, -40, 120);
+        UI.Panel(stats.GetComponent<Image>(), new Color(1, 1, 1, 0.2f));
+
+        // Stats panel: the inventory-style panel on the right, toggled by Stats.
+        var sp = UI.Box(home.transform, UI.Card, true, "statsPanel").At(1, 0, 1, 1, -820, 150, -40, -150);
+        UI.Label(sp.transform, "Brain Stats", 44, UI.Ink, TextAnchor.UpperLeft, FontStyle.BoldAndItalic).At(0, 1, 1, 1, 36, -96, -36, -26);
         for (int i = 0; i < StatKeys.Length; i++)
         {
-            float y = -78 - i * 52;
-            UI.Label(sc.transform, StatNames[i], 24, UI.Ink).At(0, 1, 0, 1, 32, y - 40, 230, y);
-            statFill[i] = UI.Meter(UI.Rt(sc.transform, "m" + i).At(0, 1, 1, 1, 230, y - 25, -110, y - 15));
-            statVal[i] = UI.Title(sc.transform, "0", 30, UI.Ink, TextAnchor.MiddleRight).At(1, 1, 1, 1, -100, y - 42, -32, y + 2);
+            float y = -130 - i * 92;
+            var row = UI.Box(sp.transform, UI.Row, false, StatKeys[i]).At(0, 1, 1, 1, 24, y - 80, -24, y);
+            UI.Label(row.transform, StatNames[i], 28, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 1, 24, 0, -24, -12);
+            statVal[i] = UI.Label(row.transform, "0", 40, UI.Amber, TextAnchor.MiddleRight, FontStyle.BoldAndItalic).At(1, 0, 1, 1, -140, 0, -24, 0);
+            statFill[i] = UI.Meter(UI.Rt(row.transform, "m").At(0, 0, 1, 0, 24, 18, -160, 26));
             SetFill(statFill[i], 0);
         }
-        cardBrain = UI.Label(sc.transform, "Brain —", 18, UI.Dim).At(0, 0, 1, 0, 32, 34, -24, 62);
-        cardAcct = UI.Label(sc.transform, "", 18, UI.Dim).At(0, 0, 1, 0, 32, 10, -24, 36);
+        sp.gameObject.SetActive(false);
+        stats.onClick.AddListener(() => sp.gameObject.SetActive(!sp.gameObject.activeSelf));
 
-        // Daily goal chip, bottom left, like a quest tracker.
-        var dq = UI.Box(home.transform, UI.Card, true, "daily").At(0, 0, 0, 0, 48, 56, 620, 150);
-        UI.Caption(dq.transform, "DAILY").At(0, 1, 0, 1, 30, -40, 200, -12);
-        cardDaily = UI.Label(dq.transform, "", 22, UI.Ink, TextAnchor.MiddleLeft).At(0, 0, 1, 1, 30, 8, -24, -36);
+        // Server address: developer setting, opened from the gear in the tab bar.
+        serverBox = UI.Box(home.transform, UI.Bg, true, "server").At(1, 1, 1, 1, -900, -280, -40, -140);
+        serverField = UI.Field(serverBox.transform, "http://<laptop-ip>:8787", Api.BaseUrl, 24).At(0, 1, 1, 1, 24, -86, -210, -22);
+        UI.Big(serverBox.transform, "Connect", true, () => { Api.BaseUrl = serverField.text; StartCoroutine(Connect()); }, 26).At(1, 1, 1, 1, -190, -86, -24, -22);
+        serverStatus = UI.Label(serverBox.transform, "", 18, UI.Dim, TextAnchor.MiddleLeft).At(0, 0, 1, 0, 28, 10, -24, 46);
+        serverBox.gameObject.SetActive(false);
+    }
 
-        // Top right: energy and wallet pills, settings.
-        cardEnergy = UI.Pill(UI.Rt(home.transform, "energy").At(1, 1, 1, 1, -900, -112, -620, -44), "", 24);
-        var wallet = UI.Btn(home.transform, "", UI.Steel, UI.Ink, OpenFund, 26).At(1, 1, 1, 1, -600, -112, -160, -44);
-        cardMoney = wallet.GetComponentInChildren<Text>(); cardMoney.rectTransform.offsetMax = new Vector2(-64, 0);
-        UI.Label(wallet.transform, "+", 34, UI.Ink, TextAnchor.MiddleRight, FontStyle.Bold).At(0, 0, 1, 1, 0, 2, -24, 0);
-        var srv = UI.Box(home.transform, UI.Card, true, "server").At(1, 1, 1, 1, -900, -268, -64, -136);
-        serverField = UI.Field(srv.transform, "http://<laptop-ip>:8787", Api.BaseUrl, 22).At(0, 1, 1, 1, 24, -84, -196, -24);
-        UI.Btn(srv.transform, "Connect", UI.Accent, UI.Dark, () => { Api.BaseUrl = serverField.text; StartCoroutine(Connect()); }, 22).At(1, 1, 1, 1, -180, -84, -24, -24);
-        serverStatus = UI.Label(srv.transform, "", 18, UI.Dim, TextAnchor.MiddleLeft).At(0, 0, 1, 0, 28, 10, -24, 44);
-        srv.gameObject.SetActive(false);
-        UI.Round1(home.transform, "≡", () => srv.gameObject.SetActive(!srv.gameObject.activeSelf), 34).At(1, 1, 1, 1, -136, -112, -64, -40);
+    // A lobby mode row: dark band fading to the right, amber icon, white label. Returns the label.
+    TMP_Text LobbyRow(Transform p, float top, string icon, Action click)
+    {
+        var row = UI.Btn(p, "", UI.Steel, UI.Ink, click, 26).At(0, 1, 0, 1, -20, top - 62, 520, top);
+        var img = row.GetComponent<Image>(); img.sprite = UI.Ramp; img.type = Image.Type.Simple;
+        if (click == null) row.interactable = false;
+        row.transition = Selectable.Transition.None;
+        UI.IconImg(row.transform, icon, UI.Amber, 34).At(0, 0, 0, 1, 40, 0, 84, 0);
+        var t = row.GetComponentInChildren<TMP_Text>(); t.SetAlign(TextAnchor.MiddleLeft); t.At(0, 0, 1, 1, 100, 0, -12, 0);
+        return t;
+    }
 
-        // Right edge: side tiles. Camp shows a dot once there are enough demos for a fine-tune.
-        var tiles = new (string label, Action go)[] { ("BRAIN", OpenBrain), ("CAMP", OpenCamp), ("WALLET", OpenFund) };
-        for (int i = 0; i < tiles.Length; i++)
+    // TMP_Text tabs, top right, over Home and its panels (Lobby, Brain, Camp, Wallet), with the settings gear.
+    TMP_Text[] tabText; Image[] tabLine; Image serverBox;
+    void BuildTabs(Transform root)
+    {
+        tabs = UI.Go(root, "tabs");
+        ((RectTransform)tabs.transform).At(1, 1, 1, 1, -900, -112, -40, -30);
+        var items = new (string label, Action go)[] { ("Lobby", () => Show(Mode.Home)), ("Brain", OpenBrain), ("Camp", OpenCamp), ("Wallet", OpenFund) };
+        tabText = new TMP_Text[items.Length]; tabLine = new Image[items.Length];
+        for (int i = 0; i < items.Length; i++)
         {
-            float top = -170 - i * 150;
-            var t = UI.Big(home.transform, tiles[i].label, false, tiles[i].go, 24).At(1, 1, 1, 1, -200, top - 130, -64, top);
-            if (i == 1) campDot = UI.Badge(t.transform.Find("face"));
+            var b = UI.Btn(tabs.transform, items[i].label, new Color(0, 0, 0, 0), UI.Ink, items[i].go, 38);
+            b.At(i * 0.2f, 0, (i + 1) * 0.2f, 1);
+            tabText[i] = b.GetComponentInChildren<TMP_Text>();
+            tabLine[i] = UI.Box(b.transform, UI.Accent, false, "line").At(0.2f, 0, 0.8f, 0, 0, 4, 0, 9);
+            if (i == 2) { campDot = UI.Badge(tabText[i]); campDot.SetActive(false); }
         }
-        campDot.SetActive(false);
+        UI.IconBtn(tabs.transform, "gear", () => { Show(Mode.Home); serverBox.gameObject.SetActive(!serverBox.gameObject.activeSelf); }).At(1, 0.5f, 1, 0.5f, -72, -36, 0, 36);
+    }
 
-        // Bottom right: the two calls to action. Fight breathes; high stakes sits above it.
-        UI.Big(home.transform, "TRAIN", false, StartTrainGuided, 46).At(1, 0, 1, 0, -900, 56, -580, 206);
-        fightBtn = UI.Big(home.transform, "FIGHT", true, FindClicked, 58, pulse: true);
-        fightBtn.At(1, 0, 1, 0, -560, 56, -64, 206);
-        highBtn = UI.Btn(home.transform, "High stakes  <size=18><color=#8E8E93>World ID</color></size>", UI.Outline, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 22);
-        highBtn.At(1, 0, 1, 0, -560, 226, -64, 286);
+    void UpdateTabs()
+    {
+        bool show = mode == Mode.Home && !modal.activeSelf && !welcome.activeSelf && !create.activeSelf;
+        tabs.SetActive(show);
+        if (!show) return;
+        int on = home.activeSelf ? 0 : brain.activeSelf ? 1 : camp.activeSelf ? 2 : fund.activeSelf ? 3 : -1;
+        for (int i = 0; i < tabText.Length; i++) { tabText[i].color = i == on ? UI.Amber : UI.Ink; tabLine[i].enabled = i == on; }
     }
 
     void BuildTrain(Transform root)
     {
         train = UI.Go(root, "Train");
         ((RectTransform)train.transform).At(0, 0, 1, 1);
-        UI.Title(train.transform, "SPARRING", 46, UI.Ink).At(0, 1, 0, 1, 48, -112, 700, -36);
+        UI.FadeUp(train.transform, 360);
+        // Back leaves training; GoHome saves the brain to 0G Storage when there are unsaved rounds.
+        UI.TopBar(train.transform, "Sparring", GoHome);
 
-        // Round HUD, top centre: clock · energy pill, then what's happening under it.
-        var hud = UI.Panel(UI.Box(train.transform, UI.Card, true, "hud")).At(0.5f, 1, 0.5f, 1, -300, -108, 300, -44);
-        roundTimer = UI.Label(hud.transform, "", 30, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 1, 1, 28, 0, -28, 0);
-        energyPips = UI.Label(hud.transform, "", 24, UI.Ink, TextAnchor.MiddleRight, FontStyle.Bold).At(0, 0, 1, 1, 28, 0, -28, 0);
-        roundInfo = UI.Label(train.transform, "", 22, UI.Dim, TextAnchor.UpperCenter).At(0.5f, 1, 0.5f, 1, -420, -146, 420, -116);
-        padFeed = UI.Label(train.transform, "", 26, UI.Ink, TextAnchor.UpperCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -420, -184, 420, -150);
+        // Round box, top centre (clock + energy); move count top right; the last move under the box.
+        var hud = UI.Box(train.transform, UI.Card, true, "hud").At(0.5f, 1, 0.5f, 1, -260, -112, 260, -40);
+        roundTimer = UI.Label(hud.transform, "", 32, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 1, 1, 28, 0, -28, 0);
+        energyPips = UI.Label(hud.transform, "", 22, UI.Amber, TextAnchor.MiddleRight).At(0, 0, 1, 1, 28, 0, -28, 0);
+        roundInfo = UI.Label(train.transform, "", 28, UI.Ink, TextAnchor.MiddleRight, FontStyle.Bold).At(1, 1, 1, 1, -560, -112, -40, -40);
+        padFeed = UI.Label(train.transform, "", 24, UI.Ink, TextAnchor.UpperCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -460, -160, 460, -122);
+        trainSaved = UI.Label(train.transform, "", 20, UI.Ink, TextAnchor.UpperRight).At(1, 1, 1, 1, -560, -196, -40, -124);
+        trainDaily = UI.Label(train.transform, "", 20, UI.Dim, TextAnchor.UpperRight).At(1, 1, 1, 1, -620, -232, -40, -200);
 
-        // Done leaves training; GoHome saves the brain to 0G Storage when there are unsaved rounds.
-        UI.Big(train.transform, "DONE", true, GoHome, 32).At(1, 1, 1, 1, -260, -118, -40, -36);
-        trainSaved = UI.Label(train.transform, "", 22, UI.Ink, TextAnchor.UpperRight).At(1, 1, 1, 1, -560, -196, -40, -120);
-        trainDaily = UI.Label(train.transform, "", 21, UI.Dim, TextAnchor.UpperRight).At(1, 1, 1, 1, -620, -236, -40, -204);
-
-        // Move pad: defence under the left thumb, punches under the right. Pressed = played now and recorded as a demo.
-        Pad(train.transform, new[] { ("dodge_l", "Slip L"), ("block", "Block"), ("dodge_r", "Slip R"), ("step_back", "← Back"), ("step_in", "In →") }, false);
-        Pad(train.transform, new[] { ("hook_l", "L hook"), ("uppercut", "Upper"), ("hook_r", "R hook"), ("jab", "Jab"), ("cross", "Cross"), ("body", "Body") }, true);
+        // Left thumb: a round dodge pad like a remote (up = step in, down = step back, sides = slip, centre = block).
+        // Right thumb: a punch cluster, big Cross in the corner, the other punches on an arc around it.
+        DodgePad(train.transform);
+        PunchCluster(train.transform);
 
         BuildCoachBar(train.transform, out trainTranscript, out trainField);
 
-        // Round result card: amber check badge, title, what the round taught, OK.
-        summary = UI.Panel(UI.Box(train.transform, UI.Card, true, "summary"), new Color(1, 1, 1, 0.16f)).At(0.5f, 0.5f, 0.5f, 0.5f, -440, -190, 440, 250).gameObject;
-        var badgeImg = UI.Go(summary.transform, "check").AddComponent<Image>(); badgeImg.sprite = UI.Circle; badgeImg.color = UI.Accent; badgeImg.raycastTarget = false;
-        badgeImg.At(0.5f, 1, 0.5f, 1, -40, -112, 40, -32);
-        UI.Label(badgeImg.transform, "✓", 46, UI.Dark, TextAnchor.MiddleCenter, FontStyle.Bold);
-        summaryTitle = UI.Title(summary.transform, "", 50, UI.Ink, TextAnchor.UpperCenter).At(0, 1, 1, 1, 30, -192, -30, -122);
-        summaryBody = UI.Label(summary.transform, "", 26, UI.Ink, TextAnchor.UpperCenter).At(0, 0, 1, 1, 40, 110, -40, -196);
-        summaryBody.lineSpacing = 1.15f;
-        UI.Big(summary.transform, "KEEP TRAINING", true, () => summary.SetActive(false), 32, pulse: true).At(0, 0, 1, 0, 40, 26, -40, 112);
+        // Round result: full-screen dim, check icon, title, big +XP, what it learned, Continue.
+        summary = UI.Box(train.transform, new Color(0.01f, 0.01f, 0.012f, 0.8f), false, "summary").At(0, 0, 1, 1, -600, -600, 600, 600).gameObject; // bleeds past the safe area
+        UI.IconImg(summary.transform, "check", UI.Amber, 120).At(0.5f, 0.5f, 0.5f, 0.5f, -80, 240, 80, 400);
+        summaryTitle = UI.Label(summary.transform, "", 60, UI.Ink, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0.5f, 0.5f, 0.5f, 0.5f, -700, 150, 700, 240);
+        summaryXp = UI.Label(summary.transform, "", 120, UI.Amber, TextAnchor.MiddleCenter, FontStyle.Italic).At(0.5f, 0.5f, 0.5f, 0.5f, -700, 20, 700, 160);
+        summaryBody = UI.Label(summary.transform, "", 26, UI.Ink, TextAnchor.UpperCenter).At(0.5f, 0.5f, 0.5f, 0.5f, -700, -110, 700, 10);
+        UI.Big(summary.transform, "Continue  " + UI.I("chevron"), true, () => summary.SetActive(false), 40).At(0.5f, 0.5f, 0.5f, 0.5f, -260, -250, 260, -140);
         summary.SetActive(false);
     }
 
-    // 3 columns, 2 rows of big thumb buttons in a bottom corner. Five-button pads stretch the bottom row to two.
-    void Pad(Transform parent, (string move, string label)[] keys, bool right)
+    // One round move button: icon (rotated / mirrored to show the punch's direction) over a small label.
+    Button MoveBtn(Transform parent, string move, string icon, string label, float cx, float cy, float size, bool corner, bool punch, float rot = 0, bool mirror = false)
     {
-        const float w = 158, h = 104, gap = 14;
-        var pad = UI.Rt(parent, right ? "padAttack" : "padDefense");
-        if (right) pad.At(1, 0, 1, 0, -(3 * w + 2 * gap) - 36, 30, -36, 30 + 2 * h + gap);
-        else pad.At(0, 0, 0, 0, 36, 30, 36 + 3 * w + 2 * gap, 30 + 2 * h + gap);
-        UI.Caption(pad, right ? "PUNCH" : "DEFEND").At(0, 1, 1, 1, 4, 6, -4, 36).alignment = right ? TextAnchor.LowerRight : TextAnchor.LowerLeft;
-        // Chunky keys; punches get a brighter rim than defence so the two pads read apart at a glance.
-        var rim = right ? new Color(1, 1, 1, 0.5f) : new Color(1, 1, 1, 0.16f);
-        for (int i = 0; i < keys.Length; i++)
-        {
-            int row = i / 3, n = row == 0 ? 3 : keys.Length - 3, c = i % 3;
-            float cw = (3 * w + 2 * gap - (n - 1) * gap) / n, x = c * (cw + gap), y = (1 - row) * (h + gap);
-            var key = keys[i].move;
-            var btn = UI.Big(pad, keys[i].label.ToUpperInvariant(), false, null, 28);
-            btn.At(0, 0, 0, 0, x, y, x + cw, y + h);
-            var r = btn.transform.Find("face/rim")?.GetComponent<Image>(); if (r != null) r.color = rim;
-            btn.gameObject.AddComponent<HoldButton>().onDown = () => PadMove(key); // fires on touch-down: no release lag
-        }
+        var img = UI.Go(parent, "move:" + move).AddComponent<Image>(); img.sprite = UI.Circle;
+        img.color = punch ? new Color(0.06f, 0.035f, 0.01f, 0.88f) : new Color(0.02f, 0.02f, 0.024f, 0.85f);
+        var ring = UI.Go(img.transform, "ring").AddComponent<Image>(); ring.sprite = UI.CircleRing; ring.raycastTarget = false; ring.At(0, 0, 1, 1);
+        ring.color = punch ? new Color(1f, 0.64f, 0.24f, 0.85f) : new Color(1, 1, 1, 0.35f);
+        var rt = (RectTransform)img.transform;
+        float ax = corner ? 1 : 0; rt.anchorMin = rt.anchorMax = new Vector2(ax, 0);
+        rt.sizeDelta = new Vector2(size, size); rt.anchoredPosition = new Vector2(cx, cy);
+        var ic = UI.IconImg(img.transform, icon, punch ? UI.Accent : UI.Ink, Mathf.RoundToInt(size * 0.44f)).At(0.15f, 0.3f, 0.85f, 0.92f);
+        ic.rectTransform.localEulerAngles = new Vector3(0, 0, rot);
+        if (mirror) ic.rectTransform.localScale = new Vector3(-1, 1, 1);
+        UI.Label(img.transform, label, Mathf.RoundToInt(Mathf.Clamp(size * 0.17f, 16, 26)), UI.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0.08f, 1, 0.34f);
+        var b = img.gameObject.AddComponent<Button>(); b.navigation = new Navigation { mode = Navigation.Mode.None };
+        var cb = b.colors; cb.pressedColor = new Color(1.4f, 1.4f, 1.4f); cb.fadeDuration = 0.05f; b.colors = cb;
+        img.gameObject.AddComponent<Press>();
+        img.gameObject.AddComponent<HoldButton>().onDown = () => PadMove(move); // fires on touch-down: no release lag
+        return b;
     }
 
-    void BuildCoachBar(Transform parent, out Text transcript, out InputField field)
+    void DodgePad(Transform parent)
     {
-        // Between the two pads: transcript line, hold-to-talk, typed fallback.
-        var bar = UI.Rt(parent, "coach").At(0.5f, 0, 0.5f, 0, -370, 30, 370, 214);
-        var tr = UI.Panel(UI.Box(bar, UI.Card, true, "transcriptBg")).At(0, 1, 1, 1, 0, -60, 0, 0);
-        var t = UI.Label(tr.transform, "", 22, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 16, 0, -16, 0);
-        transcript = t;
-        var mic = UI.Panel(UI.Box(bar, UI.Accent, true, "mic", 0.4f), new Color(1, 1, 1, 0f)).At(0, 0, 0, 0, 0, 0, 250, 112);
-        mic.gameObject.AddComponent<Press>();
-        UI.Label(mic.transform, "●  Hold to talk", 28, UI.Dark, TextAnchor.MiddleCenter, FontStyle.Bold);
+        const float c = 250, r = 140; // centre of the pad from the bottom-left corner, button orbit
+        var disc = UI.Go(parent, "dodgePad").AddComponent<Image>(); disc.sprite = UI.Circle; disc.color = new Color(0, 0, 0, 0.45f); disc.raycastTarget = false;
+        var drt = (RectTransform)disc.transform; drt.anchorMin = drt.anchorMax = Vector2.zero; drt.sizeDelta = new Vector2(440, 440); drt.anchoredPosition = new Vector2(c, c);
+        var dr = UI.Go(disc.transform, "ring").AddComponent<Image>(); dr.sprite = UI.CircleRing; dr.color = new Color(1, 1, 1, 0.16f); dr.raycastTarget = false; dr.At(0, 0, 1, 1);
+        UI.Caption(parent, "DODGE").At(0, 0, 0, 0, c - 200, c + 230, c + 200, c + 262).SetAlign(TextAnchor.LowerCenter);
+        MoveBtn(parent, "step_in", "up", "In", c, c + r, 120, false, false);
+        MoveBtn(parent, "step_back", "down", "Back", c, c - r, 120, false, false);
+        MoveBtn(parent, "dodge_l", "left", "Slip L", c - r, c, 120, false, false);
+        MoveBtn(parent, "dodge_r", "right", "Slip R", c + r, c, 120, false, false);
+        MoveBtn(parent, "block", "shield", "Block", c, c, 134, false, false);
+    }
+
+    void PunchCluster(Transform parent)
+    {
+        const float cx = -190, cy = 190, r = 290; // Cross sits in the corner; the arc runs from left round to the top
+        MoveBtn(parent, "cross", "glove", "Cross", cx, cy, 190, true, true, 0, true);
+        var arc = new (string move, string label, float deg, float rot, bool mirror)[]
+        {
+            ("jab", "Jab", 184, 0, true), ("hook_l", "L Hook", 158, 35, false), ("uppercut", "Upper", 132, -60, true),
+            ("hook_r", "R Hook", 106, -35, true), ("body", "Body", 80, -120, true),
+        };
+        foreach (var (move, label, deg, rot, mirror) in arc)
+        {
+            float a = deg * Mathf.Deg2Rad;
+            MoveBtn(parent, move, "glove", label, cx + r * Mathf.Cos(a), cy + r * Mathf.Sin(a), 124, true, true, rot, mirror);
+        }
+        UI.Caption(parent, "ATTACK").At(1, 0, 1, 0, -300, cy + r + 80, -40, cy + r + 112).SetAlign(TextAnchor.LowerRight);
+    }
+
+    // Bottom bar: round amber mic, a "teach your fighter" field with send; what it last heard above it.
+    void BuildCoachBar(Transform parent, out TMP_Text transcript, out TMP_InputField field)
+    {
+        var bar = UI.Rt(parent, "coach").At(0.5f, 0, 0.5f, 0, -400, 30, 400, 112);
+        transcript = UI.Label(parent, "", 22, UI.Dim, TextAnchor.MiddleCenter).At(0.5f, 0, 0.5f, 0, -420, 130, 420, 170);
+        var t = transcript;
+        var mic = UI.IconBtn(bar, "mic", null, UI.Accent, UI.Dark).At(0, 0, 0, 1, 0, 0, 82, 0);
         var hold = mic.gameObject.AddComponent<HoldButton>();
         hold.onDown = () => MicDown(t); hold.onUp = () => MicUp(t);
-        var f = UI.Field(bar, "or type a rule…", "", 24).At(0, 0, 1, 0, 262, 26, -112, 86);
-        UI.Btn(bar, "Send", UI.Steel, UI.Ink, null, 24).At(1, 0, 1, 0, -100, 26, 0, 86).onClick.AddListener(() => SendTyped(f, t));
+        var f = UI.Field(bar, "Teach your fighter…", "", 26).At(0, 0, 1, 1, 100, 6, 0, -6);
+        var send = UI.Btn(f.transform, UI.I("send"), new Color(0, 0, 0, 0), UI.Amber, null, 34).At(1, 0, 1, 1, -84, 0, 0, 0);
+        send.onClick.AddListener(() => SendTyped(f, t));
         field = f;
     }
 
@@ -1113,83 +1168,99 @@ public partial class Game : MonoBehaviour
         for (int i = 0; i < 2; i++)
         {
             bool left = i == 0;
-            // Fighting-game header: big portrait badge at the outer edge, heavy name, thick framed bar.
+            // Portrait ring at the outer edge, heavy name above a framed bar, budget under it.
             var g = UI.Rt(fight.transform, left ? "barA" : "barB");
-            if (left) g.At(0, 1, 0.5f, 1, 36, -156, -110, -28); else g.At(0.5f, 1, 1, 1, 110, -156, -36, -28);
-            var por = UI.Portrait(g, left ? UI.Ink : UI.Dim, "");
-            ((RectTransform)por.transform.parent).At(left ? 0 : 1, 0.5f, left ? 0 : 1, 0.5f, left ? 0 : -128, -64, left ? 128 : 0, 64);
-            portrait[i] = por; por.font = UI.Display; por.fontSize = por.resizeTextMaxSize = 56;
-            float inL = left ? 146 : 0, inR = left ? 0 : -146;
-            barName[i] = UI.Title(g, "", 36, UI.Ink, left ? TextAnchor.LowerLeft : TextAnchor.LowerRight).At(0, 0.5f, 1, 1, inL, 8, inR, 0);
-            barMoney[i] = UI.Title(g, "", 34, UI.Brass, left ? TextAnchor.LowerRight : TextAnchor.LowerLeft).At(0, 0.5f, 1, 1, inL, 8, inR, 0);
-            var frame = UI.Box(g, new Color(0.02f, 0.02f, 0.025f, 0.92f), true, "frame", 0.5f).At(0, 0.5f, 1, 0.5f, inL, -40, inR, 0);
-            frame.gameObject.AddComponent<SoftShadow>();
-            var bg = UI.Box(frame.transform, new Color(1, 1, 1, 0.08f), true, "bg", 0.5f).At(0, 0, 1, 1, 5, 5, -5, -5);
-            barTrail[i] = UI.Box(bg.transform, new Color(0.95f, 0.35f, 0.3f, 0.75f), true, "trail", 0.5f).At(0, 0, 1, 1).rectTransform;
-            var fill = UI.Shine(UI.Box(bg.transform, UI.Brass, true, "fill", 0.5f)).At(0, 0, 1, 1);
-            barFill[i] = fill.rectTransform;
-            UI.Label(g, "health = fight budget", 17, UI.Dim, left ? TextAnchor.UpperLeft : TextAnchor.UpperRight).At(0, 0, 1, 0.5f, inL, -14, inR, -46);
+            if (left) g.At(0, 1, 0.5f, 1, 40, -156, -170, -32); else g.At(0.5f, 1, 1, 1, 170, -156, -40, -32);
+            var por = UI.Portrait(g, left ? UI.Accent : UI.Ink, "");
+            ((RectTransform)por.transform.parent).At(left ? 0 : 1, 0.5f, left ? 0 : 1, 0.5f, left ? 0 : -112, -56, left ? 112 : 0, 56);
+            portrait[i] = por;
+            float inL = left ? 132 : 0, inR = left ? 0 : -132;
+            barName[i] = UI.Label(g, "", 40, UI.Ink, left ? TextAnchor.LowerLeft : TextAnchor.LowerRight, FontStyle.BoldAndItalic).At(0, 0.5f, 1, 1, inL, 6, inR, 0);
+            barMoney[i] = UI.Label(g, "", 24, UI.Brass, left ? TextAnchor.UpperRight : TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 0.5f, inL, -6, inR, -30);
+            var frame = UI.Box(g, new Color(0, 0, 0, 0.7f), false, "frame").At(0, 0.5f, 1, 0.5f, inL, -26, inR, 0);
+            UI.Panel(frame, new Color(1, 1, 1, 0.25f));
+            barTrail[i] = UI.Box(frame.transform, new Color(1f, 0.4f, 0.3f, 0.85f), false, "trail").At(0, 0, 1, 1, 3, 3, -3, -3).rectTransform;
+            barFill[i] = UI.Box(frame.transform, left ? UI.Accent : UI.Brass, false, "fill").At(0, 0, 1, 1, 3, 3, -3, -3).rectTransform;
             barGroup[i] = g; barPos[i] = g.anchoredPosition;
-            // Combo: big italic count + caption, mid-height on that fighter's side (clear of the plan bubble above).
-            comboText[i] = UI.Title(fight.transform, "", 34, UI.Ink, left ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
+            // Combo: big italic count + caption, mid-height on that fighter's side.
+            comboText[i] = UI.Label(fight.transform, "", 40, UI.Ink, left ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, FontStyle.Italic);
             comboText[i].rectTransform.pivot = new Vector2(left ? 0 : 1, 0.5f);
-            if (left) comboText[i].At(0, 0.5f, 0.5f, 0.5f, 60, -60, 0, 80); else comboText[i].At(0.5f, 0.5f, 1, 0.5f, 0, -60, -60, 80);
-            comboText[i].gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0.7f);
+            if (left) comboText[i].At(0, 0.5f, 0.5f, 0.5f, 60, -70, 0, 90); else comboText[i].At(0.5f, 0.5f, 1, 0.5f, 0, -70, -60, 90);
+            Stroke(comboText[i], 0.18f);
         }
-        // Round clock in a ringed badge between the bars.
-        var clock = UI.Go(fight.transform, "clock").AddComponent<Image>(); clock.sprite = UI.Circle; clock.color = new Color(0.03f, 0.03f, 0.035f, 0.95f); clock.raycastTarget = false;
-        clock.At(0.5f, 1, 0.5f, 1, -76, -176, 76, -24); clock.gameObject.AddComponent<SoftShadow>();
-        var cr = UI.Go(clock.transform, "ring").AddComponent<Image>(); cr.sprite = UI.CircleRing; cr.color = UI.Ink; cr.raycastTarget = false; cr.At(0, 0, 1, 1);
-        UI.Title(clock.transform, "VS", 22, UI.Dim, TextAnchor.UpperCenter).At(0, 0, 1, 1, 0, 0, 0, -26);
-        vsClock = UI.Title(clock.transform, "00:00", 40, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 0, -12, 0, 0);
-        banner = UI.Title(fight.transform, "", 210, UI.Accent, TextAnchor.MiddleCenter).At(0, 0.5f, 1, 0.5f, 0, -150, 0, 170);
-        var bo = banner.gameObject.AddComponent<Outline>(); bo.effectColor = new Color(0, 0, 0, 0.85f); bo.effectDistance = new Vector2(4, -4);
-        banner.gameObject.AddComponent<Shadow>().effectColor = new Color(0, 0, 0, 0.5f);
-        fightTitle = UI.Label(fight.transform, "", 18, UI.Dim, TextAnchor.UpperCenter).At(0.5f, 1, 0.5f, 1, -300, -230, 300, -184);
+        // Centre: VS over the fight clock.
+        UI.Label(fight.transform, "VS", 60, UI.Accent, TextAnchor.MiddleCenter, FontStyle.Italic).At(0.5f, 1, 0.5f, 1, -150, -100, 150, -26);
+        vsClock = UI.Label(fight.transform, "00:00", 36, UI.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -150, -146, 150, -100);
+        banner = UI.Label(fight.transform, "", 220, UI.Accent, TextAnchor.MiddleCenter, FontStyle.Italic).At(0, 0.5f, 1, 0.5f, 0, -160, 0, 180);
+        Stroke(banner, 0.12f);
 
-        // x402 payments: compact rows, right edge, below the opponent's thought bubble.
-        var tk = UI.Rt(fight.transform, "ticker").At(1, 1, 1, 1, -560, -780, -40, -420);
-        UI.Caption(tk, "x402 PAYMENTS  ·  HEDERA TESTNET").At(0, 1, 1, 1, 4, -26, 0, 0);
+        // Details (plan bubbles, x402 payments, fight ids, autonomy note) stay hidden until the info button.
+        fightDetails = UI.Go(fight.transform, "details"); ((RectTransform)fightDetails.transform).At(0, 0, 1, 1);
+        fightTitle = UI.Label(fightDetails.transform, "", 20, UI.Dim, TextAnchor.UpperCenter).At(0.5f, 1, 0.5f, 1, -340, -210, 340, -154);
+        var tk = UI.Rt(fightDetails.transform, "ticker").At(1, 1, 1, 1, -580, -780, -40, -420);
+        UI.Caption(tk, "X402 PAYMENTS · HEDERA TESTNET").At(0, 1, 1, 1, 4, -28, 0, 0);
         var col = UI.Column(tk, 6, "rows");
-        col.At(0, 0, 1, 1, 0, 0, 0, -34);
+        col.At(0, 0, 1, 1, 0, 0, 0, -36);
         col.childAlignment = TextAnchor.UpperLeft;
         ticker = col.transform;
+        var auto = UI.Box(fightDetails.transform, UI.Card, true, "autonomous").At(0.5f, 0, 0.5f, 0, -580, 40, 580, 100);
+        fightTranscript = UI.Label(auto.transform, "", 22, UI.Dim, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 24, 0, -24, 0);
+        fightDetails.SetActive(false);
+        UI.IconBtn(fight.transform, "info", () => fightDetails.SetActive(!fightDetails.activeSelf)).At(0, 0, 0, 0, 40, 36, 116, 112);
 
-        // Fights are autonomous: no mic or typing bar here, coaching happens in Train.
-        var auto = UI.Panel(UI.Box(fight.transform, UI.Card, true, "autonomous")).At(0.5f, 0, 0.5f, 0, -560, 40, 560, 92);
-        fightTranscript = UI.Label(auto.transform, "", 22, UI.Dim, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 20, 0, -20, 0);
+        // Status tag bottom right: LIVE (green), OFFLINE or REPLAY.
+        var tag = UI.Box(fight.transform, new Color(0, 0, 0, 0.6f), false, "live").At(1, 0, 1, 0, -210, 44, -40, 106);
+        UI.Panel(tag, new Color(0.45f, 0.86f, 0.5f, 0.6f));
+        fightTag = UI.Label(tag.transform, "LIVE", 30, UI.Green, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0, 0, 1, 1);
     }
+
+    // Black outline on big floating text (banners, combo, K.O.) so it reads over the ring.
+    static void Stroke(TMP_Text t, float w) { t.outlineWidth = w; t.outlineColor = new Color32(0, 0, 0, 220); }
 
     Bubble BuildBubble(Transform root, Fighter f)
     {
-        var box = UI.Panel(UI.Box(root, UI.Card, true, "bubble:" + f.botId), new Color(1, 1, 1, f == a ? 0.3f : 0.14f));
+        var box = UI.Box(root, UI.Card, true, "bubble:" + f.botId);
+        UI.Box(box.transform, f == a ? UI.Accent : UI.Ink, false, "side").At(0, 0, 0, 1, 0, 0, 5, 0);
         var rt = box.rectTransform;
         rt.anchorMin = rt.anchorMax = Vector2.zero;
         rt.pivot = new Vector2(0.5f, 0);
-        rt.sizeDelta = new Vector2(540, 134);
-        var say = UI.Label(box.transform, "", 30, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 1, 24, 0, -24, -16);
-        var meta = UI.Label(box.transform, "", 19, UI.Dim, TextAnchor.LowerLeft).At(0, 0, 1, 1, 24, 14, -24, 0);
+        rt.sizeDelta = new Vector2(560, 130);
+        var say = UI.Label(box.transform, "", 30, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 1, 28, 0, -24, -14);
+        var meta = UI.Label(box.transform, "", 20, UI.Dim, TextAnchor.LowerLeft).At(0, 0, 1, 1, 28, 12, -24, 0);
         box.gameObject.SetActive(false);
         return new Bubble { root = rt, say = say, meta = meta, f = f };
     }
 
+    // Brain: a panel over the lobby. Version chip, two big counts, then what it has learned as rows.
     void BuildBrain(Transform root)
     {
-        brain = UI.Go(root, "Brain");
-        ((RectTransform)brain.transform).At(0, 0, 1, 1);
-        var panel = UI.Box(brain.transform, UI.Card, true, "panel").At(0.38f, 0, 1, 1, 0, 40, -40, -40);
-        UI.Label(panel.transform, "Brain", 52, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 52, -110, -40, -40);
-        UI.Label(panel.transform, "What your fighter has learned. Encrypted on 0G Storage.", 24, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 1, 1, 54, -150, -40, -112);
-        UI.Box(panel.transform, UI.Line, false, "rule").At(0, 1, 1, 1, 52, -172, -52, -170);
-        brainList = UI.Label(panel.transform, "", 25, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 1, 54, 40, -48, -196);
-        brainList.lineSpacing = 1.2f;
-        UI.Dismiss(brain.transform, GoHome);
-        UI.Close(panel.transform, GoHome);
+        var c = Page(root, "Brain", "Brain", null, out brain);
+        var chip = UI.Box(c.parent, new Color(0, 0, 0, 0.5f), false, "ver").At(1, 1, 1, 1, -170, -106, -40, -40);
+        UI.Panel(chip, new Color(1f, 0.64f, 0.24f, 0.6f));
+        brainVer = UI.Label(chip.transform, "v—", 30, UI.Amber, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0, 0, 1, 1);
+        brainDemos = UI.Label(c, "0", 96, UI.Amber, TextAnchor.LowerLeft, FontStyle.Italic).At(0, 1, 0.5f, 1, 0, -120, 0, 0);
+        UI.Caption(c, "DEMOS").At(0, 1, 0.5f, 1, 4, -156, 0, -122);
+        brainLearned = UI.Label(c, "0", 96, UI.Amber, TextAnchor.LowerLeft, FontStyle.Italic).At(0.5f, 1, 1, 1, 0, -120, 0, 0);
+        UI.Caption(c, "LEARNED").At(0.5f, 1, 1, 1, 4, -156, 0, -122);
+        var rows = UI.Column(c, 10, "rows").At(0, 0, 1, 1, 0, 50, 0, -184);
+        rows.childAlignment = TextAnchor.UpperLeft;
+        brainRows = rows.transform;
+        brainList = UI.Label(c, "", 18, UI.Dim, TextAnchor.LowerLeft).At(0, 0, 1, 0, 0, 0, 0, 36);
+    }
+
+    // One learned rule: what triggers it, and the moves it answers with.
+    void BrainRow(string title, string moves)
+    {
+        var row = UI.Box(brainRows, UI.Row, false, "rule").H(92);
+        row.sprite = UI.Ramp; row.color = new Color(1, 1, 1, 0.09f);
+        UI.Box(row.transform, UI.Accent, false, "side").At(0, 0, 0, 1, 0, 0, 5, 0);
+        UI.Label(row.transform, title, 30, UI.Ink, TextAnchor.LowerLeft, FontStyle.Bold).At(0, 0.5f, 1, 1, 28, 0, -24, -10);
+        UI.Label(row.transform, UI.I("chevron") + " " + moves, 22, UI.Dim, TextAnchor.UpperLeft).At(0, 0, 1, 0.5f, 28, 10, -24, -2);
     }
 
     void BuildModal(Transform root)
     {
-        modal = UI.Box(root, new Color(0, 0, 0, 0.75f), false, "modal").At(0, 0, 1, 1).gameObject;
+        modal = UI.Box(root, new Color(0, 0, 0, 0.75f), false, "modal").At(0, 0, 1, 1, -600, -600, 600, 600).gameObject; // bleeds past the safe area
         var card = UI.Box(modal.transform, UI.Card, true, "card").At(0.5f, 0.5f, 0.5f, 0.5f, -520, -380, 520, 380);
         UI.Caption(card.transform, "WORLD ID APPROVAL").At(0, 1, 1, 1, 50, -76, -50, -40);
         modalAction = UI.Label(card.transform, "", 48, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 50, -156, -50, -84);
@@ -1260,25 +1331,41 @@ public partial class Game : MonoBehaviour
         a.scripted = b.scripted = false; replaying = false;
     }
 
+    // Result: huge K.O. (or TIME / DRAW), who won, Fight Again + Details. Details holds rating, lessons, proof links.
     void BuildKO(Transform root)
     {
-        koPanel = UI.Box(root, new Color(0, 0, 0, 0.55f), false, "ko").At(0, 0, 1, 1).gameObject;
-        var band = UI.Box(koPanel.transform, new Color(0.035f, 0.04f, 0.05f, 0.95f), false, "band").At(0, 0.5f, 1, 0.5f, 0, -250, 0, 250);
-        foreach (var edge in new[] { 1f, 0f }) UI.Box(band.transform, UI.Line, false, "edge").At(0, edge, 1, edge, 0, -1, 0, 1);
-        koPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.65f);
-        koTitle = UI.Title(band.transform, "", 130, UI.Red, TextAnchor.MiddleCenter).At(0, 1, 1, 1, 40, -170, -40, -10);
-        koSub = UI.Label(band.transform, "", 30, UI.Ink, TextAnchor.MiddleCenter).At(0, 1, 1, 1, 40, -234, -40, -174);
-        koLessons = UI.Label(band.transform, "", 26, UI.Dim, TextAnchor.UpperCenter).At(0, 0, 1, 1, 200, 110, -200, -230);
-        var row = UI.Rt(band.transform, "buttons").At(0.5f, 0, 0.5f, 0, -620, 26, 620, 100);
-        koLedger = UI.Btn(row, "Fight ledger on HashScan  ↗", UI.Steel, UI.Ink, () => Application.OpenURL("https://hashscan.io/testnet/topic/" + ledgerTopic), 26);
-        koLedger.At(0, 0, 0.4f, 1);
-        UI.Big(row, "REPLAY FROM 0G", false, () => StartCoroutine(Replay(fightId)), 28).At(0.42f, 0, 0.74f, 1, 0, -10, 0, 10);
-        UI.Big(row, "CONTINUE", true, GoHome, 32, pulse: true).At(0.76f, 0, 1, 1, 0, -10, 0, 10);
+        koPanel = UI.Box(root, new Color(0, 0, 0, 0), false, "ko").At(0, 0, 1, 1).gameObject;
+        UI.Box(koPanel.transform, new Color(0.01f, 0.01f, 0.012f, 0.74f), false, "dim").At(0, 0, 1, 1, -600, -600, 600, 600); // bleeds past the safe area
+        koTitle = UI.Label(koPanel.transform, "", 280, UI.Amber, TextAnchor.MiddleCenter, FontStyle.Italic).At(0, 0.5f, 1, 0.5f, 40, 70, -40, 400);
+        Stroke(koTitle, 0.1f);
+        koWin = UI.Label(koPanel.transform, "", 64, UI.Ink, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0, 0.5f, 1, 0.5f, 40, -20, -40, 80);
+        UI.Big(koPanel.transform, UI.I("refresh") + "  Fight Again", true, () => { GoHome(); FindClicked(); }, 44, pulse: true).At(0.5f, 0.5f, 0.5f, 0.5f, -560, -180, -100, -70);
+        UI.Big(koPanel.transform, UI.I("home") + "  Lobby", false, GoHome, 36).At(0.5f, 0.5f, 0.5f, 0.5f, -80, -180, 200, -70);
+        UI.Big(koPanel.transform, "Details", false, () => koDetails.SetActive(!koDetails.activeSelf), 36).At(0.5f, 0.5f, 0.5f, 0.5f, 220, -180, 500, -70);
+        koDetails = UI.Box(koPanel.transform, UI.Card, true, "details").At(0.5f, 0, 0.5f, 0, -800, 30, 800, 320).gameObject;
+        koSub = UI.Label(koDetails.transform, "", 26, UI.Ink, TextAnchor.UpperCenter).At(0, 1, 1, 1, 30, -100, -30, -20);
+        koLessons = UI.Label(koDetails.transform, "", 22, UI.Dim, TextAnchor.UpperCenter).At(0, 0, 1, 1, 30, 96, -30, -104);
+        var row = UI.Rt(koDetails.transform, "buttons").At(0.5f, 0, 0.5f, 0, -500, 18, 500, 84);
+        koLedger = UI.Big(row, "Fight Ledger on HashScan", false, () => Application.OpenURL("https://hashscan.io/testnet/topic/" + ledgerTopic), 26);
+        koLedger.At(0, 0, 0.5f, 1, 0, 0, -8, 0);
+        UI.Big(row, UI.I("refresh") + "  Replay from 0G", false, () => StartCoroutine(Replay(fightId)), 26).At(0.5f, 0, 1, 1, 8, 0, 0, 0);
+        koDetails.SetActive(false);
         koPanel.SetActive(false);
     }
 
     // ---------------------------------------------------------------- capture mode
     // -capture <dir> [-captureTag <prefix>]: walks every screen, saves PNGs, quits. Uses the server if it answers.
+    IEnumerator AutoDodge(int s)
+    {
+        string last = null;
+        while (s == session)
+        {
+            if (Fighter.IsAttack(b.Current) && b.Current != last) { last = b.Current; PadMove(b.Current is "hook_l" ? "dodge_r" : b.Current is "hook_r" ? "dodge_l" : UnityEngine.Random.value < 0.5f ? "dodge_l" : "dodge_r"); }
+            if (!Fighter.IsAttack(b.Current)) last = null;
+            yield return null;
+        }
+    }
+
     IEnumerator Capture()
     {
         var args = Environment.GetCommandLineArgs();
@@ -1297,6 +1384,26 @@ public partial class Game : MonoBehaviour
         IEnumerator Wait(float s) { yield return new WaitForSecondsRealtime(s); }
 
         if (Array.IndexOf(args, "-flow") >= 0) { yield return CaptureFlow(Shot); Debug.Log("[capture] done"); Application.Quit(); yield break; }
+        // -record: an offline fight as a 30 fps frame sequence (fixed timestep, so motion is judged, not frame drops).
+        if (Array.IndexOf(args, "-record") >= 0)
+        {
+            yield return Connect();
+            a.botId = "bot_a"; a.displayName = "Brass Knuckle"; // the offline sim's demo bot (a stored id from an older run won't exist)
+            bool dodges = Array.IndexOf(args, "-dodges") >= 0; // sparring: the dummy punches, we slip straights and weave under hooks
+            if (dodges) { StartTrain(); counterAttacks.AddRange(new[] { "jab", "hook_l", "cross", "hook_r" }); }
+            else { budgetUsd = 0.25f; StartFight("normal", null); }
+            yield return Wait(0.5f);
+            Time.captureFramerate = 30;
+            if (dodges) StartCoroutine(AutoDodge(session));
+            for (int i = 0; i < 30 * 14 && !(over && koPanel.activeSelf); i++)
+            {
+                yield return new WaitForEndOfFrame();
+                var tex = ScreenCapture.CaptureScreenshotAsTexture();
+                File.WriteAllBytes(Path.Combine(captureDir, $"f{i:0000}.jpg"), tex.EncodeToJPG(85));
+                Destroy(tex);
+            }
+            Debug.Log("[capture] done"); Application.Quit(); yield break;
+        }
         yield return Connect();
         yield return Wait(2.5f);
         yield return Shot("01_home");

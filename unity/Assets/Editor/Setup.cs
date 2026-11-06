@@ -140,6 +140,7 @@ public static class Setup
         sm.defaultState = sm.states.First(s => s.state.name == "idle_boxing_bounce").state;
         // spd defaults to 0 otherwise; idle must play before any script sets it.
         var ps = ctrl.parameters; ps[0].defaultFloat = 1f; ctrl.parameters = ps;
+        var layers = ctrl.layers; layers[0].iKPass = true; ctrl.layers = layers; // Fighter plants the feet while it slips and weaves
         EditorUtility.SetDirty(ctrl);
         return ctrl;
     }

@@ -71,6 +71,16 @@ public class Fighter : MonoBehaviour
     Vector3 knock;
     float baseY;
 
+    // Procedural layer on top of the clips (LateUpdate): a spring that jolts spine/chest/head when hit, slow breathing
+    // and weight shift in the guard, and a head that keeps tracking the opponent. World-space axes, so bone orientation doesn't matter.
+    Vector3 jolt, joltVel;  // degrees: x = pitch (back +), y = yaw, z = roll
+    float phase;            // per-bot offset so the two never breathe in sync
+    Transform spine, chest, head, hips;
+
+    // Boxing dodges, drawn procedurally over the guard clip with the feet pinned by IK: a slip (knees bend, head goes
+    // off the centre line, torso leans into it) against straights, a bob-and-weave (U under the punch) against hooks.
+    float dodgeSide; bool weave;
+
     // impact flash on the body (emission via property block)
     Renderer[] rends; MaterialPropertyBlock mpb; float flash; Color flashTint;
     static readonly int Emission = Shader.PropertyToID("_EmissionColor");
@@ -90,6 +100,8 @@ public class Fighter : MonoBehaviour
         anim.gameObject.AddComponent<RootRelay>().f = this;
         rends = GetComponentsInChildren<Renderer>();
         mpb = new MaterialPropertyBlock();
+        spine = Bone(HumanBodyBones.Spine); chest = Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest); head = Bone(HumanBodyBones.Head); hips = Bone(HumanBodyBones.Hips);
+        phase = UnityEngine.Random.value * 10f;
     }
 
     float Len(string state, float speed)
@@ -110,7 +122,7 @@ public class Fighter : MonoBehaviour
 
     public void ResetFor(int cents)
     {
-        budget = startBudget = cents; guard = 1f; down = won = holdBlock = false; lastHitBy = null;
+        budget = startBudget = cents; guard = 1f; down = won = holdBlock = false; lastHitBy = null; jolt = joltVel = Vector3.zero;
         queue.Clear(); lastMoves.Clear(); current = null; idle = false; knock = Vector3.zero; flash = 0; ApplyFlash();
         nextFootwork = Time.time + UnityEngine.Random.Range(0.6f, 1.6f);
         anim.SetFloat(Spd, 1f);
@@ -147,7 +159,9 @@ public class Fighter : MonoBehaviour
 
         if (holdBlock)
         {
-            if (!idle) { anim.SetFloat(Spd, 0f); anim.CrossFade("block_hold", 0.15f, 0, 0.45f); idle = true; }
+            // Covering up (no fresh plan): a slowed guard bounce, hands up. IsBlocking stays true via holdBlock.
+            // (Freezing block_hold mid-clip left an upright, arms-down pose.)
+            if (!idle) { Play("idle_boxing_bounce", 0.6f, 0.25f); idle = true; }
             guard = Mathf.Min(1f, guard + Time.deltaTime * 0.1f);
             return;
         }
@@ -190,8 +204,20 @@ public class Fighter : MonoBehaviour
     void Begin(string move, bool record = true)
     {
         var state = State[move];
-        float speed = Speed(state);
-        Play(state, speed, IsAttack(move) ? 0.06f : 0.1f);
+        float speed = Speed(state) * UnityEngine.Random.Range(0.94f, 1.06f); // no two jabs identical
+        if (move is "dodge_l" or "dodge_r")
+        {
+            dodgeSide = move == "dodge_l" ? -1 : 1;
+            var incoming = opp != null ? opp.current : null;
+            weave = incoming is "hook_l" or "hook_r";
+            anim.SetFloat(Spd, 1f); anim.CrossFadeInFixedTime("idle_boxing_bounce", 0.1f); // the normal guard; the dodge is layered on top
+            current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue; // same timing window as before
+            lastMoves.Add(move); if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
+            return;
+        }
+        // Attacks out of another attack chain quickly; everything else blends a touch longer so it never pops.
+        bool chain = IsAttack(move) && lastMoves.Count > 0 && IsAttack(lastMoves[^1]) && t < dur + 0.2f;
+        Play(state, speed, IsAttack(move) ? (chain ? 0.14f : 0.11f) : 0.18f);
         current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue;
         stepTarget = MinGap + 0.1f;
         if (!record) return;
@@ -216,7 +242,65 @@ public class Fighter : MonoBehaviour
             }
             if (n >= s.peak + 0.05f) { hitDone = true; OnSwing?.Invoke(this, current); Resolve(current); }
         }
+        // Flow: once a punch has landed and is recovering, a queued punch comes straight out of it (a combo);
+        // with nothing queued, blend back to guard before the clip's dead tail instead of snapping at the end.
+        bool attack = IsAttack(current);
+        bool resolved = !attack || hitDone;
+        if (resolved && n >= 0.7f && queue.Count > 0 && IsAttack(queue.Peek()) && Distance <= RangeOf(queue.Peek()) + 0.12f) { current = null; return; }
+        // (block's guard window runs to 0.85, so it blends out a little later)
+        if (resolved && n >= (current == "block" ? 0.86f : 0.82f) && queue.Count == 0 && current != "_hit") { current = null; Play("idle_boxing_bounce", 1f, 0.3f); idle = true; return; }
         if (n >= 1f) current = null;
+    }
+
+    // 0 → 1 → 0 over the dodge, peaking inside the window where IsDodging counts (12-70%).
+    float DodgeK => current is "dodge_l" or "dodge_r" ? Mathf.Sin(Mathf.PI * Mathf.Clamp01(N / 0.85f)) : 0f;
+
+    // Called from RootRelay.OnAnimatorIK: move the body, then pin both feet where the clip had them so the knees bend.
+    public void OnIK()
+    {
+        float k = DodgeK;
+        if (k <= 0.001f) { anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0); anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0); return; }
+        var lf = anim.GetIKPosition(AvatarIKGoal.LeftFoot); var rf = anim.GetIKPosition(AvatarIKGoal.RightFoot);
+        var lr = anim.GetIKRotation(AvatarIKGoal.LeftFoot); var rr = anim.GetIKRotation(AvatarIKGoal.RightFoot);
+        Vector3 side = transform.right * dodgeSide, offset;
+        if (weave)
+        {
+            float n = Mathf.Clamp01(N / 0.85f);
+            offset = Vector3.down * 0.24f * Mathf.Sin(Mathf.PI * n) + side * 0.18f * Mathf.Sin(Mathf.PI * (n - 0.5f)) + transform.forward * 0.06f * Mathf.Sin(Mathf.PI * n); // down, under, up the other side
+        }
+        else offset = Vector3.down * 0.1f * k + side * 0.2f * k + transform.forward * 0.05f * k; // head goes forward and outside the punch
+        anim.bodyPosition += offset;
+        foreach (var (g, pos, rot) in new[] { (AvatarIKGoal.LeftFoot, lf, lr), (AvatarIKGoal.RightFoot, rf, rr) })
+        {
+            anim.SetIKPositionWeight(g, 1); anim.SetIKRotationWeight(g, 1);
+            anim.SetIKPosition(g, pos); anim.SetIKRotation(g, rot);
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (anim == null || head == null) return;
+        float dt = Time.deltaTime; // follows hit-stop and slow-mo
+        // critically-ish damped spring back to zero
+        joltVel += (-jolt * 260f - joltVel * 20f) * dt;
+        jolt += joltVel * dt;
+        if (down || opp == null) return;
+        float tt = Time.time + phase;
+        bool settled = current == null && !won;
+        float breathe = settled ? Mathf.Sin(tt * 2.1f) * 1.6f : 0f, sway = settled ? Mathf.Sin(tt * 0.9f) * 3f : 0f;
+        Vector3 right = transform.right, up = Vector3.up, fwd = transform.forward;
+        Quaternion J(Vector3 deg) => Quaternion.AngleAxis(-deg.x, right) * Quaternion.AngleAxis(deg.y, up) * Quaternion.AngleAxis(deg.z, fwd);
+        if (hips != null) hips.rotation = Quaternion.AngleAxis(sway + 10f * dodgeSide * DodgeK * (weave ? 0.5f : 1f), up) * hips.rotation; // hips turn with the slip
+        // dodge lean: slip rolls the torso into the slip and turns the shoulders; the weave folds forward at the bottom of the U
+        float dk = DodgeK;
+        // x < 0 folds forward at the waist (never back), y turns the shoulders into the slip, z is a small side tilt
+        var lean = weave ? new Vector3(-30f * dk, 8f * dodgeSide * dk, 6f * dodgeSide * Mathf.Sin(Mathf.PI * N)) : new Vector3(-12f * dk, 18f * dodgeSide * dk, 9f * dodgeSide * dk);
+        if (spine != null) spine.rotation = J(jolt * 0.35f + new Vector3(breathe * 0.5f, 0, 0) + lean * 0.45f) * spine.rotation;
+        if (chest != null) chest.rotation = J(jolt * 0.3f + new Vector3(breathe, -sway * 0.6f, 0) + lean * 0.55f) * chest.rotation;
+        // eyes on the opponent: a small yaw toward his head, clamped so the clip's own head work still shows
+        var toOpp = Vector3.ProjectOnPlane(opp.Head - head.position, up);
+        float look = Mathf.Clamp(Vector3.SignedAngle(Vector3.ProjectOnPlane(fwd, up), toOpp, up), -18f, 18f) * (settled ? 0.6f : 0.25f);
+        head.rotation = J(jolt * 0.6f + new Vector3(0, look, 0)) * head.rotation;
     }
 
     // Every position change goes through here: ring bounds plus a hard minimum gap, so the bodies can never overlap
@@ -263,7 +347,7 @@ public class Fighter : MonoBehaviour
         if (logStrikes) Debug.Log($"[strike] {botId} {move} d={Distance:F2} fist={minFist:F2} -> {result ?? "whiff"}");
         if (result == null) return; // whiff
         if (result == "clean") opp.TakeHit(move);
-        else if (result == "blocked") { opp.guard = Mathf.Max(0f, opp.guard - 0.08f * Damage(move)); opp.Flash(new Color(0.4f, 0.65f, 1f), 0.5f); opp.knock = -opp.ToOpp * 0.5f; }
+        else if (result == "blocked") { opp.guard = Mathf.Max(0f, opp.guard - 0.08f * Damage(move)); opp.Flash(new Color(0.4f, 0.65f, 1f), 0.5f); opp.knock = -opp.ToOpp * 0.35f; opp.joltVel += new Vector3(140 * Damage(move), 0, 0); }
         OnHit?.Invoke(this, move, result);
     }
 
@@ -276,10 +360,18 @@ public class Fighter : MonoBehaviour
     {
         lastHitBy = move;
         var state = HitState.TryGetValue(move, out var s) ? s : "hit_body";
-        Play(state, 1.3f, 0.04f);
-        current = "_hit"; t = 0; dur = Len(state, 1.3f) * 0.8f; idle = false;
+        Play(state, 1.25f * UnityEngine.Random.Range(0.95f, 1.05f), 0.07f);
+        current = "_hit"; t = 0; dur = Len(state, 1.25f) * 0.78f; idle = false;
         // hit_upper carries its own 1.1 m root-motion knockback; the rest get a short shove that bleeds off
-        if (move != "uppercut" && opp != null) knock = -ToOpp * (0.7f + 0.25f * Damage(move));
+        if (move != "uppercut" && opp != null) knock = -ToOpp * (0.45f + 0.18f * Damage(move));
+        // The body answers the punch: head snaps back from straights, turns away from hooks, lifts on an uppercut, folds on a body shot.
+        float k = 0.8f + 0.2f * Damage(move);
+        joltVel += move switch
+        {
+            "jab" => new Vector3(260, 0, 0), "cross" => new Vector3(380, 40, 0),
+            "hook_l" => new Vector3(80, -420, 160), "hook_r" => new Vector3(80, 420, -160),
+            "uppercut" => new Vector3(520, 0, 0), "body" => new Vector3(-420, 0, 0), _ => new Vector3(200, 0, 0),
+        } * k;
         Flash(flashColor, 1f);
     }
 
@@ -328,4 +420,5 @@ public class RootRelay : MonoBehaviour
     Animator anim;
     void Awake() => anim = GetComponent<Animator>();
     void OnAnimatorMove() { if (f != null) f.ApplyRoot(anim.deltaPosition); }
+    void OnAnimatorIK(int layer) { if (f != null) f.OnIK(); }
 }

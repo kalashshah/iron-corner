@@ -16,7 +16,11 @@ public class Fx : MonoBehaviour
     ParticleSystem sparks, glow, blockSparks, debris, smoke, flashes, confetti;
     Light[] lights; float[] lightLife, lightPeak; int li;
     AudioSource[] srcs; int si; AudioSource crowdLoop;
-    AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur, tick;
+    // Music: two sources so screens crossfade; loops render on a worker thread at startup.
+    AudioSource musicA, musicB; Music.Kind musicWant = Music.Kind.Lobby; bool musicOn;
+    readonly AudioClip[] music = new AudioClip[3]; readonly float[][] musicData = new float[3][];
+    public float musicVolume = 0.5f;
+    AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur, tick, dodge, slam, ooh, ding;
 
     void Awake()
     {
@@ -49,12 +53,43 @@ public class Fx : MonoBehaviour
         for (int i = 0; i < srcs.Length; i++) { srcs[i] = gameObject.AddComponent<AudioSource>(); srcs[i].playOnAwake = false; srcs[i].spatialBlend = 0; }
         BuildSounds();
         crowdLoop = gameObject.AddComponent<AudioSource>();
-        crowdLoop.clip = murmur; crowdLoop.loop = true; crowdLoop.volume = 0.2f; crowdLoop.Play();
+        crowdLoop.clip = murmur; crowdLoop.loop = true; crowdLoop.volume = 0f; crowdLoop.Play();
+        musicA = gameObject.AddComponent<AudioSource>(); musicB = gameObject.AddComponent<AudioSource>();
+        foreach (var m in new[] { musicA, musicB }) { m.loop = true; m.volume = 0; m.playOnAwake = false; }
+        foreach (Music.Kind k in Enum.GetValues(typeof(Music.Kind)))
+        {
+            var kk = k;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                try { musicData[(int)kk] = Music.Render(kk); Debug.Log($"[music] {kk} rendered in {sw.ElapsedMilliseconds} ms"); }
+                catch (Exception e) { Debug.LogException(e); } // a task would swallow it otherwise
+            });
+        }
         BuildCrowd();
     }
 
     // ---------------------------------------------------------------- public hooks
     public void SetCrowd(float baseLevel) => crowdBase = baseLevel;
+
+    // Lobby / Train / Fight music; crossfades over ~1 s.
+    public void SetMusic(Music.Kind k) { musicWant = k; musicOn = true; }
+
+    void UpdateMusic(float dt)
+    {
+        for (int i = 0; i < 3; i++)
+            if (music[i] == null && musicData[i] != null) { var c = AudioClip.Create("music" + i, musicData[i].Length, 1, Music.SR, false); c.SetData(musicData[i], 0); music[i] = c; musicData[i] = null; }
+        var want = music[(int)musicWant];
+        if (musicOn && want != null && musicA.clip != want)
+        {
+            (musicA, musicB) = (musicB, musicA); // A is always the one fading in
+            musicA.clip = want; musicA.volume = 0; musicA.Play();
+        }
+        float target = musicVolume * (musicWant == Music.Kind.Fight ? 0.75f : musicWant == Music.Kind.Train ? 0.55f : 0.45f);
+        musicA.volume = Mathf.MoveTowards(musicA.volume, musicOn ? target : 0, dt * 0.8f);
+        musicB.volume = Mathf.MoveTowards(musicB.volume, 0, dt * 0.8f);
+        if (musicB.isPlaying && musicB.volume <= 0) musicB.Stop();
+    }
 
     public void Swing(Vector3 at, bool heavy) => Play(whoosh, heavy ? 0.55f : 0.4f, heavy ? 0.85f : 1.1f);
 
@@ -79,7 +114,19 @@ public class Fx : MonoBehaviour
             Play(clank, 0.55f, Random.Range(0.95f, 1.12f));
             shake = Mathf.Min(1f, shake + 0.1f);
         }
-        else Play(whoosh, 0.35f, 1.35f);
+        else { Play(dodge, 0.6f, Random.Range(0.95f, 1.1f)); Play(ooh, 0.3f, Random.Range(0.95f, 1.08f)); }
+    }
+
+    // Combo counter: a ding that climbs a step with every hit in the run.
+    public void Combo(int n) => Play(ding, 0.35f, Mathf.Pow(1.122f, Mathf.Min(n, 8) - 2));
+
+    // Special impact (slow-mo close-up): a big spark burst, a white-hot flash, the slam and the crowd's "ooh".
+    public void Special(Vector3 at)
+    {
+        Emit(sparks, at, 110); Emit(glow, at, 3); Emit(debris, at, 18); Emit(flashes, at, 2);
+        Light(at, new Color(1f, 0.75f, 0.45f), 45f);
+        Play(slam, 1f, 1f); Play(ooh, 0.8f, 1f);
+        shake = 1f; excite = 1f;
     }
 
     public void Tick() => Play(tick, 0.3f, Random.Range(0.96f, 1.04f)); // UI buttons
@@ -121,7 +168,11 @@ public class Fx : MonoBehaviour
             lights[i].intensity = lightPeak[i] * lightLife[i] * lightLife[i];
         }
         float level = Mathf.Max(crowdBase, excite);
-        crowdLoop.volume = Mathf.Lerp(crowdLoop.volume, 0.12f + level * 0.45f, dt * 3f);
+        crowdLoop.volume = Mathf.Lerp(crowdLoop.volume, level * 0.5f, dt * 3f);
+        UpdateMusic(dt);
+        // slow-mo bends the music down like tape slowing, and snaps back after
+        float mp = Mathf.Lerp(musicA.pitch, Time.timeScale < 0.5f ? 0.8f : 1f, dt * (Time.timeScale < 0.5f ? 10f : 4f));
+        musicA.pitch = musicB.pitch = mp;
         // camera-flash glints from the stands, more when the crowd is up
         if (Random.value < dt * (1.5f + level * 14f))
         {
@@ -316,27 +367,67 @@ public class Fx : MonoBehaviour
         return t => { y += a * (Noise() - y); return y * Mathf.Exp(-t * decay); };
     }
 
+    // Short bright noise burst: the "crack" on top of a punch.
+    static Func<float, float> Crack(float hp, float decay)
+    {
+        float lo = 0, a = LpA(hp);
+        return t => { float x = Noise(); lo += a * (x - lo); return (x - lo) * Mathf.Exp(-t * decay); };
+    }
+
+    // Resonant band-pass (two-pole): formants for the crowd "ooh" and the glove smack.
+    static Func<float, float, float> Reso(float q)
+    {
+        float y1 = 0, y2 = 0;
+        return (x, f) => { float w = 2 * Mathf.PI * f / SR, r = 1 - w / (2 * q); float y = (1 - r) * x + 2 * r * Mathf.Cos(w) * y1 - r * r * y2; y2 = y1; y1 = y; return y; };
+    }
+
+    // A small room: four feedback combs in parallel, mixed under the dry signal (and a tail added to the clip).
+    static float[] Room(float[] d, float mix, float tailSecs)
+    {
+        int tail = (int)(tailSecs * SR);
+        var o = new float[d.Length + tail];
+        Array.Copy(d, o, d.Length);
+        int[] taps = { 1557, 1617, 1491, 1422 };
+        var wet = new float[o.Length];
+        foreach (var tap in taps)
+        {
+            var buf = new float[tap]; int bi = 0;
+            for (int i = 0; i < o.Length; i++) { float x = i < d.Length ? d[i] : 0; float y = buf[bi]; buf[bi] = x + y * 0.72f; bi = (bi + 1) % tap; wet[i] += y * 0.25f; }
+        }
+        float peak = 1e-4f;
+        for (int i = 0; i < o.Length; i++) { o[i] = o[i] + wet[i] * mix; peak = Mathf.Max(peak, Mathf.Abs(o[i])); }
+        for (int i = 0; i < o.Length; i++) o[i] *= 0.92f / peak;
+        int fade = Mathf.Min(SR / 50, o.Length); for (int i = 0; i < fade; i++) o[o.Length - 1 - i] *= i / (float)fade;
+        return o;
+    }
+
     void BuildSounds()
     {
+        // jab / cross: glove smack (resonant body ~1.1 kHz), a bright crack, a pitch-drop thump, a light metal ring
         {
-            var th = Thump(150, 55, 16); var hs = Hiss(3500, 70);
-            float[] f = { 610, 1430, 2270, 3310 }, dk = { 14, 18, 24, 30 };
-            punch = Clip("punch", Synth(0.35f, t => th(t) * 0.9f + hs(t) * 2.2f + Ring(t, f, dk, 0.35f)));
+            var th = Thump(160, 55, 18); var cr = Crack(5000, 140); var bp = Reso(3f);
+            float[] f = { 610, 1430, 2270, 3310 }, dk = { 18, 24, 30, 38 };
+            punch = Clip("punch", Room(Synth(0.3f, t => th(t) * 1.1f + cr(t) * 1.4f + bp(Noise() * Mathf.Exp(-t * 55), 1100) * 14f + Ring(t, f, dk, 0.16f)), 0.16f, 0.25f));
         }
+        // heavy (hooks / uppercut): deeper thump, sub boom, crunch, longer ring
         {
-            var th = Thump(120, 38, 9); var hs = Hiss(2500, 35);
-            float[] f = { 340, 810, 1390, 2110 }, dk = { 7, 9, 13, 18 };
-            punchHeavy = Clip("punchHeavy", Synth(0.6f, t => th(t) + hs(t) * 2.6f + Ring(t, f, dk, 0.42f)));
+            var th = Thump(120, 36, 9); var cr = Crack(3500, 90); var sub = Thump(60, 30, 5); var cn = Hiss(900, 22);
+            float[] f = { 340, 810, 1390, 2110 }, dk = { 8, 11, 15, 20 };
+            punchHeavy = Clip("punchHeavy", Room(Synth(0.7f, t => th(t) * 1.1f + sub(t) * 0.7f + cr(t) * 1.6f + cn(t) * 2.2f + Ring(t, f, dk, 0.26f)), 0.24f, 0.45f));
         }
+        // body shot: dull thud, a muffled whump, a quick armour rattle
         {
-            var th = Thump(95, 42, 13); var hs = Hiss(1400, 40);
-            body = Clip("body", Synth(0.4f, t => th(t) + hs(t) * 2f));
+            var th = Thump(95, 40, 12); var hs = Hiss(700, 30);
+            float[] f = { 2400, 3700, 5100 }, dk = { 45, 60, 70 };
+            body = Clip("body", Room(Synth(0.42f, t => th(t) * 1.2f + hs(t) * 2.4f + Ring(t, f, dk, 0.12f)), 0.14f, 0.25f));
         }
+        // block: metal clank on the forearm guards
         {
-            var th = Thump(220, 120, 30); var hs = Hiss(6000, 90);
+            var th = Thump(230, 120, 30); var hs = Hiss(6000, 90);
             float[] f = { 1240, 2870, 4130, 5390 }, dk = { 11, 14, 19, 25 };
-            clank = Clip("clank", Synth(0.45f, t => th(t) * 0.4f + hs(t) * 1.6f + Ring(t, f, dk, 0.8f)));
+            clank = Clip("clank", Room(Synth(0.45f, t => th(t) * 0.5f + hs(t) * 1.4f + Ring(t, f, dk, 0.45f)), 0.2f, 0.3f));
         }
+        // punch swing
         {
             float lo = 0, hi = 0; const float T = 0.26f;
             whoosh = Clip("whoosh", Synth(T, t =>
@@ -344,6 +435,16 @@ public class Fx : MonoBehaviour
                 float k = t / T, fc = 500 + 2600 * Mathf.Sin(Mathf.PI * k);
                 float x = Noise(); lo += LpA(fc) * (x - lo); hi += LpA(fc * 0.35f) * (lo - hi);
                 float env = Mathf.Sin(Mathf.PI * k); return (lo - hi) * env * env;
+            }));
+        }
+        // dodge: a shorter, brighter whoosh (the head slipping past the glove)
+        {
+            float lo = 0, hi = 0; const float T = 0.18f;
+            dodge = Clip("dodge", Synth(T, t =>
+            {
+                float k = t / T, fc = 1400 + 4200 * Mathf.Sin(Mathf.PI * k);
+                float x = Noise(); lo += LpA(fc) * (x - lo); hi += LpA(fc * 0.4f) * (lo - hi);
+                float env = Mathf.Sin(Mathf.PI * k); return (lo - hi) * env;
             }));
         }
         {
@@ -355,33 +456,49 @@ public class Fx : MonoBehaviour
             var th = Thump(70, 28, 3.5f); var hs = Hiss(600, 5);
             boom = Clip("boom", Synth(1.4f, t => th(t) + hs(t) * 1.5f));
         }
-        cheer = Clip("cheer", Synth(2.6f, CrowdVoice(2.6f, true)));
+        // special impact: a long sub drop, a crack, a big metallic ring, lots of room
+        {
+            var sub = Thump(90, 24, 2.6f); var cr = Crack(3000, 40); var hs = Hiss(1800, 9);
+            float[] f = { 290, 690, 1180, 1870, 2730 }, dk = { 3, 4, 6, 8, 11 };
+            slam = Clip("slam", Room(Synth(1.6f, t => sub(t) * 1.2f + cr(t) * 1.8f + hs(t) * 1.4f + Ring(t, f, dk, 0.35f)), 0.35f, 0.9f));
+        }
+        // crowd "ooh": noise through two gliding vowel formants, quick swell, slow fall
+        {
+            var f1 = Reso(5f); var f2 = Reso(6f); float lo = 0, a = LpA(2000);
+            ooh = Clip("ooh", Synth(1.5f, t =>
+            {
+                float x = Noise(); lo += a * (x - lo);
+                float glide = 1f - 0.12f * Mathf.Clamp01(t / 1.2f);
+                float env = Mathf.Clamp01(t / 0.12f) * Mathf.Exp(-t * 1.7f);
+                return (f1(lo, 420 * glide) + f2(lo, 780 * glide) * 0.7f) * env;
+            }));
+        }
+        // combo ding: two bright partials with a quick tick on the front (pitched up per hit in the run)
+        { var th = Thump(900, 700, 60); ding = Clip("ding", Synth(0.5f, t => Mathf.Sin(2 * Mathf.PI * 1320 * t) * Mathf.Exp(-t * 7) + Mathf.Sin(2 * Mathf.PI * 1980 * t) * 0.4f * Mathf.Exp(-t * 11) + th(t) * 0.4f)); }
+        cheer = Clip("cheer", Synth(2.6f, CrowdWash(2.6f, true)));
         { float[] f = { 1850, 3120, 4700 }, dk = { 60, 80, 110 }; var th = Thump(420, 180, 70); tick = Clip("tick", Synth(0.09f, t => th(t) * 0.6f + Ring(t, f, dk, 0.8f))); }
-        murmur = Clip("murmur", Loop(Synth(6.5f, CrowdVoice(6.5f, false)), 0.5f));
+        murmur = Clip("murmur", Loop(Synth(8f, CrowdWash(8f, false)), 1f));
     }
 
-    // Many detuned "aah" voices over band-limited noise. cheer=true swells up and fades out; false is a steady murmur.
-    static Func<float, float> CrowdVoice(float secs, bool cheer)
+    // A crowd as shaped noise (no oscillators, so no drone): a band-passed wash that swells slowly, plus scattered
+    // hand claps. cheer=true rises fast, gets brighter and clappier, then fades; false is a steady low murmur.
+    static Func<float, float> CrowdWash(float secs, bool cheer)
     {
-        int n = cheer ? 28 : 14;
-        var fr = new float[n]; var ph = new float[n]; var vib = new float[n];
-        for (int i = 0; i < n; i++) { fr[i] = 170 + (float)Rng.NextDouble() * (cheer ? 420 : 200); ph[i] = (float)Rng.NextDouble() * 6; vib[i] = 3 + (float)Rng.NextDouble() * 4; }
-        float lo = 0, lo2 = 0, ylo = 0, f1 = 0;
-        float aN = LpA(cheer ? 2600 : 900), aN2 = LpA(250), aF = LpA(1100);
+        float lo = 0, lo2 = 0, hp = 0, clapEnv = 0;
+        float aN = LpA(cheer ? 2400 : 1200), aN2 = LpA(cheer ? 300 : 220), aH = LpA(2500);
+        var sw = new float[4]; var ph = new float[4];
+        for (int i = 0; i < 4; i++) { sw[i] = 0.12f + (float)Rng.NextDouble() * 0.5f; ph[i] = (float)Rng.NextDouble() * 6; }
+        float clapRate = cheer ? 38f : 3f; // claps per second
         return t =>
         {
             float x = Noise(); lo += aN * (x - lo); lo2 += aN2 * (lo - lo2);
-            float noise = (lo - lo2) * 2.4f;
-            float v = 0;
-            for (int i = 0; i < n; i++)
-            {
-                float f = fr[i] * (1 + 0.025f * Mathf.Sin(2 * Mathf.PI * vib[i] * t + ph[i]));
-                float s = 2 * ((f * t + ph[i]) % 1f) - 1; // saw, then a soft formant lowpass below
-                v += s * (0.6f + 0.4f * Mathf.Sin(t * (0.7f + i * 0.13f) + ph[i]));
-            }
-            ylo += aF * (v / n - ylo); f1 = ylo;
-            float env = cheer ? Mathf.Clamp01(t / 0.25f) * Mathf.Clamp01((secs - t) / 1.4f) : 0.8f + 0.2f * Mathf.Sin(t * 1.1f);
-            return (noise * (cheer ? 0.9f : 0.7f) + f1 * (cheer ? 1.4f : 0.6f)) * env;
+            float wash = (lo - lo2) * 2.2f;
+            float mod = 0.7f; for (int i = 0; i < 4; i++) mod += 0.08f * Mathf.Sin(2 * Mathf.PI * sw[i] * t + ph[i]);
+            if (Rng.NextDouble() < clapRate / SR) clapEnv = 0.5f + (float)Rng.NextDouble() * 0.5f;
+            clapEnv *= 0.9985f; hp += aH * (x - hp);
+            float clap = (x - hp) * clapEnv * clapEnv * (cheer ? 0.9f : 0.35f);
+            float env = cheer ? Mathf.Clamp01(t / 0.18f) * Mathf.Clamp01((secs - t) / 1.6f) : 1f;
+            return (wash * mod + clap) * env;
         };
     }
 
