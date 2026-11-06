@@ -41,7 +41,7 @@ def moves(zip_path, prompt):
         model.set_adapter(name)
         enc = tok(prompt, return_tensors="pt")
         with torch.no_grad():
-            out = model.generate(**enc, max_new_tokens=8, do_sample=False)
+            out = model.generate(**enc, max_new_tokens=12, do_sample=False)
         return tok.decode(out[0][enc["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
 class H(BaseHTTPRequestHandler):
