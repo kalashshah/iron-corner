@@ -60,7 +60,9 @@ public partial class Game : MonoBehaviour
     TMP_Text banner; float bannerAt = -9f;
 
     // Shadow sparring: the owner boxes with the move pad; each move becomes a demo (state, action, outcome) for the backend.
-    class Demo { public JObject state; public string action; public float at; public string outcome; public bool gotHit; }
+    // A demo is born on the tap, but its clock, its state snapshot and its result all belong to the moment the bot
+    // actually throws the move (Fighter.OnBegin): taps queue behind the current move and may step in first.
+    class Demo { public JObject state; public string action; public float tapAt, at; public bool started; public int throwId; public string outcome; public bool gotHit; }
     readonly List<Demo> demoPending = new();
     readonly JArray demoBatch = new();
     readonly List<string> drilling = new(); // attacks the owner has been defending against; the dummy throws more of them
@@ -83,6 +85,13 @@ public partial class Game : MonoBehaviour
         ringY = a.transform.position.y;
         a.opp = b; b.opp = a;
         a.OnHit += OnHit; b.OnHit += OnHit;
+        a.OnBegin += (f, move, id) => // sparring: the tapped move is thrown now; start its demo from this moment
+        {
+            if (mode != Mode.Train || !roundOn) return;
+            var d = demoPending.FirstOrDefault(x => !x.started && x.action == move);
+            if (d == null) return;
+            d.started = true; d.at = Time.time; d.throwId = id; d.state = State(a);
+        };
         fx = GetComponent<Fx>();
         a.OnSwing += (f, m) => fx.Swing(f.Fist(m), Fighter.Damage(m) >= 3);
         b.OnSwing += (f, m) => fx.Swing(f.Fist(m), Fighter.Damage(m) >= 3);
@@ -474,7 +483,9 @@ public partial class Game : MonoBehaviour
     {
         if (mode != Mode.Train) return;
         if (!roundOn) StartRound();
-        demoPending.Add(new Demo { state = State(a), action = m, at = Time.time });
+        // the new tap replaces anything still waiting in the bot's queue: those taps were never thrown, so they aren't demos
+        demoPending.RemoveAll(x => !x.started);
+        demoPending.Add(new Demo { action = m, tapAt = Time.time });
         a.holdBlock = false; a.SetQueue(new[] { m });
     }
 
@@ -493,11 +504,11 @@ public partial class Game : MonoBehaviour
         if (mode != Mode.Train || !roundOn) return;
         if (att == a)
         {
-            var d = demoPending.FirstOrDefault(x => x.outcome == null && x.action == move);
+            var d = demoPending.FirstOrDefault(x => x.started && x.outcome == null && x.throwId == a.ThrowId); // this exact throw
             if (d != null) d.outcome = result == "clean" ? "landed" : result;
             return;
         }
-        foreach (var d in demoPending.Where(x => x.outcome == null && Time.time - x.at < 1.2f))
+        foreach (var d in demoPending.Where(x => x.started && x.outcome == null && Time.time - x.at < 1.2f))
         {
             if (result == "clean") d.gotHit = true;
             if (!Fighter.IsAttack(d.action)) d.outcome = result == "clean" ? "got_hit" : d.action == "block" ? "blocked" : "dodged";
@@ -511,6 +522,7 @@ public partial class Game : MonoBehaviour
         for (int i = demoPending.Count - 1; i >= 0; i--)
         {
             var d = demoPending[i];
+            if (!d.started) { if (Time.time - d.tapAt > 2.5f) demoPending.RemoveAt(i); continue; } // never thrown
             bool atk = Fighter.IsAttack(d.action);
             if (d.outcome == null && Time.time - d.at < (atk ? 1.4f : 1.0f)) continue;
             // A defensive move with a dummy punch striking into it that didn't land clean made it miss.
@@ -531,6 +543,7 @@ public partial class Game : MonoBehaviour
         var o1 = (string)(d.state["oppLastMoves"] as JArray)?.LastOrDefault();
         if (!atk && Fighter.IsAttack(o1)) { drilling.Add(o1); if (drilling.Count > 8) drilling.RemoveAt(0); }
         roundMoves++;
+        if (Fighter.logStrikes) Debug.Log($"[demo] {d.action} {d.outcome} d={(float?)d.state?["distance"] ?? 0:F2}");
         string mark = ok ? "<color=#5CDB85>\ue5ca</color>" : d.outcome == "got_hit" ? "<color=#F2523F>\ue5cd</color>" : "<color=#8E8E93>·</color>";
         padFeed.text = $"{mark} {char.ToUpperInvariant(UI.Nice(d.action)[0])}{UI.Nice(d.action).Substring(1)} · {d.outcome.Replace('_', ' ')}   <color=#8E8E93>demo recorded</color>";
         roundInfo.text = $"{roundMoves} moves";
@@ -549,7 +562,7 @@ public partial class Game : MonoBehaviour
     void EndRound()
     {
         roundOn = false;
-        foreach (var d in demoPending) { d.outcome ??= d.gotHit ? "got_hit" : "whiff"; Recorded(d); }
+        foreach (var d in demoPending.Where(x => x.started)) { d.outcome ??= d.gotHit ? "got_hit" : "whiff"; Recorded(d); }
         demoPending.Clear();
         a.SetQueue(Array.Empty<string>());
         if (roundMoves > 0) unsavedRounds++;
@@ -1358,7 +1371,9 @@ public partial class Game : MonoBehaviour
     IEnumerator AutoPunch(int s)
     {
         string[] all = { "jab", "cross", "hook_l", "hook_r", "uppercut", "body" };
-        for (int i = 0; s == session; i++) { PadMove(all[i % all.Length]); yield return new WaitForSeconds(1.1f); }
+        var args = Environment.GetCommandLineArgs(); int gi = Array.IndexOf(args, "-tapgap");
+        float gap = gi >= 0 && gi + 1 < args.Length && float.TryParse(args[gi + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var g) ? g : 1.1f;
+        for (int i = 0; s == session; i++) { PadMove(all[i % all.Length]); yield return new WaitForSeconds(gap); }
     }
 
     IEnumerator AutoDodge(int s)

@@ -21,6 +21,8 @@ public class Fighter : MonoBehaviour
     public readonly List<string> lastMoves = new();
     public event Action<Fighter, string, string> OnHit; // attacker, move, result
     public event Action<Fighter, string> OnSwing;       // attacker, move: every punch at its strike frame, landed or not
+    public event Action<Fighter, string, int> OnBegin;  // a move actually starts (after any queue wait / step-in), with its throw id
+    public int ThrowId { get; private set; }            // id of the move in progress; hits resolve during it
 
     public static readonly string[] Moves = { "jab", "cross", "hook_l", "hook_r", "uppercut", "body", "block", "dodge_l", "dodge_r", "step_in", "step_back" };
 
@@ -223,6 +225,7 @@ public class Fighter : MonoBehaviour
             anim.SetFloat(Spd, 1f); anim.CrossFadeInFixedTime("idle_boxing_bounce", 0.1f); // the normal guard; the dodge is layered on top
             current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue; // same timing window as before
             lastMoves.Add(move); if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
+            OnBegin?.Invoke(this, move, ++ThrowId);
             return;
         }
         // Attacks out of another attack chain quickly; everything else blends a touch longer so it never pops.
@@ -233,6 +236,7 @@ public class Fighter : MonoBehaviour
         if (!record) return;
         lastMoves.Add(move);
         if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
+        OnBegin?.Invoke(this, move, ++ThrowId);
     }
 
     void Tick()
