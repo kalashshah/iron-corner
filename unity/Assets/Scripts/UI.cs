@@ -5,7 +5,7 @@ using UnityEngine.UI;
 // Tiny runtime UGUI builder. Screens are built in code so there are no prefabs to keep in sync.
 public static class UI
 {
-    public static Font Font;
+    public static Font Font, Display; // Display: heavy face for titles and game buttons
     public static Sprite Round;
 
     // Monochrome: near-black glass, white type, grey secondary. Colour only for meaning (green = good, red = damage).
@@ -31,6 +31,7 @@ public static class UI
     {
         Font = Font.CreateDynamicFontFromOSFont(new[] { "Avenir Next", "Roboto", "Helvetica Neue", "Arial", "Arial Unicode MS" }, 48);
         if (Font == null) Font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        Display = Font.CreateDynamicFontFromOSFont(new[] { "Avenir Next Heavy", "Avenir Next Condensed Heavy", "Roboto Black", "Arial Black", "Roboto", "Arial" }, 64) ?? Font;
         const int s = 64, r = 18;
         // One rounded-rect distance field, four looks: solid fill, top sheen, 2px rim, soft outer glow.
         Sprite Make(Func<float, float, float> alpha, int size, int border)
@@ -117,6 +118,9 @@ public static class UI
         t.font = Font; t.text = s; t.fontSize = size; t.color = c; t.alignment = a; t.fontStyle = st;
         t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false; t.supportRichText = true;
+        // Shrink-to-fit instead of spilling out of the box: long names, ids and translated copy stay inside their rect.
+        t.verticalOverflow = VerticalWrapMode.Truncate;
+        t.resizeTextForBestFit = true; t.resizeTextMaxSize = size; t.resizeTextMinSize = Mathf.Max(10, Mathf.RoundToInt(size * 0.5f));
         if (c.r + c.g + c.b > 1.2f) t.gameObject.AddComponent<Shadow>().effectColor = new Color(0, 0, 0, 0.45f); // light text stays legible over the 3D ring
         return t.At(0, 0, 1, 1);
     }
@@ -143,6 +147,49 @@ public static class UI
 
     public static void SetLabel(this Button b, string s) => b.GetComponentInChildren<Text>().text = s;
 
+    // Heavy italic display text for titles, banners and numbers.
+    public static Text Title(Transform p, string s, int size, Color c, TextAnchor a = TextAnchor.MiddleLeft)
+    {
+        var t = Label(p, s, size, c, a, FontStyle.Italic);
+        t.font = Display;
+        return t;
+    }
+
+    // Chunky game button: a face sitting on a darker slab, so it reads as a physical key. Primary = white, else graphite.
+    public static Button Big(Transform p, string label, bool primary, Action click, int size = 44, bool pulse = false)
+    {
+        var root = Go(p, "big:" + label).AddComponent<Image>(); root.color = new Color(0, 0, 0, 0);
+        var slab = Box(root.transform, primary ? new Color(0.5f, 0.5f, 0.53f) : new Color(0.015f, 0.015f, 0.02f, 0.96f), true, "slab", 0.5f).At(0, 0, 1, 1, 0, 0, 0, -10);
+        slab.raycastTarget = false; slab.gameObject.AddComponent<SoftShadow>().alpha = 0.3f;
+        var face = Box(root.transform, primary ? Accent : new Color(0.12f, 0.12f, 0.13f, 0.97f), true, "face", 0.5f).At(0, 0, 1, 1, 0, 10, 0, 0);
+        face.raycastTarget = false;
+        Layer(face, Gloss, new Color(1, 1, 1, primary ? 0.22f : 0.07f), "sheen");
+        Layer(face, Ring, new Color(1, 1, 1, primary ? 0f : 0.16f), "rim");
+        var b = root.gameObject.AddComponent<Button>(); b.targetGraphic = face;
+        var cb = b.colors; cb.pressedColor = new Color(0.8f, 0.8f, 0.8f); cb.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.6f); cb.fadeDuration = 0.06f; b.colors = cb;
+        b.navigation = new Navigation { mode = Navigation.Mode.None };
+        root.gameObject.AddComponent<Press>().pulse = pulse;
+        if (click != null) b.onClick.AddListener(() => click());
+        Title(face.transform, label, size, primary ? Dark : Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 12, 2, -12, 0);
+        return b;
+    }
+
+    // Red notification dot on a button's top-right corner.
+    public static GameObject Badge(Component c)
+    {
+        var d = Go(c.transform, "badge").AddComponent<Image>(); d.sprite = Circle; d.color = Red; d.raycastTarget = false;
+        d.At(1, 1, 1, 1, -26, -26, 4, 4);
+        return d.gameObject;
+    }
+
+    // Dark rounded chip with a hairline rim (currency / energy readouts).
+    public static Text Pill(Transform p, string s, int size = 26)
+    {
+        var img = Box(p, new Color(0.05f, 0.05f, 0.056f, 0.88f), true, "pill", PillCorner).At(0, 0, 1, 1);
+        Layer(img, Ring, new Color(1, 1, 1, 0.14f), "rim");
+        return Label(img.transform, s, size, Ink, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0, 1, 1, 22, 0, -22, 0);
+    }
+
     // Round icon button (back arrow, menu).
     public static Button Round1(Transform p, string glyph, Action click, int size = 34)
     {
@@ -153,14 +200,20 @@ public static class UI
         return b;
     }
 
-    // Round back button with the screen title beside it ("← Sparring").
-    public static Button Back(Transform p, string title, Action click)
+    // Small × in a card's top-right corner; the card also closes on a tap outside it (see Dismiss).
+    public static Button Close(Transform card, Action click)
     {
-        var g = Rt(p, "back").At(0, 1, 0, 1, 40, -112, 700, -40);
-        var b = Round1(g, "←", click);
-        b.At(0, 0, 0, 1, 0, 0, 72, 0);
-        if (!string.IsNullOrEmpty(title)) Label(g, title, 38, Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 1, 1, 96, 0, 0, 0);
+        var b = Btn(card, "×", new Color(0, 0, 0, 0), Dim, click, 52);
+        b.At(1, 1, 1, 1, -92, -92, -16, -16);
         return b;
+    }
+
+    // Full-screen invisible catcher behind a pop-up card: tapping the scene closes it, like a game menu.
+    public static void Dismiss(Transform panel, Action click)
+    {
+        var bg = Go(panel, "dismiss").AddComponent<Image>(); bg.color = new Color(0, 0, 0, 0);
+        bg.At(0, 0, 1, 1); bg.transform.SetAsFirstSibling();
+        bg.gameObject.AddComponent<Button>().onClick.AddListener(() => click());
     }
 
     // Card heading: bold title, dim one-line subtitle.
@@ -206,7 +259,7 @@ public static class UI
         Layer(img, Ring, new Color(1, 1, 1, 0.14f), "rim");
         var f = img.gameObject.AddComponent<InputField>();
         var txt = Label(img.transform, value, size, Ink).At(0, 0, 1, 1, 24, 0, -24, 0);
-        txt.supportRichText = false;
+        txt.supportRichText = false; txt.resizeTextForBestFit = false;
         txt.horizontalOverflow = HorizontalWrapMode.Overflow;
         var ph = Label(img.transform, placeholder, size, Dim, TextAnchor.MiddleLeft, FontStyle.Italic).At(0, 0, 1, 1, 24, 0, -24, 0);
         f.textComponent = txt; f.placeholder = ph; f.text = value;
@@ -273,6 +326,7 @@ public class SoftShadow : BaseMeshEffect
 // Tactile buttons: grow a touch on hover, squash on press, spring back. Plays the UI tick.
 public class Press : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
 {
+    public bool pulse; // primary call to action breathes so the eye finds it
     float target = 1f, s = 1f, vel;
     bool over, down;
     Selectable sel;
@@ -286,9 +340,10 @@ public class Press : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandle
     void OnDisable() { over = down = false; s = target = 1f; vel = 0; transform.localScale = Vector3.one; }
     void Update()
     {
-        if (Mathf.Abs(s - target) < 0.0005f && Mathf.Abs(vel) < 0.001f) return;
+        if (!pulse && Mathf.Abs(s - target) < 0.0005f && Mathf.Abs(vel) < 0.001f) return;
         s = Mathf.SmoothDamp(s, target, ref vel, down ? 0.03f : 0.09f, Mathf.Infinity, Time.unscaledDeltaTime);
-        transform.localScale = new Vector3(s, s, 1);
+        float k = pulse && !down ? s * (1f + 0.022f * Mathf.Sin(Time.unscaledTime * 3.2f)) : s;
+        transform.localScale = new Vector3(k, k, 1);
     }
 }
 

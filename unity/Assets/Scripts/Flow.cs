@@ -134,7 +134,7 @@ public partial class Game
     {
         if (bot["paint"] is JValue pv && pv.Type == JTokenType.String) { paint = (string)pv; ApplyPaint(a, paint); }
         string hex = ColorUtility.ToHtmlStringRGB(PaintColor(paint));
-        cardName.text = a.displayName + (bot["paint"] != null ? $" <size=40><color=#{hex}>●</color></size>" : "");
+        cardName.text = a.displayName.ToUpperInvariant() + (bot["paint"] != null ? $" <size=34><color=#{hex}>●</color></size>" : "");
         trained = (bool?)bot["onboarding"]?["trained"] != false;
         league = (string)bot["league"];
         var parts = new List<string>();
@@ -146,11 +146,14 @@ public partial class Game
 
     // ---------------------------------------------------------------- screens
     // Right-hand card like Home's, so the painted robot stays visible on the left.
-    Transform Card(Transform root, string name, out GameObject panel, float h = 820)
+    // close: where a tap outside the card (or its ×) goes. Null = no way out (Welcome is the first screen).
+    Transform Card(Transform root, string name, out GameObject panel, float h = 820, Action close = null)
     {
         panel = UI.Go(root, name);
         ((RectTransform)panel.transform).At(0, 0, 1, 1);
-        var card = UI.Box(panel.transform, UI.Card, true, "card").At(1, 0.5f, 1, 0.5f, -740, -h / 2 + 56, -56, h / 2 + 56); // sits above the tab bar
+        if (close != null) UI.Dismiss(panel.transform, close);
+        var card = UI.Box(panel.transform, UI.Card, true, "card").At(1, 0.5f, 1, 0.5f, -740, -h / 2, -56, h / 2);
+        if (close != null) UI.Close(card.transform, close);
         var col = UI.Column(card.transform, 14).At(0, 0, 1, 1, 48, 40, -48, -40);
         col.childAlignment = TextAnchor.UpperLeft;
         return col.transform;
@@ -160,17 +163,17 @@ public partial class Game
     {
         // Welcome
         var w = Card(root, "Welcome", out welcome, 760);
-        UI.Label(w, "IRON <color=#FFFFFF>CORNER</color>", 84, UI.Ink, TextAnchor.MiddleLeft, FontStyle.BoldAndItalic).H(100);
+        UI.Title(w, "IRON CORNER", 84, UI.Ink).H(100);
         UI.Label(w, "Robot boxing. Your coaching is the only edge.", 28, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).H(80);
         UI.Label(w, "<color=#FFFFFF>1</color>  Teach it by boxing with it and talking to it.\n<color=#FFFFFF>2</color>  It fights other players' bots on its own, thinking on 0G.\n<color=#FFFFFF>3</color>  Every clean hit pays the other corner over x402 on Hedera.",
             24, UI.Dim, TextAnchor.UpperLeft).H(190);
         UI.Box(w, UI.Line, false, "rule").H(2);
-        UI.Btn(w, "Create your fighter  →", UI.Accent, UI.Dark, OpenCreate, 34).H(90);
+        UI.Big(w, "CREATE YOUR FIGHTER", true, OpenCreate, 38, pulse: true).H(104);
         UI.Label(w, "Testnet only. No real money anywhere.", 22, UI.Dim).H(30);
         UI.Btn(w, "Use the demo corner (Brass Knuckle) ›", new Color(0, 0, 0, 0), UI.Dim, () => { Remember("botId", "bot_a"); a.botId = "bot_a"; Show(Mode.Home); }, 22).H(48);
 
         // Create
-        var c = Card(root, "Create", out create, 880);
+        var c = Card(root, "Create", out create, 820, () => ShowPanel(welcome));
         UI.Header(c, "Create your fighter", "Pick a name and a paint job.");
         UI.Caption(c, "NAME").H(30);
         createName = UI.Field(c, "2-20 letters, digits or spaces", "", 36).H(84);
@@ -189,23 +192,21 @@ public partial class Game
         }
         UI.Label(c, "Same body for every bot. The brain you teach is the only thing that differs.", 22, UI.Dim).H(34);
         createErr = UI.Label(c, "", 22, UI.Ink).H(56);
-        UI.Btn(c, "Create fighter", UI.Accent, UI.Dark, CreateFighter, 32).H(84);
-        UI.Btn(c, "Back", UI.Steel, UI.Ink, () => ShowPanel(welcome), 26).H(62);
+        UI.Big(c, "CREATE FIGHTER", true, CreateFighter, 36).H(98);
 
         // Fund
-        var f = Card(root, "Fund", out fund, 800);
+        var f = Card(root, "Fund", out fund, 740, () => Show(Mode.Home));
         UI.Header(f, "Fund your fighter", "Its own Hedera testnet wallet pays for every clean hit it takes.");
         UI.Caption(f, "WALLET").H(34);
         fundBal = UI.Label(f, "—", 60, UI.Brass, TextAnchor.MiddleLeft, FontStyle.Bold).H(72);
         UI.Label(f, "Test funds come from the house faucet: once a day, up to 0.5 HBAR, while the wallet holds less than 0.5. Testnet HBAR has no value.",
             22, UI.Dim, TextAnchor.UpperLeft).H(96);
-        UI.Btn(f, "Add test funds", UI.Accent, UI.Dark, AddFunds, 32).H(84);
+        UI.Big(f, "ADD TEST FUNDS", true, AddFunds, 36).H(98);
         fundMsg = UI.Label(f, "", 22, UI.Ink, TextAnchor.UpperLeft).H(56);
         UI.Btn(f, "Find a fight  →", UI.Steel, UI.Ink, FindClicked, 28).H(72);
-        UI.Btn(f, "Back to menu", UI.Steel, UI.Ink, () => Show(Mode.Home), 26).H(62);
 
         // Find a fight: stake picker, then the searching panel
-        var q = Card(root, "Find", out find, 800);
+        var q = Card(root, "Find", out find, 740, () => { if (!searching) Show(Mode.Home); });
         UI.Header(q, "Find a fight");
         var lr = UI.Rt(q, "leagueRow").H(64);
         findLeague = UI.Label(lr, "", 21, UI.Ink).At(0, 0, 0.62f, 1, 0, 0, -12, 0);
@@ -226,23 +227,21 @@ public partial class Game
         UI.Label(findPick.transform, "Health = budget. Every clean hit your bot takes pays the other corner; an empty budget is a KO. Your bot fights on its own with what you taught it.",
             22, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -280, 0, -164);
         findMsg = UI.Label(findPick.transform, "", 22, UI.Ink, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -370, 0, -290);
-        UI.Btn(findPick.transform, "Join queue  →", UI.Accent, UI.Dark, JoinQueue, 32).At(0, 0, 1, 0, 0, 78, 0, 162);
-        UI.Btn(findPick.transform, "Back to menu", UI.Steel, UI.Ink, () => Show(Mode.Home), 26).At(0, 0, 1, 0, 0, 0, 0, 62);
+        UI.Big(findPick.transform, "JOIN QUEUE", true, JoinQueue, 40, pulse: true).At(0, 0, 1, 0, 0, 0, 0, 104);
         findSearch = UI.Go(body, "search"); ((RectTransform)findSearch.transform).At(0, 0, 1, 1);
-        findStatus = UI.Label(findSearch.transform, "Searching", 60, UI.Ink, TextAnchor.MiddleLeft, FontStyle.BoldAndItalic).At(0, 1, 1, 1, 0, -150, 0, -50);
+        findStatus = UI.Title(findSearch.transform, "SEARCHING", 64, UI.Ink).At(0, 1, 1, 1, 0, -150, 0, -50);
         findSub = UI.Label(findSearch.transform, "", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -330, 0, -170);
         UI.Btn(findSearch.transform, "Cancel", UI.Steel, UI.Ink, () => { LeaveQueue(); ShowFind(false); }, 28).At(0, 0, 1, 0, 0, 0, 0, 84);
         findSearch.SetActive(false);
 
         // Camp
-        var k = Card(root, "Camp", out camp, 720);
+        var k = Card(root, "Camp", out camp, 660, () => Show(Mode.Home));
         UI.Caption(k, "FIGHT CAMP").H(28);
         UI.Header(k, "Train your own model", "A LoRA fine-tune on 0G Compute.");
         campBody = UI.Label(k, "", 24, UI.Ink, TextAnchor.UpperLeft).H(230);
         campBody.lineSpacing = 1.15f;
-        campBtn = UI.Btn(k, "Send to camp", UI.Accent, UI.Dark, SendToCamp, 32);
-        campBtn.H(84);
-        UI.Btn(k, "Back to menu", UI.Steel, UI.Ink, () => Show(Mode.Home), 26).H(62);
+        campBtn = UI.Big(k, "SEND TO CAMP", true, SendToCamp, 36);
+        campBtn.H(98);
 
         // First-training guide, over the Train screen (right side, clear of the pads and the bubble)
         var g = UI.Box(train.transform, UI.Card, true, "guide").At(1, 0, 1, 0, -540, 330, -40, 720);
@@ -381,7 +380,7 @@ public partial class Game
         StartCoroutine(Api.Call("POST", "/queue", new JObject { ["botId"] = a.botId, ["stakeCents"] = stakeCents }, r =>
         {
             searching = true; ShowFind(true);
-            findStatus.text = "Searching"; findSub.text = "";
+            findStatus.text = "SEARCHING"; findSub.text = "";
             StartCoroutine(QueueLoop(session));
         }, e => findMsg.text = "<color=#F2523F>" + (e.Contains("needs_training") ? "Finish your first training round first." : e) + "</color>"));
     }
@@ -399,7 +398,7 @@ public partial class Game
             if (r != null)
             {
                 int waited = (int?)r["waitedSec"] ?? 0;
-                findStatus.text = "Searching" + new string('.', 1 + waited % 3);
+                findStatus.text = "SEARCHING" + new string('.', 1 + waited % 3);
                 findSub.text = $"Waited {waited} s  ·  {r["queueSize"] ?? 1} in queue\n{UI.Usd(stakeCents)} stake  ·  {(league == "verified" ? "Verified" : "Open")} league\n<size=22>The search widens with time; after 25 s you get a house sparring bot.</size>";
             }
             yield return new WaitForSecondsRealtime(1f);
@@ -569,9 +568,9 @@ public partial class Game
     {
         yield return new WaitForSecondsRealtime(1.6f);
         if (s != session) yield break;
-        koTitle.color = UI.Accent;
-        koTitle.text = w == null ? "Draw on time" : $"{w.displayName} wins on time";
-        koSub.text = w == null ? "Both budgets equal after 90 s." : $"{w.displayName} has more fight budget left after 90 s.";
+        koTitle.color = w == a ? UI.Ink : w == null ? UI.Dim : UI.Red;
+        koTitle.text = w == null ? "DRAW" : w == a ? "VICTORY" : "DEFEAT";
+        koSub.text = w == null ? "Both budgets equal after 90 s." : $"{w.displayName} wins on time: more fight budget left after 90 s.";
         koPanel.SetActive(true);
         yield return LiveEnd(s);
     }
@@ -595,8 +594,8 @@ public partial class Game
             : delta != null ? $"Rating <b>{(delta >= 0 ? "+" : "")}{delta}</b>" + (me?["rating"] != null ? $" → {me["rating"]}" : "") : (me?["rating"] != null ? $"Rating {me["rating"]}" : "");
         string record = me?["record"] is JObject rec ? $"Record {rec["w"]}W {rec["l"]}L" : "";
         string w = (string)liveEnd?["winner"];
-        if ((string)liveEnd?["reason"] == "ko" && w == a.botId) { koTitle.text = "K.O. You win"; koTitle.color = UI.Green; }
-        string result = w == null || koTitle.text.Contains("You win") ? "" : w == a.botId ? "<color=#5CDB85><b>You win.</b></color>  " : "<color=#F2523F><b>You lose.</b></color>  ";
+        if ((string)liveEnd?["reason"] == "ko" && w == a.botId) { koTitle.text = "VICTORY"; koTitle.color = UI.Ink; }
+        string result = w == null || koTitle.text == "VICTORY" ? "" : w == a.botId ? "<color=#5CDB85><b>You win.</b></color>  " : "<color=#F2523F><b>You lose.</b></color>  ";
         koSub.text = result + string.Join("  ·  ", new[] { rating, record }.Where(x => x != ""));
         string fair = seed != null
             ? $"Provably fair: seed {UI.Short(seed, 10)}, hash {UI.Short(seedHash, 10)}  " + (SeedMatches(seed, seedHash) ? "<color=#5CDB85>✓ hash checked on this device</color>" : "<color=#F2A33A>hash not checked</color>")
@@ -644,7 +643,7 @@ public partial class Game
             };
             campBody.text = string.Join("\n", lines);
             campBtn.interactable = demos >= 40 && !running;
-            campBtn.SetLabel(running ? "In camp…" : "Send to camp");
+            campBtn.SetLabel(running ? "IN CAMP…" : "SEND TO CAMP");
             yield return new WaitForSecondsRealtime(running ? 3f : 10f);
         }
     }
