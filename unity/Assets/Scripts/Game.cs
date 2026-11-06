@@ -1140,19 +1140,39 @@ public partial class Game : MonoBehaviour
         return b;
     }
 
+    // Left thumb: a virtual joystick. Flick up = step in, down = step back, left / right = slip, tap = block.
     void DodgePad(Transform parent)
     {
-        const float c = 250, r = 140; // centre of the pad from the bottom-left corner, button orbit
-        var disc = UI.Go(parent, "dodgePad").AddComponent<Image>(); disc.sprite = UI.Circle; disc.color = new Color(0, 0, 0, 0.45f); disc.raycastTarget = false;
-        var drt = (RectTransform)disc.transform; drt.anchorMin = drt.anchorMax = Vector2.zero; drt.sizeDelta = new Vector2(440, 440); drt.anchoredPosition = new Vector2(c, c);
-        var dr = UI.Go(disc.transform, "ring").AddComponent<Image>(); dr.sprite = UI.CircleRing; dr.color = new Color(1, 1, 1, 0.16f); dr.raycastTarget = false; dr.At(0, 0, 1, 1);
-        UI.Caption(parent, "DODGE").At(0, 0, 0, 0, c - 200, c + 230, c + 200, c + 262).SetAlign(TextAnchor.LowerCenter);
-        MoveBtn(parent, "step_in", "up", "In", c, c + r, 120, false, false);
-        MoveBtn(parent, "step_back", "down", "Back", c, c - r, 120, false, false);
-        MoveBtn(parent, "dodge_l", "left", "Slip L", c - r, c, 120, false, false);
-        MoveBtn(parent, "dodge_r", "right", "Slip R", c + r, c, 120, false, false);
-        MoveBtn(parent, "block", "shield", "Block", c, c, 134, false, false);
+        const float c = 250, size = 400; // centre from the bottom-left corner, base diameter
+        var disc = UI.Go(parent, "joystick").AddComponent<Image>(); disc.sprite = UI.Circle; disc.color = new Color(0.01f, 0.01f, 0.012f, 0.72f);
+        var drt = (RectTransform)disc.transform; drt.anchorMin = drt.anchorMax = Vector2.zero; drt.sizeDelta = new Vector2(size, size); drt.anchoredPosition = new Vector2(c, c);
+        var ring = UI.Go(disc.transform, "ring").AddComponent<Image>(); ring.sprite = UI.CircleRing; ring.color = new Color(1, 1, 1, 0.22f); ring.raycastTarget = false; ring.At(0, 0, 1, 1);
+        // direction hints round the edge, each lights up as it fires
+        var hints = new System.Collections.Generic.Dictionary<string, TMP_Text>();
+        foreach (var (move, icon, label, dx, dy) in new[] { ("step_in", "up", "IN", 0f, 1f), ("step_back", "down", "BACK", 0f, -1f), ("dodge_l", "left", "SLIP", -1f, 0f), ("dodge_r", "right", "SLIP", 1f, 0f) })
+        {
+            var h = UI.Rt(disc.transform, "hint:" + move);
+            h.anchorMin = h.anchorMax = new Vector2(0.5f, 0.5f); h.sizeDelta = new Vector2(110, 90); h.anchoredPosition = new Vector2(dx, dy) * (size * 0.5f - 52);
+            var ic = UI.IconImg(h, icon, UI.Ink, 46).At(0, 0.35f, 1, 1);
+            UI.Label(h, label, 18, new Color(0.85f, 0.83f, 0.8f), TextAnchor.UpperCenter, FontStyle.Bold).At(0, 0, 1, 0.38f);
+            hints[move] = ic;
+        }
+        var knob = UI.Go(disc.transform, "knob").AddComponent<Image>(); knob.sprite = UI.Circle; knob.color = new Color(0.08f, 0.08f, 0.09f, 0.95f); knob.raycastTarget = false;
+        var krt = (RectTransform)knob.transform; krt.anchorMin = krt.anchorMax = new Vector2(0.5f, 0.5f); krt.sizeDelta = new Vector2(150, 150);
+        var kr = UI.Go(knob.transform, "ring").AddComponent<Image>(); kr.sprite = UI.CircleRing; kr.color = new Color(1, 1, 1, 0.45f); kr.raycastTarget = false; kr.At(0, 0, 1, 1);
+        UI.IconImg(knob.transform, "shield", UI.Ink, 44).At(0.2f, 0.36f, 0.8f, 0.9f);
+        UI.Label(knob.transform, "TAP = BLOCK", 15, new Color(0.85f, 0.83f, 0.8f), TextAnchor.MiddleCenter, FontStyle.Bold).At(0.05f, 0.12f, 0.95f, 0.36f);
+        var js = disc.gameObject.AddComponent<Joystick>();
+        js.knob = krt; js.radius = size * 0.5f - 75;
+        js.onMove = m =>
+        {
+            PadMove(m); UI.Click?.Invoke();
+            if (hints.TryGetValue(m, out var hi)) { hi.color = UI.Accent; StartCoroutine(Unlight(hi)); }
+        };
+        UI.Caption(parent, "MOVE · DODGE").At(0, 0, 0, 0, c - 200, c + size * 0.5f + 10, c + 200, c + size * 0.5f + 42).SetAlign(TextAnchor.LowerCenter);
     }
+
+    IEnumerator Unlight(TMP_Text t) { yield return new WaitForSecondsRealtime(0.25f); if (t != null) t.color = UI.Ink; }
 
     void PunchCluster(Transform parent)
     {
@@ -1540,5 +1560,38 @@ public class SafeArea : MonoBehaviour
         rt.anchorMin = new Vector2(sa.xMin / Screen.width, sa.yMin / Screen.height);
         rt.anchorMax = new Vector2(sa.xMax / Screen.width, sa.yMax / Screen.height);
         rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
+}
+
+// A virtual stick: drag past half the radius to fire that direction once (it re-arms back near the centre); a tap
+// (press and release without leaving the centre) fires "block". The knob follows the thumb, clamped to the base.
+public class Joystick : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IPointerUpHandler
+{
+    public RectTransform knob; public float radius = 125f;
+    public Action<string> onMove;
+    bool armed, moved; float downAt;
+    RectTransform rt;
+    void Awake() => rt = (RectTransform)transform;
+
+    public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e) { armed = true; moved = false; downAt = Time.unscaledTime; Track(e); }
+    public void OnDrag(UnityEngine.EventSystems.PointerEventData e) => Track(e);
+    public void OnPointerUp(UnityEngine.EventSystems.PointerEventData e)
+    {
+        if (!moved && Time.unscaledTime - downAt < 0.35f) onMove?.Invoke("block");
+        knob.anchoredPosition = Vector2.zero;
+    }
+
+    void Track(UnityEngine.EventSystems.PointerEventData e)
+    {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, e.position, e.pressEventCamera, out var p)) return;
+        p -= rt.rect.center;
+        var k = Vector2.ClampMagnitude(p, radius);
+        knob.anchoredPosition = k;
+        float m = k.magnitude / radius;
+        if (m > 0.25f) moved = true;
+        if (m < 0.3f) { armed = true; return; }   // back near the centre: ready for the next flick
+        if (!armed || m < 0.55f) return;
+        armed = false;
+        onMove?.Invoke(Mathf.Abs(k.x) > Mathf.Abs(k.y) ? (k.x < 0 ? "dodge_l" : "dodge_r") : (k.y > 0 ? "step_in" : "step_back"));
     }
 }
