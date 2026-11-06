@@ -882,12 +882,15 @@ public partial class Game : MonoBehaviour
         }
         if (koTarget != null && Time.unscaledTime < koCamUntil)
         {
-            // KO cam: low and close on the falling bot, slowly orbiting
-            var c = koTarget.transform.position;
-            // stays on the loser's side of the ring (away from the winner) so the winner never blocks the shot
-            var away = new Vector3(c.x - koTarget.opp.transform.position.x, 0, c.z - koTarget.opp.transform.position.z).normalized;
-            var dir = Quaternion.AngleAxis(55f + Mathf.Sin(Time.unscaledTime * 0.6f) * 35f, Vector3.up) * away;
-            pos = c + dir * 3.1f + Vector3.up * 1.3f; look = c + Vector3.up * 0.7f; rate = 2.2f;
+            // KO cam: side-on to the winner and the falling bot so both stay in frame (it used to sit behind the loser,
+            // whose back then hid the knockdown), on whichever side the camera already is, with a slow gentle orbit.
+            var c = koTarget.transform.position; var w = koTarget.opp.transform.position;
+            var axis2 = new Vector3(w.x - c.x, 0, w.z - c.z); float sep2 = axis2.magnitude; axis2 = sep2 > 0.01f ? axis2 / sep2 : Vector3.forward;
+            var side2 = Vector3.Cross(Vector3.up, axis2);
+            if (Vector3.Dot(cam.transform.position - (c + w) * 0.5f, side2) < 0) side2 = -side2;
+            var mid2 = Vector3.Lerp(c, w, 0.4f); // a little toward the loser: the fall is the story
+            var dir = Quaternion.AngleAxis(Mathf.Sin(Time.unscaledTime * 0.4f) * 15f, Vector3.up) * side2;
+            pos = mid2 + dir * (3.4f + sep2 * 0.5f) + Vector3.up * 1.5f; look = mid2 + Vector3.up * 0.75f; rate = 2.2f;
         }
         float k = 1f - Mathf.Exp(-rate * Time.unscaledDeltaTime);
         if (Time.frameCount < 3 || camSnap) k = 1f;
