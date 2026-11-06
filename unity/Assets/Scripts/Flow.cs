@@ -555,6 +555,7 @@ public partial class Game
         house = (bool?)ob?["house"] == true || (bool?)fv?["house"] == true;
         b.botId = opp ?? "opponent"; b.displayName = ((string)ob?["name"] ?? b.botId) + (house ? " (House)" : "");
         bEns = (string)(ob?["ens"] as JObject)?["name"]; bBelt = (bool?)(ob?["nft"] as JObject)?["holdsBelt"] == true;
+        ApplyPaint(b, (string)(ob?["paint"] as JValue)); // the opponent in its own paint, not the dummy's
         int start = (int?)fv?["budgets"]?[a.botId] ?? (int?)fv?["stakeCents"] ?? stakeCents;
         a.ResetFor(start); b.ResetFor((int?)fv?["budgets"]?[b.botId] ?? start);
         a.active = b.active = true; a.scripted = b.scripted = true;
@@ -575,7 +576,7 @@ public partial class Game
     {
         koTitle.color = UI.Red;
         if (oppId0 == null) return;
-        b.botId = oppId0; b.displayName = oppName0; oppId0 = oppName0 = null; bEns = null; bBelt = false;
+        b.botId = oppId0; b.displayName = oppName0; oppId0 = oppName0 = null; bEns = null; bBelt = false; ApplyPaint(b, "gunmetal");
     }
 
     IEnumerator LivePoll(int s, List<JToken> q)
@@ -814,8 +815,10 @@ public partial class Game
         yield return shot("01_welcome");
 
         OpenCreate();
-        createName.text = "Copper Kid";
-        PickPaint("cobalt");
+        var args = Environment.GetCommandLineArgs();
+        string Arg(string k, string d) { int i = Array.IndexOf(args, k); return i >= 0 && i + 1 < args.Length ? args[i + 1] : d; }
+        createName.text = Arg("-name", "Copper Kid");
+        PickPaint(Arg("-paint", "cobalt"));
         yield return Wait(1.2f);
         yield return shot("02_create");
 
@@ -859,6 +862,15 @@ public partial class Game
         var sr = fund.GetComponentInChildren<ScrollRect>(); if (sr != null) sr.verticalNormalizedPosition = 0;
         yield return Wait(0.4f);
         yield return shot("09b_ens");
+
+        // Live: the ENS name is registered on Sepolia 1-2 min after creation. Queue once it exists, so it's on the fight bars.
+        float ensUntil = Time.realtimeSinceStartup + 240f;
+        while (!Api.Offline && aEns == null && Time.realtimeSinceStartup < ensUntil)
+        {
+            yield return Api.Call("GET", $"/bots/{a.botId}", null, r => aEns = (string)(r["ens"] as JObject)?["name"]);
+            if (aEns == null) yield return Wait(5f);
+        }
+        Debug.Log("[capture] ens " + aEns);
 
         FindClicked();
         PickStake(25);

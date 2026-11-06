@@ -112,6 +112,8 @@ public partial class Game : MonoBehaviour
         var args = Environment.GetCommandLineArgs();
         int i = Array.IndexOf(args, "-capture");
         if (i >= 0 && i + 1 < args.Length) { captureDir = args[i + 1]; StartCoroutine(Capture()); }
+        int fi = Array.IndexOf(args, "-film");
+        if (fi >= 0 && fi + 1 < args.Length) StartCoroutine(Film(args[fi + 1]));
         else StartCoroutine(Connect());
     }
 
@@ -1352,6 +1354,33 @@ public partial class Game : MonoBehaviour
             if (Fighter.IsAttack(b.Current) && b.Current != last) { last = b.Current; PadMove(b.Current is "hook_l" ? "dodge_r" : b.Current is "hook_r" ? "dodge_l" : UnityEngine.Random.value < 0.5f ? "dodge_l" : "dodge_r"); }
             if (!Fighter.IsAttack(b.Current)) last = null;
             yield return null;
+        }
+    }
+
+    // -film <dir> (demo film): records every rendered frame in real time, named by its unscaled time in ms, without
+    // slowing the game (async GPU readback, JPEG on a worker thread). Live fights run on the server's clock, so the
+    // fixed-rate -record capture would drift; this keeps real time and the cut resamples to 30 fps from the names.
+    IEnumerator Film(string dir)
+    {
+        Directory.CreateDirectory(dir);
+        var rt = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+        var wait = new WaitForEndOfFrame();
+        while (true)
+        {
+            yield return wait;
+            if (rt.width != Screen.width || rt.height != Screen.height) { rt.Release(); rt = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32); }
+            ScreenCapture.CaptureScreenshotIntoRenderTexture(rt);
+            int w = rt.width, h = rt.height; long ms = (long)(Time.realtimeSinceStartupAsDouble * 1000);
+            UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, req =>
+            {
+                if (req.hasError) return;
+                var px = req.GetData<byte>().ToArray();
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    var jpg = ImageConversion.EncodeArrayToJPG(px, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB, (uint)w, (uint)h, 0, 90);
+                    File.WriteAllBytes(Path.Combine(dir, $"t{ms:D9}.jpg"), jpg);
+                });
+            });
         }
     }
 
