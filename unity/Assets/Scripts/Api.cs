@@ -84,21 +84,6 @@ public static class Api
         Finish(req, ok, fail);
     }
 
-    public static IEnumerator Texture(string path, Action<Texture2D> ok)
-    {
-        if (Offline) { ok?.Invoke(OfflineSim.FakeQr(path)); yield break; }
-        using var req = UnityWebRequestTexture.GetTexture(BaseUrl + path);
-        Auth(req);
-        req.timeout = 10;
-        yield return req.SendWebRequest();
-        if (req.result == UnityWebRequest.Result.Success)
-        {
-            var tex = DownloadHandlerTexture.GetContent(req);
-            tex.filterMode = FilterMode.Point;
-            ok?.Invoke(tex);
-        }
-    }
-
     // Status and JSON body of the most recent failed call, for screens that explain a refusal (e.g. 409 {reason, have, need}).
     public static long LastStatus; public static JObject LastBody;
 

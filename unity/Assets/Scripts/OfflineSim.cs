@@ -8,7 +8,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 // In-game stand-in for the backend so every screen works without a server. Everything it returns is
-// marked "mock": true and the UI shows an OFFLINE badge. No money moves, nothing reaches 0G/Hedera/World.
+// marked "mock": true and the UI shows an OFFLINE badge. No money moves, nothing reaches 0G or Hedera.
 public static class OfflineSim
 {
     class Fight
@@ -18,7 +18,6 @@ public static class OfflineSim
         public JArray events; public int seq, stake; public float startAt, nextAt, dist = 1.6f; public string seed, seedHash; public bool over, house; public System.Random rng;
         public readonly Dictionary<string, List<string>> last = new(); public readonly Dictionary<string, string> hitBy = new();
     }
-    class Approval { public float at; public string status = "pending"; public string action; }
 
     static readonly Dictionary<string, JObject> bots = new()
     {
@@ -39,7 +38,6 @@ public static class OfflineSim
     static readonly List<Demo> demos = new();
     const int EnergyMax = 5;
     static int xpTotal, roundsToday, roundCount; static string energyDay, roundId; static float roundStart;
-    static readonly Dictionary<string, Approval> approvals = new();
     static int ids;
 
     static readonly string[] Lines =
@@ -67,8 +65,7 @@ public static class OfflineSim
             case "users": me = new User { id = NewId("user"), token = Hex(64).Substring(2) }; return new JObject { ["userId"] = me.id, ["token"] = me.token, ["mock"] = true };
             case "me":
                 if (me == null) throw new Exception("unauthorized");
-                return new JObject { ["userId"] = me.id, ["worldVerified"] = me.verified, ["league"] = me.verified ? "verified" : "open", ["botId"] = me.botId, ["mock"] = true };
-            case "auth": return NewApproval("sign_in");
+                return new JObject { ["userId"] = me.id, ["league"] = "open", ["botId"] = me.botId, ["mock"] = true };
             case "queue": return Queue(method, seg, body);
             case "bots":
                 if (seg.Length == 1 && method == "POST") return CreateBot(body);
@@ -115,12 +112,6 @@ public static class OfflineSim
                     if ((bool?)Get(bots, f.a)["alive"] == false) throw new Exception("knocked out: revive first");
                     int cents = Mathf.RoundToInt((float)(body["budgetUsd"] ?? 0.5) * 100);
                     f.budgets[f.a] = cents; f.budgets[f.b] = cents;
-                    if ((string)body["stakes"] == "high")
-                    {
-                        var ap = Get(approvals, (string)body["approvalId"] ?? "");
-                        if (ap.status != "approved") throw new Exception("approval not approved");
-                        ap.status = "used";
-                    }
                     var id = NewId("fight");
                     fights[id] = f;
                     return new JObject { ["fightId"] = id, ["a"] = f.a, ["b"] = f.b, ["budgets"] = JObject.FromObject(f.budgets), ["mock"] = true };
@@ -145,17 +136,6 @@ public static class OfflineSim
                 }
                 break;
 
-            case "approvals":
-                if (seg.Length == 1) return NewApproval((string)body["action"]);
-                var a = Get(approvals, seg[1]);
-                if (seg.Length > 2 && seg[2] == "cancel") { a.status = "cancelled"; return new JObject { ["status"] = a.status }; }
-                // ponytail: offline approval auto-approves after 6 s so the flow can be clicked through without a phone.
-                if (a.status == "pending" && Time.realtimeSinceStartup - a.at > 6f)
-                {
-                    a.status = "approved";
-                    if (a.action == "sign_in" && me != null) { me.verified = true; if (me.botId != null) bots[me.botId]["league"] = "verified"; }
-                }
-                return new JObject { ["status"] = a.status, ["mock"] = true };
         }
         throw new Exception($"offline: no route for {method} {path}");
     }
@@ -429,7 +409,7 @@ public static class OfflineSim
 
     // ---------------------------------------------------------------- accounts, queue, server-run fights (docs/flow-spec.md)
     // ponytail: one local player; the bearer token isn't checked offline.
-    class User { public string id, token, botId; public bool verified; }
+    class User { public string id, token, botId; }
     static User me;
     static bool coached, sparred;
     static int agentIds;
@@ -448,13 +428,6 @@ public static class OfflineSim
         if (!combos.ContainsKey(id)) combos[id] = new JArray();
         if (!styles.ContainsKey(id)) styles[id] = new JObject { ["aggression"] = 0.55, ["guard"] = 0.5 };
         if (!history.ContainsKey(id)) history[id] = new JArray();
-    }
-
-    static JObject NewApproval(string action)
-    {
-        var id = NewId("appr");
-        approvals[id] = new Approval { at = Time.realtimeSinceStartup, action = action };
-        return new JObject { ["approvalId"] = id, ["qrUri"] = "offline://" + id, ["userCode"] = "OFFL-" + Random.Range(1000, 9999), ["expiresAt"] = DateTime.UtcNow.AddMinutes(5).ToString("o"), ["mock"] = true };
     }
 
     static JObject Player(string id, string name, string paint, string owner, string league, int rating)
@@ -476,7 +449,7 @@ public static class OfflineSim
         if (!PaintIds.Contains(paint)) throw new Exception("paint must be one of " + string.Join(", ", PaintIds));
         me.botId = NewId("bot");
         coached = sparred = false;
-        Player(me.botId, name, paint, me.id, me.verified ? "verified" : "open", 1000);
+        Player(me.botId, name, paint, me.id, "open", 1000);
         return Handle("GET", "/bots/" + me.botId, null);
     }
 
@@ -673,20 +646,4 @@ public static class OfflineSim
         return new JObject { ["winner"] = winner, ["reason"] = reason, ["ratingDelta"] = delta };
     }
 
-    // Not a real QR: a labelled placeholder pattern so the modal layout can be checked offline.
-    public static Texture2D FakeQr(string seed)
-    {
-        const int n = 29;
-        var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-        var rng = new System.Random(seed.GetHashCode());
-        for (int y = 0; y < n; y++)
-        for (int x = 0; x < n; x++)
-        {
-            bool finder = (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7);
-            bool on = finder ? (Mathf.Max(Mathf.Abs((x % (n - 7)) - 3), Mathf.Abs((y % (n - 7)) - 3)) is 3 or <= 1) : rng.NextDouble() < 0.45;
-            tex.SetPixel(x, y, on ? Color.black : Color.white);
-        }
-        tex.Apply();
-        return tex;
-    }
 }

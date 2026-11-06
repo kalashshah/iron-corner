@@ -1,13 +1,13 @@
-// In-app browser sheet for World ID approvals (ASWebAuthenticationSession). The sheet closes itself when the
-// backend redirects to ironcorner://; the game learns the result by polling GET /approvals/:id, so no callback is needed.
+// In-app browser sheet (ASWebAuthenticationSession) for pages that hand back to the app, like the 0G credits link.
+// The sheet closes itself when the backend redirects to ironcorner://; the game learns the result by polling, so no callback is needed.
 #import <AuthenticationServices/AuthenticationServices.h>
 #import <UIKit/UIKit.h>
 
-@interface IcWorldAuth : NSObject <ASWebAuthenticationPresentationContextProviding>
+@interface IcSheet : NSObject <ASWebAuthenticationPresentationContextProviding>
 @property (nonatomic, strong) ASWebAuthenticationSession *session;
 @end
 
-@implementation IcWorldAuth
+@implementation IcSheet
 - (ASPresentationAnchor)presentationAnchorForWebAuthenticationSession:(ASWebAuthenticationSession *)session {
     for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
         if ([s isKindOfClass:UIWindowScene.class])
@@ -16,12 +16,12 @@
 }
 @end
 
-static IcWorldAuth *ic;
+static IcSheet *ic;
 
-extern "C" void IcWorldAuthOpen(const char *url) {
+extern "C" void IcSheetOpen(const char *url) {
     NSURL *u = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (!ic) ic = [IcWorldAuth new];
+        if (!ic) ic = [IcSheet new];
         [ic.session cancel];
         ic.session = [[ASWebAuthenticationSession alloc] initWithURL:u callbackURLScheme:@"ironcorner"
             completionHandler:^(NSURL *cb, NSError *err) { ic.session = nil; }];

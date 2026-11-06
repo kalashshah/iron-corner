@@ -10,18 +10,17 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-// New-player flow and server-run fights (docs/flow-spec.md): Welcome → Create → World ID → first training round →
+// New-player flow and server-run fights (docs/flow-spec.md): Welcome → Create → first training round →
 // Fund → Find a fight → live fight played from the server's event stream. Panels sit on top of Home mode, so the
 // camera keeps the Home framing (your painted bot on the left, a card on the right).
 public partial class Game
 {
     GameObject welcome, create, fund, find, camp, guide, findPick, findSearch;
-    Button findWorldBtn;
-    TMP_Text cardLeague, createErr, fundBal, fundMsg, findMsg, findStatus, findSub, findLeague, campBody, guideBody;
+    TMP_Text cardLeague, createErr, fundBal, fundMsg, findMsg, findStatus, findSub, campBody, guideBody;
     TMP_InputField createName;
     Button guideBtn, campBtn;
     readonly List<(string id, Image img, TMP_Text label)> swatches = new(), chips = new();
-    string paint = "brass", league; int stakeCents = 25;
+    string paint = "brass"; int stakeCents = 25;
     bool trained = true, guideRound, guideCoach, searching;
 
     // live fight
@@ -130,16 +129,14 @@ public partial class Game
         ? $"{(double?)bot["hbar"] ?? 0:0.00} <size=26><color=#8E8E93>HBAR · Hedera testnet</color></size>"
         : $"${(double?)bot["usdc"] ?? 0:0.00} <size=26><color=#8E8E93>USDC · Hedera testnet</color></size>";
 
-    // Home card extras: paint chip, league badge, rating, record. Bots without onboarding (demo bots) count as trained.
+    // Home card extras: paint chip, rating, record. Bots without onboarding (demo bots) count as trained.
     void ShowCorner(JToken bot)
     {
         if (bot["paint"] is JValue pv && pv.Type == JTokenType.String) { paint = (string)pv; ApplyPaint(a, paint); }
         string hex = ColorUtility.ToHtmlStringRGB(PaintColor(paint));
         cardName.text = a.displayName + (bot["paint"] != null ? $" <size=34><color=#{hex}>●</color></size>" : "");
         trained = (bool?)bot["onboarding"]?["trained"] != false;
-        league = (string)bot["league"];
         var parts = new List<string>();
-        if (league != null) parts.Add(league == "verified" ? "<color=#6BD694>\uead5 VERIFIED</color>" : "\uead5 OPEN LEAGUE");
         if (bot["rating"] != null) parts.Add($"RATING {bot["rating"]}");
         if (bot["record"] is JObject rec) parts.Add($"{rec["w"]}W {rec["l"]}L");
         cardLeague.text = parts.Count > 0 ? string.Join("  ·  ", parts) : "YOUR CORNER";
@@ -237,10 +234,6 @@ public partial class Game
         UI.Label(p, "Health is the budget. Each clean hit your bot takes pays the other corner. An empty budget is a K.O.", 22, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -250, 0, -178);
         UI.Big(p, UI.I("play") + "  Find Opponent", true, JoinQueue, 48, pulse: true).At(0, 1, 1, 1, 0, -390, 0, -272);
         findMsg = UI.Label(p, "", 22, UI.Ink, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -450, 0, -400);
-        findLeague = UI.Label(p, "", 22, UI.Dim).At(0, 0, 1, 0, 0, 84, 0, 120);
-        // Players who skipped World ID at first run can connect it later (Verified league).
-        findWorldBtn = UI.Big(p, UI.I("shield") + "  Connect World ID", false, () => { Show(Mode.Home); OpenWorld(); }, 26);
-        findWorldBtn.At(0, 0, 1, 0, 0, 0, 0, 70);
         findSearch = UI.Go(q, "search"); ((RectTransform)findSearch.transform).At(0, 0, 1, 1);
         findStatus = UI.Label(findSearch.transform, "Searching", 84, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Italic).At(0, 1, 1, 1, 0, -150, 0, -20);
         findSub = UI.Label(findSearch.transform, "", 26, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 1, 1, 0, -300, 0, -170);
@@ -300,23 +293,10 @@ public partial class Game
         a.displayName = (string)bot?["name"] ?? name;
         trained = (bool?)bot?["onboarding"]?["trained"] == true;
         create.SetActive(false);
-        OpenWorld();
+        AfterCreate();
     }
 
-    // ---------------------------------------------------------------- World ID
-    void OpenWorld() => Approve("/auth/world/start", new JObject(), "One human, one fighter",
-        "Connect World ID to enter the Verified league: each verified human owns one fighter there, so every opponent is a real person's bot. Skip and you fight in the Open league.",
-        "Skip for now  ·  Open league", _ => StartCoroutine(WorldDone()), AfterWorld);
-
-    IEnumerator WorldDone()
-    {
-        bool? ok = null;
-        yield return Api.Call("GET", "/me", null, r => ok = (bool?)r["worldVerified"] == true);
-        Toast(ok == true ? "Verified human \ue5ca  ·  Verified league" : "That World ID already has a verified fighter · Open league for now");
-        AfterWorld();
-    }
-
-    void AfterWorld() { if (!trained) StartTrainGuided(); else Show(Mode.Home); }
+    void AfterCreate() { if (!trained) StartTrainGuided(); else Show(Mode.Home); }
 
     // ---------------------------------------------------------------- first training round
     void StartTrainGuided()
@@ -418,12 +398,10 @@ public partial class Game
     void FindClicked()
     {
         if (!aAlive) { if (aNeedsRevive) Revive(); else Toast("Still repairing — a few seconds"); return; }
-        if (a.botId == "bot_a") { budgetUsd = 0.5f; StartFight("normal", null); return; } // demo corner: the old house fight
+        if (a.botId == "bot_a") { budgetUsd = 0.5f; StartFight("normal"); return; } // demo corner: the old house fight
         if (!trained) { Toast("Locked: spar one round and teach one line in Train first"); return; }
         ShowPanel(find); ShowFind(false); PickStake(stakeCents);
         findMsg.text = "";
-        findLeague.text = league == "verified" ? "<color=#5CDB85>\uead5 Verified league</color> <color=#8E8E93>· verified humans only</color>" : "<color=#8E8E93>\uead5 Open league</color>";
-        findWorldBtn.gameObject.SetActive(league != "verified");
     }
 
     void PickStake(int cents)
@@ -459,7 +437,7 @@ public partial class Game
             {
                 int waited = (int?)r["waitedSec"] ?? 0;
                 findStatus.text = "Searching" + new string('.', 1 + waited % 3);
-                findSub.text = $"Waited {waited} s  ·  {r["queueSize"] ?? 1} in queue\n{UI.Usd(stakeCents)} stake  ·  {(league == "verified" ? "Verified" : "Open")} league\n<size=22>The search widens with time; after 25 s you get a house sparring bot.</size>";
+                findSub.text = $"Waited {waited} s  ·  {r["queueSize"] ?? 1} in queue\n{UI.Usd(stakeCents)} stake\n<size=22>The search widens with time; after 25 s you get a house sparring bot.</size>";
             }
             yield return new WaitForSecondsRealtime(1f);
         }
@@ -749,11 +727,7 @@ public partial class Game
         yield return shot("02_create");
 
         CreateFighter();
-        yield return Until(() => modal.activeSelf, 15f);
-        yield return Wait(1.2f);
-        yield return shot("03_world");
-        if (!Api.Offline) CloseModal(true); // same as tapping Skip: live World needs an Orb-verified account (Open league)
-        yield return Until(() => mode == Mode.Train, 20f); // offline sim approves after ~6 s
+        yield return Until(() => mode == Mode.Train, 20f);
         yield return Wait(2f);
         yield return shot("04_train_guide");
 

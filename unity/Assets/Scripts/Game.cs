@@ -28,7 +28,7 @@ public partial class Game : MonoBehaviour
 
     // UI
     Transform canvas;
-    GameObject home, train, fight, brain, modal, koPanel, campDot, tabs;
+    GameObject home, train, fight, brain, koPanel, campDot, tabs;
     TMP_Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
     TMP_InputField serverField, trainField;
     readonly List<string> counterAttacks = new(); // attacks your bot has a taught counter for; the sparring dummy throws these
@@ -38,7 +38,6 @@ public partial class Game : MonoBehaviour
     RectTransform[] barFill = new RectTransform[2];
     Transform ticker;
     Bubble bubA, bubB;
-    TMP_Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn, modalOpenBtn; string approvalId, approvalUri; bool approvalOpen;
     TMP_Text koTitle, koWin, koSub, koLessons; Button koLedger; GameObject koDetails;
     TMP_Text summaryXp, fightTag, brainVer, brainDemos, brainLearned; Transform brainRows; GameObject fightDetails;
     readonly List<(TMP_Text t, float born, Vector3 world)> popups = new();
@@ -142,7 +141,7 @@ public partial class Game : MonoBehaviour
             aNeedsRevive = (bool?)bot["needsRevive"] == true;
             int repair = (int?)bot["repairIn"] ?? 0;
             cardAcct.text = $"{bot["accountId"]}" + ((bot["agentId"] is JObject ag && (ag["tokenId"]?.Type is JTokenType.Integer or JTokenType.String)) ? $"  ·  Agentic ID #{ag["tokenId"]}" : "") + (aAlive ? "" : aNeedsRevive
-                ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
+                ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight · tap Revive</color>"
                 : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
             fightBtn.SetLabel(!aAlive ? (aNeedsRevive ? "Revive" : $"Repair {repair}s") : "Fight");
             campDot.SetActive(((int?)bot["progress"]?["demos"] ?? 0) >= 40 && bot["adapter"]?.Type != JTokenType.Object);
@@ -238,10 +237,9 @@ public partial class Game : MonoBehaviour
         });
     }
 
-    void StartFight(string stakesKind, string approval)
+    void StartFight(string stakesKind)
     {
         var body = new JObject { ["a"] = a.botId, ["b"] = b.botId, ["stakes"] = stakesKind, ["budgetUsd"] = budgetUsd };
-        if (approval != null) body["approvalId"] = approval;
         StartCoroutine(Api.Call("POST", "/fights", body, r =>
         {
             Show(Mode.Fight);
@@ -678,98 +676,24 @@ public partial class Game : MonoBehaviour
         }, e => trainSaved.text = "<color=#F2523F>Save failed: " + e + "</color>"));
     }
 
-    // ---------------------------------------------------------------- approvals
-    void HighStakes() => Approve("high_stakes", "Enter high-stakes match", id => StartFight("high", id));
+    // ---------------------------------------------------------------- high stakes, revive
+    void HighStakes() => StartFight("high");
 
-    // A KO leaves your bot alive=false; it needs a human-approved revive before its next fight.
-    void Revive() => Approve("revive", "Revive " + a.displayName, id =>
-        StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/revive", new JObject { ["approvalId"] = id }, _ => { Toast(a.displayName + " is back on its feet"); StartCoroutine(RefreshHome()); }, e => Toast("Revive failed: " + e))));
-
-    void Approve(string action, string label, Action<string> onApproved) =>
-        Approve("/approvals", new JObject { ["botId"] = a.botId, ["action"] = action }, label,
-            "Tap Open World App (or scan from another phone). A human must OK every high-stakes action; each approval works once.", "Cancel", onApproved, null);
-
-    // Any World ID device-flow approval (high stakes, revive, sign-in). onClosed runs when the player closes it without approving.
-    Action modalClosed;
-    void Approve(string path, JObject body, string label, string explain, string closeLabel, Action<string> onApproved, Action onClosed)
-    {
-        StartCoroutine(Api.Call("POST", path, body, r =>
-        {
-            approvalId = (string)r["approvalId"];
-            approvalOpen = true;
-            modalClosed = onClosed;
-            modal.SetActive(true);
-            modalAction.text = label;
-            modalExplain.text = explain;
-            modalCode.text = $"Code  <b>{r["userCode"]}</b>";
-            approvalUri = Api.Offline ? null : (string)(r["appUri"] ?? r["qrUri"]);
-            modalOpenBtn.gameObject.SetActive(approvalUri != null);
-            if (approvalUri != null && Application.isMobilePlatform) OpenApprovalSheet(); // same phone: straight to World
-            modalStatus.text = "<color=#F2A33A>Waiting for World ID approval…</color>" + (Api.Offline ? "\n<size=20>OFFLINE: placeholder code, auto-approves in a few seconds</size>" : "");
-            modalBtn.SetLabel(closeLabel);
-            modalQr.texture = null;
-            StartCoroutine(Api.Texture($"/approvals/{approvalId}/qr.png", t => { if (modalQr != null) modalQr.texture = t; }));
-            StartCoroutine(PollApproval(approvalId, onApproved));
-        }, e => { Toast("Approval failed: " + e); onClosed?.Invoke(); }));
-    }
+    // A high-stakes KO leaves your bot alive=false until its owner revives it.
+    void Revive() => StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/revive", new JObject(),
+        _ => { Toast(a.displayName + " is back on its feet"); StartCoroutine(RefreshHome()); }, e => Toast("Revive failed: " + e)));
 
 #if UNITY_IOS && !UNITY_EDITOR
-    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void IcWorldAuthOpen(string url);
+    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void IcSheetOpen(string url);
 #endif
     // A page that hands back to the app via ironcorner://: the in-app sheet on iOS, the system browser elsewhere.
     void OpenSheet(string url)
     {
 #if UNITY_IOS && !UNITY_EDITOR
-        IcWorldAuthOpen(url); return;
+        IcSheetOpen(url); return;
 #else
         Application.OpenURL(url);
 #endif
-    }
-
-    // iOS: in-app browser sheet (closes itself on the ironcorner:// redirect). Elsewhere: the system browser.
-    void OpenApprovalSheet()
-    {
-        if (string.IsNullOrEmpty(approvalUri)) return;
-#if UNITY_IOS && !UNITY_EDITOR
-        if (approvalUri.Contains("/world/go/")) { IcWorldAuthOpen(approvalUri + "?p=sheet"); return; }
-#endif
-        Application.OpenURL(approvalUri);
-    }
-
-    IEnumerator PollApproval(string id, Action<string> onApproved)
-    {
-        while (approvalOpen && approvalId == id)
-        {
-            yield return new WaitForSecondsRealtime(1f);
-            string status = null;
-            yield return Api.Call("GET", $"/approvals/{id}", null, r => status = (string)r["status"]);
-            if (!approvalOpen || approvalId != id) yield break;
-            if (status == "approved")
-            {
-                modalStatus.text = "<color=#5CDB85>Approved \ue5ca</color>";
-                yield return new WaitForSecondsRealtime(0.8f);
-                modalClosed = null;
-                CloseModal(false);
-                onApproved(id);
-                yield break;
-            }
-            if (status is "denied" or "expired" or "cancelled" or "used")
-            {
-                modalStatus.text = $"<color=#F2523F>Not approved — nothing happened</color>\n<size=22>({status})</size>";
-                modalBtn.SetLabel("Close");
-                approvalOpen = false;
-                yield break;
-            }
-        }
-    }
-
-    void CloseModal(bool cancel)
-    {
-        if (cancel && approvalOpen && approvalId != null) StartCoroutine(Api.Call("POST", $"/approvals/{approvalId}/cancel", new JObject(), null));
-        approvalOpen = false;
-        modal.SetActive(false);
-        var closed = modalClosed; modalClosed = null;
-        if (cancel) closed?.Invoke();
     }
 
     // ---------------------------------------------------------------- brain screen
@@ -979,12 +903,12 @@ public partial class Game : MonoBehaviour
 
         BuildHome(root); BuildTrain(root); BuildFight(root); BuildBrain(root); BuildFlow(root);
         bubA = BuildBubble(root, a); bubB = BuildBubble(root, b);
-        BuildTabs(root); BuildModal(root); BuildKO(root);
+        BuildTabs(root); BuildKO(root);
 
         var tb = UI.Panel(UI.Box(root, UI.Card, true, "toast"), new Color(1, 1, 1, 0.22f)).At(0.5f, 1, 0.5f, 1, -440, -262, 440, -192);
         toast = UI.Label(tb.transform, "", 28, UI.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
         tb.gameObject.Appear(0.9f).SetActive(false);
-        foreach (var g in new[] { home, train, fight, brain, koPanel, modal, welcome, create, fund, find, camp }) g.Appear();
+        foreach (var g in new[] { home, train, fight, brain, koPanel, welcome, create, fund, find, camp }) g.Appear();
         summary.Appear(0.9f); guide.Appear(0.94f);
 
         badge = UI.Label(root, "…", 18, UI.Dim, TextAnchor.UpperCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -500, -30, 500, -6); // top centre, clear of names and buttons
@@ -1007,7 +931,7 @@ public partial class Game : MonoBehaviour
         highBtn = UI.Btn(home.transform, "", UI.Steel, UI.Ink, () => { budgetUsd = 0.5f; HighStakes(); }, 24);
         highBtn.At(0, 1, 0, 1, -20, -626, 480, -556);
         highBtn.GetComponent<Image>().sprite = UI.Ramp; highBtn.GetComponent<Image>().type = Image.Type.Simple;
-        var ht = highBtn.GetComponentInChildren<TMP_Text>(); ht.SetAlign(TextAnchor.MiddleLeft); ht.text = $"<color=#FFA33D>{UI.I("shield")}</color>  High Stakes  <color=#A8A399>· World ID</color>";
+        var ht = highBtn.GetComponentInChildren<TMP_Text>(); ht.SetAlign(TextAnchor.MiddleLeft); ht.text = $"<color=#FFA33D>{UI.I("shield")}</color>  High Stakes";
         ht.At(0, 0, 1, 1, 40, 0, -12, 0);
 
         // Bottom strip: player plate left, brain line centre, wallet + stats right.
@@ -1079,7 +1003,7 @@ public partial class Game : MonoBehaviour
 
     void UpdateTabs()
     {
-        bool show = mode == Mode.Home && !modal.activeSelf && !welcome.activeSelf && !create.activeSelf;
+        bool show = mode == Mode.Home && !welcome.activeSelf && !create.activeSelf;
         tabs.SetActive(show);
         if (!show) return;
         int on = home.activeSelf ? 0 : brain.activeSelf ? 1 : camp.activeSelf ? 2 : fund.activeSelf ? 3 : -1;
@@ -1304,25 +1228,6 @@ public partial class Game : MonoBehaviour
         UI.Label(row.transform, UI.I("chevron") + " " + moves, 22, UI.Dim, TextAnchor.UpperLeft).At(0, 0, 1, 0.5f, 28, 10, -24, -2);
     }
 
-    void BuildModal(Transform root)
-    {
-        modal = UI.Box(root, new Color(0, 0, 0, 0.75f), false, "modal").At(0, 0, 1, 1, -600, -600, 600, 600).gameObject; // bleeds past the safe area
-        var card = UI.Box(modal.transform, UI.Card, true, "card").At(0.5f, 0.5f, 0.5f, 0.5f, -520, -380, 520, 380);
-        UI.Caption(card.transform, "WORLD ID APPROVAL").At(0, 1, 1, 1, 50, -76, -50, -40);
-        modalAction = UI.Label(card.transform, "", 48, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 50, -156, -50, -84);
-        var qrBg = UI.Box(card.transform, Color.white, true, "qrBg").At(0, 0, 0, 0, 50, 120, 470, 540);
-        modalQr = UI.Go(qrBg.transform, "qr").AddComponent<RawImage>().At(0, 0, 1, 1, 20, 20, -20, -20);
-        modalExplain = UI.Label(card.transform, "", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 380, -50, 540);
-        modalCode = UI.Label(card.transform, "", 40, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 300, -50, 370);
-        modalStatus = UI.Label(card.transform, "", 30, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 140, -50, 290);
-        modalBtn = UI.Btn(card.transform, "Cancel", UI.Steel, UI.Ink, () => CloseModal(true), 28);
-        // Playing on the phone that has World App: open the approval link there (World App takes it), then come back.
-        modalOpenBtn = UI.Btn(card.transform, "Open World App", UI.Accent, UI.Dark, OpenApprovalSheet, 28);
-        modalOpenBtn.At(0, 0, 0.5f, 0, 50, 36, -10, 100);
-        modalBtn.At(0.5f, 0, 1, 0, 10, 36, -50, 100);
-        modal.SetActive(false);
-    }
-
     // ---------------------------------------------------------------- replay
     // Rebuilds the fight from the episode log stored on 0G Storage (GET /fights/:id/episode), not from local memory:
     // each recorded hit is replayed with its recorded result, and the 0G request id of the attacker's plan is shown.
@@ -1445,7 +1350,7 @@ public partial class Game : MonoBehaviour
             a.botId = "bot_a"; a.displayName = "Brass Knuckle"; // the offline sim's demo bot (a stored id from an older run won't exist)
             bool dodges = Array.IndexOf(args, "-dodges") >= 0 || Array.IndexOf(args, "-strikes") >= 0; // sparring (dodges: we slip; strikes: we punch every move in turn)
             if (dodges) { StartTrain(); counterAttacks.AddRange(new[] { "jab", "hook_l", "cross", "hook_r" }); }
-            else { budgetUsd = 0.25f; StartFight("normal", null); }
+            else { budgetUsd = 0.25f; StartFight("normal"); }
             yield return Wait(0.5f);
             Time.captureFramerate = 30;
             if (dodges && Array.IndexOf(args, "-strikes") < 0) StartCoroutine(AutoDodge(session));
@@ -1510,14 +1415,9 @@ public partial class Game : MonoBehaviour
 
         GoHome();
         yield return Wait(1f);
-        HighStakes();
-        yield return Wait(2f);
-        yield return Shot("11_approval");
-        CloseModal(true);
-
         Fighter.logStrikes = true;
         budgetUsd = 0.03f; // short fight so the KO lands inside the capture
-        StartFight("normal", null);
+        StartFight("normal");
         yield return Wait(0.3f);
         yield return Shot("12a_fight_banner");
         for (int n = 0; n < 3; n++)

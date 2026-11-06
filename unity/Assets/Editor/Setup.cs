@@ -487,7 +487,7 @@ public static class Setup
             wa.SetPlatformData(BuildTarget.iOS, "FrameworkDependencies", "AuthenticationServices;");
             wa.SaveAndReimport();
         }
-        PlayerSettings.iOS.iOSUrlSchemes = new[] { "ironcorner" }; // World approval pages hand the player back here
+        PlayerSettings.iOS.iOSUrlSchemes = new[] { "ironcorner" }; // the 0G credits page hands the player back here
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/Main.unity" },
