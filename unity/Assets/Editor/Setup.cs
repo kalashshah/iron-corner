@@ -14,9 +14,9 @@ using UnityEngine.Rendering.Universal;
 // through the ring/spacing constraint, so a lunge or knockback moves the fighter instead of sliding the mesh into the other one.
 public class MixamoImport : AssetPostprocessor
 {
-    public override uint GetVersion() => 2; // bump to force a reimport when these rules change
+    public override uint GetVersion() => 3; // bump to force a reimport when these rules change
 
-    bool Ours => assetPath.Contains("ThirdParty/Mixamo/") || assetPath.Contains("ThirdParty/Robots/");
+    bool Ours => assetPath.Contains("ThirdParty/Mixamo/") || assetPath.Contains("ThirdParty/Robots/") || assetPath.Contains("ThirdParty/Rocketbox/");
     bool IsClip => assetPath.Contains("/Clips/");
 
     void OnPreprocessModel()
@@ -39,7 +39,7 @@ public class MixamoImport : AssetPostprocessor
         var c = defs[0];
         var name = Path.GetFileNameWithoutExtension(assetPath);
         c.name = name;
-        c.loopTime = name.StartsWith("idle");
+        c.loopTime = name.StartsWith("idle") || name.Contains("cheer");
         c.lockRootRotation = c.keepOriginalOrientation = true;
         c.lockRootHeightY = c.keepOriginalPositionY = true;
         // Only clips that end somewhere else (measured: steps 0.6-0.9 m, hit_upper 1.1 m back, KO falls, advance/retreat).
@@ -432,7 +432,6 @@ public static class Setup
         var gameGo = new GameObject("Game");
         var fx = gameGo.AddComponent<Fx>();
         fx.add = Particle("fx_add", true); fx.alpha = Particle("fx_alpha", false); fx.ringTop = Top;
-        fx.crowdMat = Lit("crowd", Color.gray, 0f, 0.25f); fx.crowdMat.enableInstancing = true;
         var game = gameGo.AddComponent<Game>();
         game.a = fa.GetComponent<Fighter>(); game.b = fb.GetComponent<Fighter>(); game.cam = cam;
 
@@ -441,9 +440,58 @@ public static class Setup
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(scenePath, true) };
     }
 
+    // Crowd prefabs for Fx: each Rocketbox avatar with plain Lit materials from its colour textures, plus one looping
+    // controller per cheer clip. Everything lands in Resources/Crowd so Fx can load it at runtime.
+    const string RB = "Assets/ThirdParty/Rocketbox", CrowdOut = "Assets/Resources/Crowd";
+    public static void Crowd()
+    {
+        if (!AssetDatabase.IsValidFolder(RB)) return;
+        Directory.CreateDirectory(CrowdOut);
+        foreach (var f in Directory.GetFiles(RB + "/Clips", "*.fbx"))
+        {
+            var clip = AssetDatabase.LoadAllAssetsAtPath(f.Replace('\\', '/')).OfType<AnimationClip>().First(c => !c.name.StartsWith("__preview"));
+            var path = $"{CrowdOut}/{Path.GetFileNameWithoutExtension(f)}.controller";
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(path)) continue;
+            AnimatorController.CreateAnimatorControllerAtPath(path).layers[0].stateMachine.AddState("Cheer").motion = clip;
+        }
+        foreach (var dir in Directory.GetDirectories(RB).Select(d => d.Replace('\\', '/')).Where(d => !d.EndsWith("/Clips")))
+        {
+            var name = Path.GetFileName(dir);
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{dir}/{name}.fbx");
+            if (!model) continue;
+            Material Mat(string slot)
+            {
+                var part = new[] { "opacity", "head", "body" }.FirstOrDefault(p => slot.ToLower().Contains(p)) ?? "body";
+                var path = $"{CrowdOut}/{name}_{part}.mat";
+                var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (m) return m;
+                m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                var tex = Directory.GetFiles(dir, $"*_{part}_color.png").FirstOrDefault();
+                if (tex != null) m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(tex.Replace('\\', '/')));
+                m.SetFloat("_Smoothness", 0.25f);
+                if (part == "opacity") { m.SetFloat("_AlphaClip", 1); m.SetFloat("_Cutoff", 0.5f); m.EnableKeyword("_ALPHATEST_ON"); }
+                m.enableInstancing = true;
+                AssetDatabase.CreateAsset(m, path);
+                return m;
+            }
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            foreach (var r in go.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                r.sharedMaterials = r.sharedMaterials.Select((m, i) => Mat(m ? m.name : r.name)).ToArray();
+                r.quality = SkinQuality.Bone2; r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false; r.updateWhenOffscreen = false;
+            }
+            if (!go.GetComponent<Animator>()) go.AddComponent<Animator>();
+            go.GetComponent<Animator>().applyRootMotion = false;
+            PrefabUtility.SaveAsPrefabAsset(go, $"{CrowdOut}/{name}.prefab");
+            Object.DestroyImmediate(go);
+        }
+        AssetDatabase.SaveAssets();
+    }
+
     [MenuItem("Iron Corner/Build macOS Player")]
     public static void BuildMac()
     {
+        Crowd();
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/Main.unity" },
@@ -478,10 +526,11 @@ public static class Setup
     [MenuItem("Iron Corner/Build iOS Xcode Project")]
     public static void BuildIOS()
     {
+        Crowd();
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
         PlayerSettings.iOS.appleDeveloperTeamID = "J99B88X7CK";
         PlayerSettings.iOS.appleEnableAutomaticSigning = true;
-        if (AssetImporter.GetAtPath("Assets/Plugins/iOS/WorldAuth.mm") is PluginImporter wa) // in-app World sheet
+        if (AssetImporter.GetAtPath("Assets/Plugins/iOS/Sheet.mm") is PluginImporter wa) // in-app browser sheet
         {
             wa.SetCompatibleWithPlatform(BuildTarget.iOS, true);
             wa.SetPlatformData(BuildTarget.iOS, "FrameworkDependencies", "AuthenticationServices;");

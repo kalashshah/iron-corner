@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 // camera-flash glints in the stands, KO confetti, and every sound, synthesized at startup so there are no audio files to ship.
 public class Fx : MonoBehaviour
 {
-    public Material add, alpha, crowdMat; // assigned by Setup (URP Particles/Unlit additive + alpha, URP Lit instanced)
+    public Material add, alpha; // assigned by Setup (URP Particles/Unlit additive + alpha)
     public float ringTop = 1f;
 
     [NonSerialized] public float shake;  // camera trauma 0..1, Game reads and decays it
@@ -217,76 +217,56 @@ public class Fx : MonoBehaviour
         DrawCrowd(level);
     }
 
-    // ---------------------------------------------------------------- crowd (GPU instanced)
-    Mesh bodyMesh, headMesh; Matrix4x4[][] bodies, heads; Vector4[] seeds; Material[] crowdMats; RenderParams[] rp;
-    const int Groups = 4;
+    // ---------------------------------------------------------------- crowd
+    // Rocketbox people (Resources/Crowd, made by Setup.Crowd) cheering in ringside rows on all four sides.
+    // The cheer speeds up with the crowd's energy.
+    Animator[] crowd = new Animator[0];
 
     void BuildCrowd()
     {
-        if (crowdMat == null) return;
-        bodyMesh = PrimMesh(PrimitiveType.Capsule); headMesh = PrimMesh(PrimitiveType.Sphere);
-        var spots = new System.Collections.Generic.List<Vector4>(); // x, y, z, yaw
+        var people = Resources.LoadAll<GameObject>("Crowd");
+        var cheers = Resources.LoadAll<RuntimeAnimatorController>("Crowd");
+        if (people.Length == 0 || cheers.Length == 0) return;
+        var list = new System.Collections.Generic.List<Animator>();
+        var root = new GameObject("Crowd").transform;
+        var riserMat = new Material(people[0].GetComponentInChildren<Renderer>().sharedMaterial); // same Lit shader, so nothing gets stripped
+        riserMat.SetTexture("_BaseMap", null); riserMat.SetFloat("_AlphaClip", 0); riserMat.DisableKeyword("_ALPHATEST_ON");
+        riserMat.SetColor("_BaseColor", new Color(0.08f, 0.085f, 0.1f));
+        // Three rising rows packed close around the ring, like ringside seats. Each row stands on a low riser.
+        // ponytail: ~200 skinned people; drop a row if phones stutter.
         for (int s = 0; s < 4; s++)
-        for (int tier = 0; tier < 4; tier++)
         {
-            float half = 12f + tier * 1.5f - 0.8f, z = 10.6f + tier * 1.6f, y = 1f + tier * 2f;
-            for (float x = -half; x <= half; x += Random.Range(0.5f, 0.75f))
+            var rot = Quaternion.Euler(0, s * 90, 0);
+            for (int row = 0; row < 3; row++)
             {
-                if (Random.value < 0.12f) continue; // empty seats
-                var p = Quaternion.Euler(0, s * 90, 0) * new Vector3(x, y, z + Random.Range(-0.3f, 0.3f));
-                spots.Add(new Vector4(p.x, p.y, p.z, s * 90 + 180));
+                float z = 5.4f + row * 0.95f, y = row * 0.45f, half = z - 0.7f;
+                var riser = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Destroy(riser.GetComponent<Collider>());
+                riser.transform.SetParent(root);
+                riser.transform.SetPositionAndRotation(rot * new Vector3(0, y / 2f - 0.01f, z), rot);
+                riser.transform.localScale = new Vector3(half * 2f + 1.4f, Mathf.Max(0.02f, y), 0.95f);
+                var rr = riser.GetComponent<Renderer>(); rr.sharedMaterial = riserMat; rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                for (float x = -half; x <= half; x += Random.Range(0.62f, 0.8f))
+                {
+                    if (Random.value < 0.05f) continue; // the odd empty seat
+                    var p = rot * new Vector3(x + Random.Range(-0.08f, 0.08f), y, z + Random.Range(-0.1f, 0.1f));
+                    var go = Instantiate(people[Random.Range(0, people.Length)], p, rot * Quaternion.Euler(0, 180 + Random.Range(-20f, 20f), 0), root);
+                    go.transform.localScale = Vector3.one * Random.Range(0.94f, 1.04f);
+                    var an = go.GetComponent<Animator>();
+                    an.runtimeAnimatorController = cheers[Random.Range(0, cheers.Length)];
+                    an.cullingMode = AnimatorCullingMode.CullCompletely;
+                    an.Play(0, 0, Random.value);
+                    list.Add(an);
+                }
             }
         }
-        var per = new System.Collections.Generic.List<Vector4>[Groups];
-        for (int g = 0; g < Groups; g++) per[g] = new();
-        foreach (var sp in spots) per[Random.Range(0, Groups)].Add(sp);
-        bodies = new Matrix4x4[Groups][]; heads = new Matrix4x4[Groups][];
-        crowdMats = new Material[Groups]; rp = new RenderParams[Groups];
-        var tints = new[] { new Color(0.16f, 0.17f, 0.2f), new Color(0.3f, 0.16f, 0.1f), new Color(0.12f, 0.16f, 0.24f), new Color(0.24f, 0.24f, 0.26f) };
-        seeds = new Vector4[spots.Count];
-        int k = 0;
-        for (int g = 0; g < Groups; g++)
-        {
-            bodies[g] = new Matrix4x4[per[g].Count]; heads[g] = new Matrix4x4[per[g].Count];
-            crowdMats[g] = new Material(crowdMat) { enableInstancing = true };
-            crowdMats[g].SetColor("_BaseColor", tints[g]);
-            rp[g] = new RenderParams(crowdMats[g]) { shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off, receiveShadows = false };
-            foreach (var sp in per[g]) seeds[k++] = new Vector4(sp.x, sp.y, sp.z, Random.value * 10f);
-        }
-        crowdSpots = per;
+        crowd = list.ToArray();
     }
-    System.Collections.Generic.List<Vector4>[] crowdSpots;
 
     void DrawCrowd(float level)
     {
-        if (bodies == null) return;
-        float tt = Time.unscaledTime;
-        int k = 0;
-        for (int g = 0; g < Groups; g++)
-        {
-            var list = crowdSpots[g];
-            for (int i = 0; i < list.Count; i++, k++)
-            {
-                var sp = list[i]; float seed = seeds[k].w;
-                float hop = Mathf.Max(0, Mathf.Sin(tt * (5f + seed * 0.4f) + seed * 7f)) * level * 0.35f + Mathf.Sin(tt * 1.3f + seed) * 0.02f;
-                var basePos = new Vector3(sp.x, sp.y + hop, sp.z);
-                var rot = Quaternion.Euler(0, sp.w, 0);
-                float h = 0.85f + (seed % 1f) * 0.3f;
-                bodies[g][i] = Matrix4x4.TRS(basePos + Vector3.up * 0.5f * h, rot, new Vector3(0.45f, 0.5f * h, 0.32f));
-                heads[g][i] = Matrix4x4.TRS(basePos + Vector3.up * (1.08f * h + 0.12f), rot, Vector3.one * 0.24f);
-            }
-            if (list.Count == 0) continue;
-            Graphics.RenderMeshInstanced(rp[g], bodyMesh, 0, bodies[g]);
-            Graphics.RenderMeshInstanced(rp[g], headMesh, 0, heads[g]);
-        }
-    }
-
-    static Mesh PrimMesh(PrimitiveType t)
-    {
-        var g = GameObject.CreatePrimitive(t);
-        var m = g.GetComponent<MeshFilter>().sharedMesh;
-        Destroy(g);
-        return m;
+        float sp = 0.55f + level * 0.7f;
+        foreach (var an in crowd) an.speed = sp;
     }
 
     // ---------------------------------------------------------------- particles & lights

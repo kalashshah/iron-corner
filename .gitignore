@@ -19,3 +19,7 @@ camp/training.json
 camp/last-task.json
 camp/adapters/
 backend/public/
+unity/Assets/ThirdParty/Rocketbox/
+unity/Assets/ThirdParty/Rocketbox.meta
+unity/Assets/Resources/Crowd/
+unity/Assets/Resources/Crowd.meta
