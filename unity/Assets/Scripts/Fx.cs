@@ -16,7 +16,7 @@ public class Fx : MonoBehaviour
     ParticleSystem sparks, glow, blockSparks, debris, smoke, flashes, confetti;
     Light[] lights; float[] lightLife, lightPeak; int li;
     AudioSource[] srcs; int si; AudioSource crowdLoop;
-    AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur;
+    AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur, tick;
 
     void Awake()
     {
@@ -81,6 +81,8 @@ public class Fx : MonoBehaviour
         }
         else Play(whoosh, 0.35f, 1.35f);
     }
+
+    public void Tick() => Play(tick, 0.3f, Random.Range(0.96f, 1.04f)); // UI buttons
 
     public void Bell(int times) { for (int i = 0; i < times; i++) Invoke(nameof(Ding), i * 0.38f); }
     void Ding() => Play(bell, 0.6f, 1f);
@@ -354,6 +356,7 @@ public class Fx : MonoBehaviour
             boom = Clip("boom", Synth(1.4f, t => th(t) + hs(t) * 1.5f));
         }
         cheer = Clip("cheer", Synth(2.6f, CrowdVoice(2.6f, true)));
+        { float[] f = { 1850, 3120, 4700 }, dk = { 60, 80, 110 }; var th = Thump(420, 180, 70); tick = Clip("tick", Synth(0.09f, t => th(t) * 0.6f + Ring(t, f, dk, 0.8f))); }
         murmur = Clip("murmur", Loop(Synth(6.5f, CrowdVoice(6.5f, false)), 0.5f));
     }
 

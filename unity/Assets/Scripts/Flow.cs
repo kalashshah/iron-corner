@@ -203,8 +203,7 @@ public partial class Game
         UI.Btn(k, "‹  HOME", UI.Steel, UI.Ink, () => Show(Mode.Home), 24).H(56);
 
         // First-training guide, over the Train screen (right side, clear of the pads and the bubble)
-        var g = UI.Box(train.transform, new Color(0.05f, 0.055f, 0.07f, 0.92f), true, "guide").At(1, 0, 1, 0, -500, 410, -40, 640);
-        g.gameObject.AddComponent<Outline>().effectColor = new Color(1f, 0.58f, 0.13f, 0.5f);
+        var g = UI.Box(train.transform, UI.Card, true, "guide").At(1, 0, 1, 0, -500, 410, -40, 640);
         guide = g.gameObject;
         UI.Label(g.transform, "FIRST TRAINING ROUND", 24, UI.Accent, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 26, -56, -26, -20);
         guideBody = UI.Label(g.transform, "", 25, UI.Ink, TextAnchor.UpperLeft).At(0, 1, 1, 1, 26, -230, -26, -64);

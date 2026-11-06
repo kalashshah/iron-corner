@@ -8,8 +8,8 @@ public static class UI
     public static Font Font;
     public static Sprite Round;
 
-    public static readonly Color Bg = new(0.05f, 0.055f, 0.07f, 0.94f);
-    public static readonly Color Card = new(0.09f, 0.1f, 0.12f, 0.9f);
+    public static readonly Color Bg = new(0.035f, 0.04f, 0.055f, 0.97f);
+    public static readonly Color Card = new(0.06f, 0.068f, 0.09f, 0.96f); // linear-space blending washes out translucent darks, so keep panels near-opaque
     public static readonly Color Line = new(1f, 1f, 1f, 0.08f);
     public static readonly Color Accent = new(1f, 0.58f, 0.13f);
     public static readonly Color Brass = new(0.88f, 0.68f, 0.34f);
@@ -17,23 +17,36 @@ public static class UI
     public static readonly Color Dim = new(0.62f, 0.65f, 0.7f);
     public static readonly Color Green = new(0.36f, 0.86f, 0.52f);
     public static readonly Color Red = new(0.95f, 0.32f, 0.26f);
-    public static readonly Color Steel = new(0.2f, 0.22f, 0.26f, 0.95f);
+    public static readonly Color Steel = new(0.17f, 0.19f, 0.24f, 0.96f);
+
+    public static Sprite Gloss, Ring, Glow;
+    public static Action Click; // UI tick sound, hooked to Fx by Game
 
     public static void Init()
     {
         Font = Font.CreateDynamicFontFromOSFont(new[] { "Avenir Next Condensed", "DIN Condensed", "Roboto Condensed", "Helvetica Neue", "Arial", "Arial Unicode MS" }, 48);
         if (Font == null) Font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         const int s = 64, r = 18;
-        var t = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
-        for (int y = 0; y < s; y++)
-        for (int x = 0; x < s; x++)
+        // One rounded-rect distance field, four looks: solid fill, top sheen, 2px rim, soft outer glow.
+        Sprite Make(Func<float, float, float> alpha, int size, int border)
         {
-            float cx = Mathf.Clamp(x + 0.5f, r, s - r), cy = Mathf.Clamp(y + 0.5f, r, s - r);
-            float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(cx, cy));
-            t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(r - d + 0.5f)));
+            var t = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++) t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(alpha(x + 0.5f, y + 0.5f))));
+            t.Apply();
+            return Sprite.Create(t, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
         }
-        t.Apply();
-        Round = Sprite.Create(t, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+        float Sd(float x, float y, int size, float rad, float inset) // signed distance to a rounded rect inset from the texture edge
+        {
+            float lo = inset + rad, hi = size - inset - rad;
+            float dx = Mathf.Max(lo - x, 0, x - hi), dy = Mathf.Max(lo - y, 0, y - hi);
+            return Mathf.Sqrt(dx * dx + dy * dy) - rad;
+        }
+        Round = Make((x, y) => 0.5f - Sd(x, y, s, r, 0), s, r);
+        Gloss = Make((x, y) => Mathf.Clamp01(0.5f - Sd(x, y, s, r, 0)) * Mathf.InverseLerp(s * 0.4f, s, y), s, r);
+        Ring = Make((x, y) => { float d = Sd(x, y, s, r, 0); return Mathf.Min(0.5f - d, d + 2.5f); }, s, r);
+        const int g = 128, pad = 40;
+        Glow = Make((x, y) => { float d = Sd(x, y, g, 20, pad); return d <= 0 ? 1 : Mathf.Pow(1 - Mathf.Clamp01(d / pad), 2.2f); }, g, pad + 20);
     }
 
     public static GameObject Go(Transform parent, string name)
@@ -59,8 +72,33 @@ public static class UI
         var img = Go(p, name).AddComponent<Image>();
         img.color = c;
         if (rounded) { img.sprite = Round; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = 2f; }
+        if (rounded && (c == Card || c == Bg)) Panel(img);
         return img;
     }
+
+    static Image Layer(Transform p, Sprite sp, Color c, string name, float grow = 0)
+    {
+        var img = Go(p, name).AddComponent<Image>();
+        img.sprite = sp; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = 2f; img.color = c; img.raycastTarget = false;
+        img.At(0, 0, 1, 1, -grow, -grow, grow, grow);
+        return img;
+    }
+
+    // Glassy card: soft drop shadow, faint top sheen, thin light rim.
+    public static Image Panel(Image img, Color? rim = null)
+    {
+        img.gameObject.AddComponent<SoftShadow>();
+        Layer(img.transform, Gloss, new Color(1, 1, 1, 0.045f), "sheen");
+        Layer(img.transform, Ring, rim ?? new Color(1, 1, 1, 0.09f), "rim");
+        return img;
+    }
+
+    // Sheen on a bar fill so meters read as lit tubes rather than flat strips.
+    public static Image Shine(Image img) { Layer(img.transform, Gloss, new Color(1, 1, 1, 0.35f), "shine"); return img; }
+
+    // Soft coloured halo around an element (accent buttons, active states).
+    // The glow's 40px falloff in the texture is scaled to fit the 26px it grows past the edge.
+    public static Image Halo(Image img, Color c, float alpha = 0.35f) { var h = Layer(img.transform, Glow, new Color(c.r, c.g, c.b, alpha), "halo", 26); h.transform.SetAsFirstSibling(); h.pixelsPerUnitMultiplier = 40f / 26f; return h; }
 
     public static Text Label(Transform p, string s, int size, Color c, TextAnchor a = TextAnchor.MiddleLeft, FontStyle st = FontStyle.Normal)
     {
@@ -68,6 +106,7 @@ public static class UI
         t.font = Font; t.text = s; t.fontSize = size; t.color = c; t.alignment = a; t.fontStyle = st;
         t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false; t.supportRichText = true;
+        if (c.r + c.g + c.b > 1.2f) t.gameObject.AddComponent<Shadow>().effectColor = new Color(0, 0, 0, 0.45f); // light text stays legible over the 3D ring
         return t.At(0, 0, 1, 1);
     }
 
@@ -75,7 +114,16 @@ public static class UI
     {
         var img = Box(p, bg, true, "btn:" + label);
         var b = img.gameObject.AddComponent<Button>();
-        var cb = b.colors; cb.highlightedColor = new Color(1.1f, 1.1f, 1.1f); cb.pressedColor = new Color(0.8f, 0.8f, 0.8f); b.colors = cb;
+        var cb = b.colors; cb.highlightedColor = new Color(1.12f, 1.12f, 1.12f); cb.pressedColor = new Color(0.78f, 0.78f, 0.78f); cb.disabledColor = new Color(0.55f, 0.55f, 0.55f, 0.6f); cb.fadeDuration = 0.08f; b.colors = cb;
+        b.navigation = new Navigation { mode = Navigation.Mode.None };
+        if (bg.a > 0.05f)
+        {
+            img.gameObject.AddComponent<SoftShadow>();
+            Layer(img.transform, Gloss, new Color(1, 1, 1, bg.grayscale > 0.4f ? 0.28f : 0.1f), "sheen");
+            Layer(img.transform, Ring, new Color(1, 1, 1, bg.grayscale > 0.4f ? 0.22f : 0.08f), "rim");
+            if (bg == Accent) Halo(img, Accent, 0.28f);
+        }
+        img.gameObject.AddComponent<Press>();
         if (click != null) b.onClick.AddListener(() => click());
         Label(img.transform, label, size, fg, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0, 1, 1, 12, 0, -12, 0);
         return b;
@@ -86,14 +134,19 @@ public static class UI
     public static InputField Field(Transform p, string placeholder, string value, int size = 28)
     {
         var img = Box(p, new Color(0, 0, 0, 0.55f), true, "field");
+        Layer(img.transform, Ring, new Color(1, 1, 1, 0.1f), "rim");
         var f = img.gameObject.AddComponent<InputField>();
         var txt = Label(img.transform, value, size, Ink).At(0, 0, 1, 1, 18, 0, -18, 0);
         txt.supportRichText = false;
         txt.horizontalOverflow = HorizontalWrapMode.Overflow;
         var ph = Label(img.transform, placeholder, size, Dim, TextAnchor.MiddleLeft, FontStyle.Italic).At(0, 0, 1, 1, 18, 0, -18, 0);
         f.textComponent = txt; f.placeholder = ph; f.text = value;
+        f.selectionColor = new Color(Accent.r, Accent.g, Accent.b, 0.35f); f.caretColor = Accent; f.customCaretColor = true; f.caretWidth = 3;
         return f;
     }
+
+    // Screens and pop-ups ease in (fade + slight zoom) every time they're shown.
+    public static GameObject Appear(this GameObject go, float from = 0.97f) { go.AddComponent<Appear>().from = from; return go; }
 
     public static VerticalLayoutGroup Column(Transform p, float spacing, string name = "column")
     {
@@ -118,4 +171,72 @@ public static class UI
 
     public static string Usd(double cents) => (cents < 0 ? "-$" : "$") + Math.Abs(cents / 100.0).ToString("0.00");
     public static string Short(string h, int keep = 6) => string.IsNullOrEmpty(h) || h.Length <= keep * 2 + 1 ? h : h.Substring(0, keep) + "…" + h.Substring(h.Length - 4);
+}
+
+// Layered drop shadow drawn under the element's own mesh: four expanding, fading copies fake a blur.
+public class SoftShadow : BaseMeshEffect
+{
+    public float spread = 3f, drop = 5f, alpha = 0.16f;
+    static readonly System.Collections.Generic.List<UIVertex> src = new(), dst = new();
+    public override void ModifyMesh(VertexHelper vh)
+    {
+        if (!IsActive()) return;
+        src.Clear(); dst.Clear();
+        vh.GetUIVertexStream(src);
+        if (src.Count == 0) return;
+        var r = ((RectTransform)transform).rect; var c = r.center;
+        for (int k = 4; k >= 1; k--)
+        {
+            float e = spread * k;
+            foreach (var v0 in src)
+            {
+                var v = v0; var p = v.position;
+                p.x += p.x < c.x ? -e : e; p.y += (p.y < c.y ? -e : e) - drop;
+                v.position = p; v.color = new Color32(0, 0, 0, (byte)(255 * alpha * v0.color.a / 255f * (1.2f - k * 0.2f)));
+                dst.Add(v);
+            }
+        }
+        dst.AddRange(src);
+        vh.Clear(); vh.AddUIVertexTriangleStream(dst);
+    }
+}
+
+// Tactile buttons: grow a touch on hover, squash on press, spring back. Plays the UI tick.
+public class Press : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
+{
+    float target = 1f, s = 1f, vel;
+    bool over, down;
+    Selectable sel;
+    void Awake() => sel = GetComponent<Selectable>();
+    bool Live => sel == null || sel.IsInteractable();
+    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) { over = true; Upd(); }
+    public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) { over = false; Upd(); }
+    public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e) { down = true; Upd(); if (Live) UI.Click?.Invoke(); }
+    public void OnPointerUp(UnityEngine.EventSystems.PointerEventData e) { down = false; Upd(); }
+    void Upd() => target = !Live ? 1f : down ? 0.93f : over ? 1.03f : 1f;
+    void OnDisable() { over = down = false; s = target = 1f; vel = 0; transform.localScale = Vector3.one; }
+    void Update()
+    {
+        if (Mathf.Abs(s - target) < 0.0005f && Mathf.Abs(vel) < 0.001f) return;
+        s = Mathf.SmoothDamp(s, target, ref vel, down ? 0.03f : 0.09f, Mathf.Infinity, Time.unscaledDeltaTime);
+        transform.localScale = new Vector3(s, s, 1);
+    }
+}
+
+public class Appear : MonoBehaviour
+{
+    public float from = 0.97f, dur = 0.22f;
+    CanvasGroup g; float t0;
+    void OnEnable()
+    {
+        if (g == null && !TryGetComponent(out g)) g = gameObject.AddComponent<CanvasGroup>();
+        t0 = Time.unscaledTime; g.alpha = 0; transform.localScale = Vector3.one * from;
+    }
+    void Update()
+    {
+        float k = Mathf.Clamp01((Time.unscaledTime - t0) / dur);
+        if (g.alpha >= 1f && k >= 1f) return;
+        float e = 1 - Mathf.Pow(1 - k, 3);
+        g.alpha = e; transform.localScale = Vector3.one * Mathf.LerpUnclamped(from, 1f, e);
+    }
 }

@@ -91,6 +91,7 @@ public partial class Game : MonoBehaviour
             if (vol.sharedProfile.TryGet(out vignette)) baseVignette = vignette.intensity.value;
         }
         UI.Init();
+        if (fx != null) UI.Click = fx.Tick;
         BuildUI();
         ResetFighters();
         Show(Mode.Home);
@@ -671,14 +672,28 @@ public partial class Game : MonoBehaviour
             modalAction.text = label;
             modalExplain.text = explain;
             modalCode.text = $"Code  <b>{r["userCode"]}</b>";
-            approvalUri = Api.Offline ? null : (string)r["qrUri"];
+            approvalUri = Api.Offline ? null : (string)(r["appUri"] ?? r["qrUri"]);
             modalOpenBtn.gameObject.SetActive(approvalUri != null);
+            if (approvalUri != null && Application.isMobilePlatform) OpenApprovalSheet(); // same phone: straight to World
             modalStatus.text = "<color=#F2A33A>Waiting for World ID approval…</color>" + (Api.Offline ? "\n<size=20>OFFLINE: placeholder code, auto-approves in a few seconds</size>" : "");
             modalBtn.SetLabel(closeLabel);
             modalQr.texture = null;
             StartCoroutine(Api.Texture($"/approvals/{approvalId}/qr.png", t => { if (modalQr != null) modalQr.texture = t; }));
             StartCoroutine(PollApproval(approvalId, onApproved));
         }, e => { Toast("Approval failed: " + e); onClosed?.Invoke(); }));
+    }
+
+#if UNITY_IOS && !UNITY_EDITOR
+    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void IcWorldAuthOpen(string url);
+#endif
+    // iOS: in-app browser sheet (closes itself on the ironcorner:// redirect). Elsewhere: the system browser.
+    void OpenApprovalSheet()
+    {
+        if (string.IsNullOrEmpty(approvalUri)) return;
+#if UNITY_IOS && !UNITY_EDITOR
+        if (approvalUri.Contains("/world/go/")) { IcWorldAuthOpen(approvalUri + "?p=sheet"); return; }
+#endif
+        Application.OpenURL(approvalUri);
     }
 
     IEnumerator PollApproval(string id, Action<string> onApproved)
@@ -931,19 +946,21 @@ public partial class Game : MonoBehaviour
         bubA = BuildBubble(root, a); bubB = BuildBubble(root, b);
         BuildModal(root); BuildKO(root);
 
-        var tb = UI.Box(root, new Color(0.08f, 0.08f, 0.1f, 0.95f), true, "toast").At(0.5f, 1, 0.5f, 1, -480, -250, 480, -170);
+        var tb = UI.Panel(UI.Box(root, new Color(0.06f, 0.065f, 0.085f, 0.96f), true, "toast"), new Color(1f, 0.58f, 0.13f, 0.55f)).At(0.5f, 1, 0.5f, 1, -480, -250, 480, -170);
         toast = UI.Label(tb.transform, "", 34, UI.Brass, TextAnchor.MiddleCenter, FontStyle.Bold);
-        tb.gameObject.AddComponent<Outline>().effectColor = new Color(1f, 0.58f, 0.13f, 0.6f);
-        tb.gameObject.SetActive(false);
+        tb.gameObject.Appear(0.9f).SetActive(false);
+        foreach (var g in new[] { home, train, fight, brain, koPanel, modal, welcome, create, fund, find, camp }) g.Appear();
+        summary.Appear(0.9f); guide.Appear(0.94f);
 
-        badge = UI.Label(root, "…", 22, UI.Accent, TextAnchor.UpperRight, FontStyle.Bold).At(1, 1, 1, 1, -700, -44, -26, -14);
+        badge = UI.Label(root, "…", 19, UI.Accent, TextAnchor.UpperCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -500, -32, 500, -6); // top centre, clear of names and buttons
     }
 
     void BuildHome(Transform root)
     {
         home = UI.Go(root, "Home");
         ((RectTransform)home.transform).At(0, 0, 1, 1);
-        UI.Label(home.transform, "IRON <color=#FF9421>CORNER</color>", 92, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 0, 1, 56, -170, 1000, -40);
+        UI.Label(home.transform, "IRON <color=#FF9421>CORNER</color>", 92, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 0, 1, 56, -170, 1000, -40).GetComponent<Shadow>().effectDistance = new Vector2(0, -4);
+        UI.Box(home.transform, UI.Accent, true, "titleRule").At(0, 1, 0, 1, 62, -152, 182, -146);
         UI.Label(home.transform, "Teach your robot by boxing with it. It fights on its own. Every clean hit pays the other corner.", 28, UI.Dim, TextAnchor.UpperLeft).At(0, 1, 0, 1, 60, -220, 1000, -160);
 
         var card = UI.Box(home.transform, UI.Card, true, "card").At(1, 0.5f, 1, 0.5f, -720, -410, -60, 480);
@@ -957,7 +974,7 @@ public partial class Game : MonoBehaviour
         var lv = UI.Rt(col.transform, "level").H(42);
         cardLevel = UI.Label(lv, "LEVEL 1", 34, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 0, 1, 0, 0, 160, 0);
         var xbg = UI.Box(lv, new Color(0, 0, 0, 0.6f), true, "xpbg").At(0, 0.5f, 1, 0.5f, 170, -9, -84, 9);
-        xpFill = UI.Box(xbg.transform, UI.Accent, true, "xp").At(0, 0, 1, 1, 2, 2, -2, -2).rectTransform;
+        xpFill = UI.Shine(UI.Box(xbg.transform, UI.Accent, true, "xp")).At(0, 0, 1, 1, 2, 2, -2, -2).rectTransform;
         cardXp = UI.Label(lv, "0/100", 22, UI.Dim, TextAnchor.MiddleRight).At(1, 0, 1, 1, -80, 0, 0, 0);
         var stats = UI.Column(col.transform, 4, "stats").H(5 * 26 + 4 * 4);
         for (int i = 0; i < StatKeys.Length; i++)
@@ -965,7 +982,7 @@ public partial class Game : MonoBehaviour
             var row = UI.Rt(stats.transform, StatKeys[i]).H(26);
             UI.Label(row, StatNames[i], 20, UI.Dim, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 0, 1, 0, 0, 160, 0);
             var bg = UI.Box(row, new Color(0, 0, 0, 0.6f), true, "bg").At(0, 0.5f, 1, 0.5f, 170, -7, -84, 7);
-            statFill[i] = UI.Box(bg.transform, UI.Brass, true, "fill").At(0, 0, 1, 1, 2, 2, -2, -2).rectTransform;
+            statFill[i] = UI.Shine(UI.Box(bg.transform, UI.Brass, true, "fill")).At(0, 0, 1, 1, 2, 2, -2, -2).rectTransform;
             statVal[i] = UI.Label(row, "0", 22, UI.Ink, TextAnchor.MiddleRight, FontStyle.Bold).At(1, 0, 1, 1, -80, 0, 0, 0);
             SetFill(statFill[i], 0);
         }
@@ -998,7 +1015,7 @@ public partial class Game : MonoBehaviour
         UI.Label(train.transform, "SPARRING", 60, UI.Ink, TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 0, 1, 270, -112, 700, -30);
 
         // Round HUD, top centre: clock · energy, then what's happening.
-        var hud = UI.Box(train.transform, new Color(0, 0, 0, 0.55f), true, "hud").At(0.5f, 1, 0.5f, 1, -330, -112, 330, -36);
+        var hud = UI.Panel(UI.Box(train.transform, new Color(0.02f, 0.025f, 0.035f, 0.85f), true, "hud")).At(0.5f, 1, 0.5f, 1, -330, -112, 330, -36);
         roundTimer = UI.Label(hud.transform, "", 34, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 1, 1, 24, 0, -24, 0);
         energyPips = UI.Label(hud.transform, "", 26, UI.Ink, TextAnchor.MiddleRight, FontStyle.Bold).At(0, 0, 1, 1, 24, 0, -24, 0);
         roundInfo = UI.Label(train.transform, "", 24, UI.Dim, TextAnchor.UpperCenter).At(0.5f, 1, 0.5f, 1, -420, -150, 420, -118);
@@ -1014,11 +1031,10 @@ public partial class Game : MonoBehaviour
 
         BuildCoachBar(train.transform, out trainTranscript, out trainField);
 
-        summary = UI.Box(train.transform, new Color(0.05f, 0.055f, 0.07f, 0.95f), true, "summary").At(0.5f, 0.5f, 0.5f, 0.5f, -470, -60, 470, 200).gameObject;
-        summary.AddComponent<Outline>().effectColor = new Color(1f, 0.58f, 0.13f, 0.5f);
+        summary = UI.Panel(UI.Box(train.transform, new Color(0.05f, 0.055f, 0.07f, 0.96f), true, "summary"), new Color(1f, 0.58f, 0.13f, 0.5f)).At(0.5f, 0.5f, 0.5f, 0.5f, -470, -110, 470, 210).gameObject;
         summaryTitle = UI.Label(summary.transform, "", 46, UI.Ink, TextAnchor.UpperCenter, FontStyle.Bold).At(0, 1, 1, 1, 30, -84, -30, -24);
-        summaryBody = UI.Label(summary.transform, "", 28, UI.Ink, TextAnchor.UpperCenter).At(0, 0, 1, 1, 30, 70, -30, -96);
-        UI.Btn(summary.transform, "OK", UI.Steel, UI.Ink, () => summary.SetActive(false), 26).At(0.5f, 0, 0.5f, 0, -90, 16, 90, 64);
+        summaryBody = UI.Label(summary.transform, "", 28, UI.Ink, TextAnchor.UpperCenter).At(0, 0, 1, 1, 30, 100, -30, -100);
+        UI.Btn(summary.transform, "OK", UI.Accent, Color.black, () => summary.SetActive(false), 28).At(0.5f, 0, 0.5f, 0, -110, 24, 110, 84);
         summary.SetActive(false);
     }
 
@@ -1030,7 +1046,7 @@ public partial class Game : MonoBehaviour
         if (right) pad.At(1, 0, 1, 0, -(3 * w + 2 * gap) - 36, 30, -36, 30 + 2 * h + gap);
         else pad.At(0, 0, 0, 0, 36, 30, 36 + 3 * w + 2 * gap, 30 + 2 * h + gap);
         UI.Label(pad, right ? "PUNCH" : "DEFEND", 20, UI.Dim, right ? TextAnchor.LowerRight : TextAnchor.LowerLeft, FontStyle.Bold).At(0, 1, 1, 1, 4, 4, -4, 34);
-        Color bg = right ? new Color(0.36f, 0.13f, 0.1f, 0.92f) : new Color(0.12f, 0.2f, 0.3f, 0.92f);
+        Color bg = right ? new Color(0.55f, 0.15f, 0.1f, 0.93f) : new Color(0.12f, 0.27f, 0.48f, 0.93f);
         for (int i = 0; i < keys.Length; i++)
         {
             int row = i / 3, n = row == 0 ? 3 : keys.Length - 3, c = i % 3;
@@ -1046,10 +1062,11 @@ public partial class Game : MonoBehaviour
     {
         // Between the two pads: transcript line, hold-to-talk, typed fallback.
         var bar = UI.Rt(parent, "coach").At(0.5f, 0, 0.5f, 0, -370, 30, 370, 214);
-        var tr = UI.Box(bar, new Color(0, 0, 0, 0.5f), true, "transcriptBg").At(0, 1, 1, 1, 0, -60, 0, 0);
+        var tr = UI.Panel(UI.Box(bar, new Color(0.02f, 0.025f, 0.035f, 0.85f), true, "transcriptBg")).At(0, 1, 1, 1, 0, -60, 0, 0);
         var t = UI.Label(tr.transform, "", 22, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 16, 0, -16, 0);
         transcript = t;
-        var mic = UI.Box(bar, UI.Accent, true, "mic").At(0, 0, 0, 0, 0, 0, 250, 112);
+        var mic = UI.Panel(UI.Box(bar, UI.Accent, true, "mic"), new Color(1, 1, 1, 0.25f)).At(0, 0, 0, 0, 0, 0, 250, 112);
+        UI.Halo(mic, UI.Accent, 0.4f); mic.gameObject.AddComponent<Press>();
         UI.Label(mic.transform, "●  HOLD TO TALK", 28, Color.black, TextAnchor.MiddleCenter, FontStyle.Bold);
         var hold = mic.gameObject.AddComponent<HoldButton>();
         hold.onDown = () => MicDown(t); hold.onUp = () => MicUp(t);
@@ -1069,9 +1086,9 @@ public partial class Game : MonoBehaviour
             if (left) g.At(0, 1, 0.5f, 1, 40, -150, -140, -30); else g.At(0.5f, 1, 1, 1, 140, -150, -40, -30);
             barName[i] = UI.Label(g, "", 36, UI.Ink, left ? TextAnchor.UpperLeft : TextAnchor.UpperRight, FontStyle.Bold).At(0, 1, 1, 1, 0, -48, 0, 0);
             barMoney[i] = UI.Label(g, "", 40, UI.Brass, left ? TextAnchor.UpperRight : TextAnchor.UpperLeft, FontStyle.Bold).At(0, 1, 1, 1, 0, -50, 0, 0);
-            var bg = UI.Box(g, new Color(0, 0, 0, 0.6f), true, "bg").At(0, 0, 1, 0, 0, 30, 0, 66);
+            var bg = UI.Panel(UI.Box(g, new Color(0, 0, 0, 0.65f), true, "bg")).At(0, 0, 1, 0, 0, 30, 0, 66);
             barTrail[i] = UI.Box(bg.transform, new Color(1f, 0.92f, 0.8f, 0.85f), true, "trail").At(0, 0, 1, 1, 4, 4, -4, -4).rectTransform;
-            var fill = UI.Box(bg.transform, UI.Brass, true, "fill").At(0, 0, 1, 1, 4, 4, -4, -4);
+            var fill = UI.Shine(UI.Box(bg.transform, UI.Brass, true, "fill")).At(0, 0, 1, 1, 4, 4, -4, -4);
             barFill[i] = fill.rectTransform;
             barGroup[i] = g; barPos[i] = g.anchoredPosition;
             comboText[i] = UI.Label(fight.transform, "", 46, UI.Accent, left ? TextAnchor.UpperLeft : TextAnchor.UpperRight, FontStyle.Bold);
@@ -1079,7 +1096,8 @@ public partial class Game : MonoBehaviour
             comboText[i].gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0.8f);
             UI.Label(g, left ? "health = fight budget" : "health = fight budget", 18, UI.Dim, left ? TextAnchor.LowerLeft : TextAnchor.LowerRight).At(0, 0, 1, 0, 0, 0, 0, 26);
         }
-        UI.Label(fight.transform, "VS", 44, UI.Accent, TextAnchor.UpperCenter, FontStyle.Bold).At(0.5f, 1, 0.5f, 1, -100, -100, 100, -36);
+        var vs = UI.Panel(UI.Box(fight.transform, UI.Card, true, "vs"), new Color(1f, 0.58f, 0.13f, 0.6f)).At(0.5f, 1, 0.5f, 1, -62, -104, 62, -34);
+        UI.Label(vs.transform, "VS", 44, UI.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
         banner = UI.Label(fight.transform, "", 200, UI.Accent, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0.5f, 1, 0.5f, 0, -150, 0, 170);
         var bo = banner.gameObject.AddComponent<Outline>(); bo.effectColor = new Color(0, 0, 0, 0.85f); bo.effectDistance = new Vector2(4, -4);
         banner.gameObject.AddComponent<Shadow>().effectColor = new Color(0, 0, 0, 0.5f);
@@ -1094,13 +1112,13 @@ public partial class Game : MonoBehaviour
 
         UI.Btn(fight.transform, "‹  HOME", UI.Steel, UI.Ink, GoHome, 28).At(0, 0, 0, 0, 40, 40, 240, 110);
         // Fights are autonomous: no mic or typing bar here, coaching happens in Train.
-        var auto = UI.Box(fight.transform, new Color(0, 0, 0, 0.5f), true, "autonomous").At(0.5f, 0, 0.5f, 0, -620, 40, 620, 96);
+        var auto = UI.Panel(UI.Box(fight.transform, new Color(0.02f, 0.025f, 0.035f, 0.85f), true, "autonomous")).At(0.5f, 0, 0.5f, 0, -620, 40, 620, 96);
         fightTranscript = UI.Label(auto.transform, "", 26, UI.Ink, TextAnchor.MiddleCenter).At(0, 0, 1, 1, 20, 0, -20, 0);
     }
 
     Bubble BuildBubble(Transform root, Fighter f)
     {
-        var box = UI.Box(root, new Color(0.04f, 0.045f, 0.06f, 0.88f), true, "bubble:" + f.botId);
+        var box = UI.Panel(UI.Box(root, new Color(0.04f, 0.045f, 0.06f, 0.9f), true, "bubble:" + f.botId), f == a ? new Color(0.4f, 0.65f, 1f, 0.45f) : new Color(1f, 0.45f, 0.35f, 0.45f));
         var rt = box.rectTransform;
         rt.anchorMin = rt.anchorMax = Vector2.zero;
         rt.pivot = new Vector2(0.5f, 0);
@@ -1135,7 +1153,7 @@ public partial class Game : MonoBehaviour
         modalStatus = UI.Label(card.transform, "", 30, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 140, -50, 290);
         modalBtn = UI.Btn(card.transform, "CANCEL", UI.Steel, UI.Ink, () => CloseModal(true), 30);
         // Playing on the phone that has World App: open the approval link there (World App takes it), then come back.
-        modalOpenBtn = UI.Btn(card.transform, "OPEN WORLD APP", UI.Accent, UI.Bg, () => { if (!string.IsNullOrEmpty(approvalUri)) Application.OpenURL(approvalUri); }, 30);
+        modalOpenBtn = UI.Btn(card.transform, "OPEN WORLD APP", UI.Accent, UI.Bg, OpenApprovalSheet, 30);
         modalOpenBtn.At(0, 0, 0.5f, 0, 50, 36, -10, 100);
         modalBtn.At(0.5f, 0, 1, 0, 10, 36, -50, 100);
         modal.SetActive(false);
@@ -1196,7 +1214,9 @@ public partial class Game : MonoBehaviour
     void BuildKO(Transform root)
     {
         koPanel = UI.Box(root, new Color(0, 0, 0, 0.55f), false, "ko").At(0, 0, 1, 1).gameObject;
-        var band = UI.Box(koPanel.transform, new Color(0.05f, 0.05f, 0.06f, 0.94f), false, "band").At(0, 0.5f, 1, 0.5f, 0, -250, 0, 250);
+        var band = UI.Box(koPanel.transform, new Color(0.035f, 0.04f, 0.05f, 0.95f), false, "band").At(0, 0.5f, 1, 0.5f, 0, -250, 0, 250);
+        foreach (var edge in new[] { 1f, 0f }) UI.Halo(UI.Box(band.transform, UI.Accent, false, "edge").At(0, edge, 1, edge, 0, -2, 0, 2), UI.Accent, 0.3f);
+        koPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.65f);
         koTitle = UI.Label(band.transform, "", 104, UI.Red, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 1, 1, 1, 40, -150, -40, -20);
         koSub = UI.Label(band.transform, "", 34, UI.Ink, TextAnchor.MiddleCenter).At(0, 1, 1, 1, 40, -210, -40, -150);
         koLessons = UI.Label(band.transform, "", 26, UI.Dim, TextAnchor.UpperCenter).At(0, 0, 1, 1, 200, 110, -200, -230);
