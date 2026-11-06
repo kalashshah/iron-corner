@@ -130,9 +130,14 @@ async function runLive(c: Camp, b: Bot, rows: unknown[]) {
   if (!c.taskId) { // fresh camp (a resumed one already has its task)
     if ((await wallet.provider.getBalance(wallet.address)) < eth.parseEther("0.03")) throw new Error("camp_budget: trainer wallet below 0.03 0G");
     await ft.acknowledgeProviderSigner(p).catch((e: any) => console.log(`[camp] ack signer: ${String(e.message).slice(0, 120)}`));
-    const acct = await ft.getAccount(p).catch(() => null);
-    if (!acct || BigInt(acct.balance ?? 0) < eth.parseEther("0.04"))
-      await br.ledger.transferFund(p, "fine-tuning", eth.parseEther("0.05")).catch((e: any) => { throw new Error(`camp_budget: 0G ledger can't fund the provider (${String(e.message).slice(0, 120)})`); });
+    // The fee grows with the dataset (0.023 to 0.1 0G so far), and the provider refuses a task the sub-account can't
+    // cover in full, so keep it at 0.15+ (topping the ledger up from the wallet when needed).
+    const acct = await ft.getAccount(p).catch(() => null), have = BigInt(acct?.balance ?? 0), want = eth.parseEther("0.15");
+    if (have < want) {
+      const need = want - have, [, avail] = (await br.ledger.getLedger().catch(() => [])) as bigint[];
+      if (BigInt(avail ?? 0) < need) await br.ledger.depositFund(Number(eth.formatEther(need)) + 0.01);
+      await br.ledger.transferFund(p, "fine-tuning", need).catch((e: any) => { throw new Error(`camp_budget: 0G ledger can't fund the provider (${String(e.message).slice(0, 120)})`); });
+    }
     fs.mkdirSync(dir, { recursive: true });
     const data = path.join(dir, "data.jsonl"), params = path.join(dir, "training.json");
     fs.writeFileSync(data, rows.map((r) => JSON.stringify(r)).join("\n") + "\n");
