@@ -107,6 +107,10 @@ public partial class Game
     // After Connect: returning players go straight Home, everyone else starts at Welcome.
     IEnumerator Enter()
     {
+        // Restore a lost login (reinstall): launched once with IC_ARGS "-restoreToken|<token>|-restoreBot|<botId>" via devicectl.
+        // Only reachable through the launch environment, never from inside the app.
+        int ri = Array.IndexOf(Api.Args, "-restoreToken"), rb = Array.IndexOf(Api.Args, "-restoreBot");
+        if (ri >= 0 && rb >= 0 && ri + 1 < Api.Args.Length && rb + 1 < Api.Args.Length) { Remember("token", Api.Args[ri + 1]); Remember("botId", Api.Args[rb + 1]); }
         Api.Token = PlayerPrefs.GetString(Key("token"), "");
         string bot = PlayerPrefs.GetString(Key("botId"), "");
         if (bot == "" || (bot != "bot_a" && Api.Token == "")) { ShowPanel(welcome); yield break; }
