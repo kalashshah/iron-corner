@@ -715,6 +715,16 @@ public partial class Game : MonoBehaviour
 #if UNITY_IOS && !UNITY_EDITOR
     [System.Runtime.InteropServices.DllImport("__Internal")] static extern void IcWorldAuthOpen(string url);
 #endif
+    // A page that hands back to the app via ironcorner://: the in-app sheet on iOS, the system browser elsewhere.
+    void OpenSheet(string url)
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        IcWorldAuthOpen(url); return;
+#else
+        Application.OpenURL(url);
+#endif
+    }
+
     // iOS: in-app browser sheet (closes itself on the ironcorner:// redirect). Elsewhere: the system browser.
     void OpenApprovalSheet()
     {

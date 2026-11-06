@@ -204,7 +204,11 @@ public partial class Game
         UI.Label(f, "Your fighter's Hedera testnet wallet pays for every clean hit it takes. The faucet tops it up once a day.", 24, UI.Dim, TextAnchor.UpperLeft).H(70);
         UI.Big(f, UI.I("wallet") + "  Add Test Funds", true, AddFunds, 40).H(108);
         fundMsg = UI.Label(f, "", 22, UI.Ink, TextAnchor.UpperLeft).H(54);
-        UI.Big(f, UI.I("fight") + "  Find a Fight", false, FindClicked, 32).H(84);
+        // Your own 0G account pays for this fighter's AI calls instead of the house (linked on a Privy page in the in-app sheet).
+        UI.Box(f, UI.Line, false, "rule").H(2);
+        UI.Caption(f, "0G CREDITS").H(34);
+        zgLine = UI.Label(f, "", 24, UI.Ink, TextAnchor.UpperLeft).H(64);
+        zgBtn = UI.Big(f, "", false, ZgClicked, 30); zgBtn.H(80);
 
         // Find a fight: stake picker, then the searching panel
         var q = Page(root, "Find", "Find a Fight", null, out find);
@@ -339,7 +343,7 @@ public partial class Game
     IEnumerator LoadBalance()
     {
         fundBal.text = "…";
-        yield return Api.Call("GET", $"/bots/{a.botId}", null, r => fundBal.text = Money(r), e => fundBal.text = "—");
+        yield return Api.Call("GET", $"/bots/{a.botId}", null, r => { fundBal.text = Money(r); ZgShow(r); }, e => fundBal.text = "—");
     }
 
     void AddFunds()
@@ -350,6 +354,53 @@ public partial class Game
             fundMsg.text = $"<color=#5CDB85>Test funds sent \ue5ca</color>  <color=#8E8E93>tx {r["txId"]}</color>";
             StartCoroutine(LoadBalance());
         }, e => fundMsg.text = $"<color=#F2A33A>{e}</color>"));
+    }
+
+    // ---------------------------------------------------------------- 0G credits (bring your own 0G account)
+    TMP_Text zgLine; Button zgBtn; bool zgLinked;
+
+    void ZgShow(JToken bot)
+    {
+        var z = bot?["zgAccount"];
+        zgLinked = (bool?)z?["linked"] == true;
+        zgLine.text = zgLinked
+            ? $"0G credits: <b>yours</b> (…{z["last4"]})  <color=#8E8E93>· spent ${(double?)z["spentUsd"] ?? 0:0.0000} over {z["calls"] ?? 0} calls</color>"
+            : "0G credits: <b>House</b>  <color=#8E8E93>· the house pays for your fighter's AI calls</color>";
+        zgBtn.SetLabel(zgLinked ? "Unlink" : UI.I("bolt") + "  Use my 0G credits");
+    }
+
+    string ZgRefusal(string e) => Api.LastStatus == 503 ? "Coming soon" : Api.LastStatus is 401 or 403 ? "Create your own fighter to use your 0G credits" : e;
+
+    void ZgClicked()
+    {
+        zgBtn.interactable = false;
+        if (zgLinked)
+        {
+            StartCoroutine(Api.Call("DELETE", $"/bots/{a.botId}/zg", null,
+                r => { zgBtn.interactable = true; Toast("Back on house 0G credits"); StartCoroutine(LoadBalance()); },
+                e => { zgBtn.interactable = true; Toast(ZgRefusal(e)); }));
+            return;
+        }
+        StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/zg/link", new JObject(), r =>
+        {
+            zgBtn.interactable = true;
+            var url = (string)r["url"];
+            if (string.IsNullOrEmpty(url)) { Toast("Couldn't start the 0G link"); return; }
+            OpenSheet(url);
+            StartCoroutine(ZgPoll(session));
+        }, e => { zgBtn.interactable = true; var m = ZgRefusal(e); Toast(m); if (m == "Coming soon") zgLine.text = "0G credits: <b>House</b>  <color=#8E8E93>· your own 0G credits are coming soon</color>"; }));
+    }
+
+    // The sheet closes itself on the ironcorner://zg redirect and tells us nothing; watch the bot until it shows linked.
+    IEnumerator ZgPoll(int s)
+    {
+        for (int i = 0; i < 60 && s == session && !zgLinked; i++)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            if (s != session) yield break;
+            yield return Api.Call("GET", $"/bots/{a.botId}", null, r => { fundBal.text = Money(r); ZgShow(r); });
+            if (zgLinked) Toast("Your 0G credits are linked");
+        }
     }
 
     // ---------------------------------------------------------------- find a fight
