@@ -8,23 +8,28 @@ public static class UI
     public static Font Font;
     public static Sprite Round;
 
-    public static readonly Color Bg = new(0.035f, 0.04f, 0.055f, 0.97f);
-    public static readonly Color Card = new(0.06f, 0.068f, 0.09f, 0.96f); // linear-space blending washes out translucent darks, so keep panels near-opaque
-    public static readonly Color Line = new(1f, 1f, 1f, 0.08f);
-    public static readonly Color Accent = new(1f, 0.58f, 0.13f);
-    public static readonly Color Brass = new(0.88f, 0.68f, 0.34f);
-    public static readonly Color Ink = new(0.95f, 0.95f, 0.96f);
-    public static readonly Color Dim = new(0.62f, 0.65f, 0.7f);
-    public static readonly Color Green = new(0.36f, 0.86f, 0.52f);
-    public static readonly Color Red = new(0.95f, 0.32f, 0.26f);
-    public static readonly Color Steel = new(0.17f, 0.19f, 0.24f, 0.96f);
+    // Monochrome: near-black glass, white type, grey secondary. Colour only for meaning (green = good, red = damage).
+    // Linear-space blending washes out translucent darks, so panels stay near-opaque.
+    public static readonly Color Bg = new(0.035f, 0.035f, 0.04f, 0.95f);
+    public static readonly Color Card = new(0.06f, 0.06f, 0.066f, 0.9f);
+    public static readonly Color Line = new(1f, 1f, 1f, 0.09f);
+    public static readonly Color Accent = new(0.96f, 0.96f, 0.97f);      // primary: solid white pill, dark text
+    public static readonly Color Brass = new(0.93f, 0.93f, 0.94f);       // money, meter fills
+    public static readonly Color Ink = new(0.96f, 0.96f, 0.97f);
+    public static readonly Color Dim = new(0.56f, 0.56f, 0.6f);
+    public static readonly Color Green = new(0.42f, 0.84f, 0.58f);
+    public static readonly Color Red = new(0.93f, 0.36f, 0.32f);
+    public static readonly Color Steel = new(0.11f, 0.11f, 0.12f, 0.88f); // secondary: dark filled pill
+    public static readonly Color Outline = new(1f, 1f, 1f, 0.04f);        // outline pill: hairline white rim, glass fill
+    public static readonly Color Dark = new(0.05f, 0.05f, 0.06f);         // text on white
+    public static readonly Color Row = new(1f, 1f, 1f, 0.04f);            // list rows inside cards
 
-    public static Sprite Gloss, Ring, Glow;
+    public static Sprite Gloss, Ring, Glow, Circle, CircleRing;
     public static Action Click; // UI tick sound, hooked to Fx by Game
 
     public static void Init()
     {
-        Font = Font.CreateDynamicFontFromOSFont(new[] { "Avenir Next Condensed", "DIN Condensed", "Roboto Condensed", "Helvetica Neue", "Arial", "Arial Unicode MS" }, 48);
+        Font = Font.CreateDynamicFontFromOSFont(new[] { "Avenir Next", "Roboto", "Helvetica Neue", "Arial", "Arial Unicode MS" }, 48);
         if (Font == null) Font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         const int s = 64, r = 18;
         // One rounded-rect distance field, four looks: solid fill, top sheen, 2px rim, soft outer glow.
@@ -44,9 +49,13 @@ public static class UI
         }
         Round = Make((x, y) => 0.5f - Sd(x, y, s, r, 0), s, r);
         Gloss = Make((x, y) => Mathf.Clamp01(0.5f - Sd(x, y, s, r, 0)) * Mathf.InverseLerp(s * 0.4f, s, y), s, r);
-        Ring = Make((x, y) => { float d = Sd(x, y, s, r, 0); return Mathf.Min(0.5f - d, d + 2.5f); }, s, r);
+        Ring = Make((x, y) => { float d = Sd(x, y, s, r, 0); return Mathf.Min(0.5f - d, d + 2f); }, s, r);
         const int g = 128, pad = 40;
         Glow = Make((x, y) => { float d = Sd(x, y, g, 20, pad); return d <= 0 ? 1 : Mathf.Pow(1 - Mathf.Clamp01(d / pad), 2.2f); }, g, pad + 20);
+        const int c = 128;
+        float Cd(float x, float y) => Mathf.Sqrt((x - c / 2f) * (x - c / 2f) + (y - c / 2f) * (y - c / 2f)) - (c / 2f - 1);
+        Circle = Make((x, y) => 0.5f - Cd(x, y), c, 0);
+        CircleRing = Make((x, y) => { float d = Cd(x, y); return Mathf.Min(0.5f - d, d + 3.5f); }, c, 0);
     }
 
     public static GameObject Go(Transform parent, string name)
@@ -67,38 +76,40 @@ public static class UI
         return c;
     }
 
-    public static Image Box(Transform p, Color c, bool rounded = true, string name = "box")
+    // Sliced-sprite scale (texture radius 18px): cards get ~24px corners, buttons are full pills.
+    const float CardCorner = 0.75f, PillCorner = 0.4f;
+
+    public static Image Box(Transform p, Color c, bool rounded = true, string name = "box", float corner = CardCorner)
     {
         var img = Go(p, name).AddComponent<Image>();
         img.color = c;
-        if (rounded) { img.sprite = Round; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = 2f; }
+        if (rounded) { img.sprite = Round; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = corner; }
         if (rounded && (c == Card || c == Bg)) Panel(img);
         return img;
     }
 
-    static Image Layer(Transform p, Sprite sp, Color c, string name, float grow = 0)
+    static Image Layer(Image parent, Sprite sp, Color c, string name, float grow = 0)
     {
-        var img = Go(p, name).AddComponent<Image>();
-        img.sprite = sp; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = 2f; img.color = c; img.raycastTarget = false;
+        var img = Go(parent.transform, name).AddComponent<Image>();
+        img.sprite = sp; img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = sp == Glow ? 2f : parent.pixelsPerUnitMultiplier; img.color = c; img.raycastTarget = false;
         img.At(0, 0, 1, 1, -grow, -grow, grow, grow);
         return img;
     }
 
-    // Glassy card: soft drop shadow, faint top sheen, thin light rim.
+    // Glass card: soft drop shadow, faint top sheen, hairline rim.
     public static Image Panel(Image img, Color? rim = null)
     {
         img.gameObject.AddComponent<SoftShadow>();
-        Layer(img.transform, Gloss, new Color(1, 1, 1, 0.045f), "sheen");
-        Layer(img.transform, Ring, rim ?? new Color(1, 1, 1, 0.09f), "rim");
+        Layer(img, Gloss, new Color(1, 1, 1, 0.035f), "sheen");
+        Layer(img, Ring, rim ?? new Color(1, 1, 1, 0.1f), "rim");
         return img;
     }
 
     // Sheen on a bar fill so meters read as lit tubes rather than flat strips.
-    public static Image Shine(Image img) { Layer(img.transform, Gloss, new Color(1, 1, 1, 0.35f), "shine"); return img; }
+    public static Image Shine(Image img) { Layer(img, Gloss, new Color(1, 1, 1, 0.25f), "shine"); return img; }
 
-    // Soft coloured halo around an element (accent buttons, active states).
-    // The glow's 40px falloff in the texture is scaled to fit the 26px it grows past the edge.
-    public static Image Halo(Image img, Color c, float alpha = 0.35f) { var h = Layer(img.transform, Glow, new Color(c.r, c.g, c.b, alpha), "halo", 26); h.transform.SetAsFirstSibling(); h.pixelsPerUnitMultiplier = 40f / 26f; return h; }
+    // Soft halo around an element. The glow's 40px falloff in the texture is scaled to fit the 26px it grows past the edge.
+    public static Image Halo(Image img, Color c, float alpha = 0.35f) { var h = Layer(img, Glow, new Color(c.r, c.g, c.b, alpha), "halo", 26); h.transform.SetAsFirstSibling(); h.pixelsPerUnitMultiplier = 40f / 26f; return h; }
 
     public static Text Label(Transform p, string s, int size, Color c, TextAnchor a = TextAnchor.MiddleLeft, FontStyle st = FontStyle.Normal)
     {
@@ -110,38 +121,96 @@ public static class UI
         return t.At(0, 0, 1, 1);
     }
 
-    public static Button Btn(Transform p, string label, Color bg, Color fg, Action click, int size = 34)
+    // Pill button. bg picks the style: Accent = solid white, Outline = hairline rim, Steel = dark fill, clear = text only.
+    public static Button Btn(Transform p, string label, Color bg, Color fg, Action click, int size = 28)
     {
-        var img = Box(p, bg, true, "btn:" + label);
+        var img = Box(p, bg, true, "btn:" + label, PillCorner);
         var b = img.gameObject.AddComponent<Button>();
-        var cb = b.colors; cb.highlightedColor = new Color(1.12f, 1.12f, 1.12f); cb.pressedColor = new Color(0.78f, 0.78f, 0.78f); cb.disabledColor = new Color(0.55f, 0.55f, 0.55f, 0.6f); cb.fadeDuration = 0.08f; b.colors = cb;
+        var cb = b.colors; cb.highlightedColor = new Color(1.1f, 1.1f, 1.1f); cb.pressedColor = new Color(0.75f, 0.75f, 0.75f); cb.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.55f); cb.fadeDuration = 0.08f; b.colors = cb;
         b.navigation = new Navigation { mode = Navigation.Mode.None };
-        if (bg.a > 0.05f)
+        if (bg == Outline) Layer(img, Ring, new Color(1, 1, 1, 0.7f), "rim");
+        else if (bg.a > 0.05f)
         {
             img.gameObject.AddComponent<SoftShadow>();
-            Layer(img.transform, Gloss, new Color(1, 1, 1, bg.grayscale > 0.4f ? 0.28f : 0.1f), "sheen");
-            Layer(img.transform, Ring, new Color(1, 1, 1, bg.grayscale > 0.4f ? 0.22f : 0.08f), "rim");
-            if (bg == Accent) Halo(img, Accent, 0.28f);
+            Layer(img, Gloss, new Color(1, 1, 1, bg.grayscale > 0.5f ? 0.18f : 0.04f), "sheen");
+            Layer(img, Ring, new Color(1, 1, 1, bg.grayscale > 0.5f ? 0f : 0.09f), "rim");
         }
         img.gameObject.AddComponent<Press>();
         if (click != null) b.onClick.AddListener(() => click());
-        Label(img.transform, label, size, fg, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0, 1, 1, 12, 0, -12, 0);
+        Label(img.transform, label, size, fg, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0, 1, 1, 14, 0, -14, 0);
         return b;
     }
 
     public static void SetLabel(this Button b, string s) => b.GetComponentInChildren<Text>().text = s;
 
-    public static InputField Field(Transform p, string placeholder, string value, int size = 28)
+    // Round icon button (back arrow, menu).
+    public static Button Round1(Transform p, string glyph, Action click, int size = 34)
     {
-        var img = Box(p, new Color(0, 0, 0, 0.55f), true, "field");
-        Layer(img.transform, Ring, new Color(1, 1, 1, 0.1f), "rim");
+        var b = Btn(p, glyph, Steel, Ink, click, size);
+        var img = b.GetComponent<Image>(); img.sprite = Circle; img.type = Image.Type.Simple;
+        foreach (var l in img.GetComponentsInChildren<Image>()) if (l != img) l.gameObject.SetActive(false);
+        b.GetComponentInChildren<Text>().At(0, 0, 1, 1, 0, 3, 0, 0);
+        return b;
+    }
+
+    // Round back button with the screen title beside it ("← Sparring").
+    public static Button Back(Transform p, string title, Action click)
+    {
+        var g = Rt(p, "back").At(0, 1, 0, 1, 40, -112, 700, -40);
+        var b = Round1(g, "←", click);
+        b.At(0, 0, 0, 1, 0, 0, 72, 0);
+        if (!string.IsNullOrEmpty(title)) Label(g, title, 38, Ink, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 1, 1, 96, 0, 0, 0);
+        return b;
+    }
+
+    // Card heading: bold title, dim one-line subtitle.
+    public static void Header(Transform col, string title, string sub = null, int size = 38)
+    {
+        Label(col, title, size, Ink, TextAnchor.LowerLeft, FontStyle.Bold).H(size + 14);
+        if (!string.IsNullOrEmpty(sub)) Label(col, sub, 23, Dim, TextAnchor.UpperLeft).H(34);
+    }
+
+    // Small uppercase section caption in grey.
+    public static Text Caption(Transform p, string s) => Label(p, s, 18, Dim, TextAnchor.LowerLeft, FontStyle.Bold);
+
+    // Thin meter: dark track, white fill. Returns the fill (SetFill drives its right anchor).
+    public static RectTransform Meter(Transform p)
+    {
+        var bg = Box(p, new Color(1, 1, 1, 0.12f), true, "track", PillCorner).At(0, 0, 1, 1);
+        var f = Box(bg.transform, Brass, true, "fill", PillCorner).At(0, 0, 1, 1);
+        return f.rectTransform;
+    }
+
+    // Left-edge scrim: black fading to clear over `width` px.
+    public static void Fade(Transform p, float width)
+    {
+        var t = new Texture2D(64, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        for (int x = 0; x < 64; x++) t.SetPixel(x, 0, new Color(0, 0, 0, 0.9f * Mathf.Pow(1 - x / 63f, 1.1f)));
+        t.Apply();
+        var img = Go(p, "fade").AddComponent<RawImage>(); img.texture = t; img.raycastTarget = false;
+        img.At(0, 0, 0, 1, -200, -200, width, 200); img.transform.SetAsFirstSibling();
+    }
+
+    // Disc portrait with a ring and an initial (fight health bars).
+    public static Text Portrait(Transform p, Color ring, string initial)
+    {
+        var disc = Go(p, "portrait").AddComponent<Image>(); disc.sprite = Circle; disc.color = new Color(0.07f, 0.07f, 0.075f, 0.95f); disc.raycastTarget = false;
+        disc.gameObject.AddComponent<SoftShadow>();
+        var rim = Go(disc.transform, "rim").AddComponent<Image>(); rim.sprite = CircleRing; rim.color = ring; rim.raycastTarget = false; rim.At(0, 0, 1, 1);
+        return Label(disc.transform, initial, 40, ring, TextAnchor.MiddleCenter, FontStyle.Bold).At(0, 0, 1, 1, 0, 2, 0, 0);
+    }
+
+    public static InputField Field(Transform p, string placeholder, string value, int size = 26)
+    {
+        var img = Box(p, new Color(0, 0, 0, 0.5f), true, "field", PillCorner);
+        Layer(img, Ring, new Color(1, 1, 1, 0.14f), "rim");
         var f = img.gameObject.AddComponent<InputField>();
-        var txt = Label(img.transform, value, size, Ink).At(0, 0, 1, 1, 18, 0, -18, 0);
+        var txt = Label(img.transform, value, size, Ink).At(0, 0, 1, 1, 24, 0, -24, 0);
         txt.supportRichText = false;
         txt.horizontalOverflow = HorizontalWrapMode.Overflow;
-        var ph = Label(img.transform, placeholder, size, Dim, TextAnchor.MiddleLeft, FontStyle.Italic).At(0, 0, 1, 1, 18, 0, -18, 0);
+        var ph = Label(img.transform, placeholder, size, Dim, TextAnchor.MiddleLeft, FontStyle.Italic).At(0, 0, 1, 1, 24, 0, -24, 0);
         f.textComponent = txt; f.placeholder = ph; f.text = value;
-        f.selectionColor = new Color(Accent.r, Accent.g, Accent.b, 0.35f); f.caretColor = Accent; f.customCaretColor = true; f.caretWidth = 3;
+        f.selectionColor = new Color(1, 1, 1, 0.25f); f.caretColor = Ink; f.customCaretColor = true; f.caretWidth = 3;
         return f;
     }
 
