@@ -76,7 +76,8 @@ export async function start(b: Bot) {
   const camps = Object.values(state.camps), today = day();
   if (camps.some((c) => c.botId === b.botId && c.day === today && c.status !== "failed")) refuse("camp_today");
   if (camps.some((c) => c.status !== "done" && c.status !== "failed")) refuse("camp_busy"); // one wallet, one camp at a time
-  if (camps.filter((c) => c.day === today && !c.mock).length >= MAX_PER_DAY && LIVE) refuse("camp_budget");
+  // Failed camps cost (almost) nothing, so only camps that ran count toward the daily cap.
+  if (camps.filter((c) => c.day === today && !c.mock && c.status !== "failed").length >= MAX_PER_DAY && LIVE) refuse("camp_budget");
   const c: Camp = { campId: id("camp"), botId: b.botId, day: today, status: "queued", taskId: null, progress: null, version: null,
     adapterRoot: null, loss: null, examples: rows.length, startedAt: new Date().toISOString(), ...(LIVE ? {} : { mock: true }) };
   state.camps[c.campId] = c; b.campId = c.campId; save();
