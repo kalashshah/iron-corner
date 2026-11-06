@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import type { QEntry } from "./state.ts";
 
 export const STAKES = [10, 25, 50];
-export const HOUSE_AFTER_S = 25, PREV_OPP_LOCK_S = 60;
+export const HOUSE_AFTER_S = Number(process.env.HOUSE_AFTER_S ?? 25), PREV_OPP_LOCK_S = 60; // HOUSE_AFTER_S: raise briefly to line up two live players
 export const windowFor = (waitedSec: number) => Math.min(800, 150 + 25 * waitedSec);
 
 // Oldest entry first. Candidates: same league + stake, different owner, not the previous opponent (unless the older
