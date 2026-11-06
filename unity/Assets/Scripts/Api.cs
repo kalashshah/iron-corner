@@ -99,13 +99,17 @@ public static class Api
         }
     }
 
+    // Status and JSON body of the most recent failed call, for screens that explain a refusal (e.g. 409 {reason, have, need}).
+    public static long LastStatus; public static JObject LastBody;
+
     static void Finish(UnityWebRequest req, Action<JToken> ok, Action<string> fail)
     {
         var text = req.downloadHandler != null ? req.downloadHandler.text : null;
         if (req.result != UnityWebRequest.Result.Success)
         {
             string msg = req.error;
-            try { if (!string.IsNullOrEmpty(text)) { var j = JObject.Parse(text); msg = (string)j["error"] ?? (string)j["reason"] ?? msg; } } catch { }
+            LastStatus = req.responseCode; LastBody = null;
+            try { if (!string.IsNullOrEmpty(text)) { var j = JObject.Parse(text); LastBody = j; msg = (string)j["error"] ?? (string)j["reason"] ?? msg; } } catch { }
             Debug.LogWarning($"[api] {req.method} {req.url} -> {msg}");
             fail?.Invoke(msg);
             return;

@@ -638,13 +638,35 @@ public partial class Game
                 "<size=21><color=#8E8E93>One camp per bot per day.</color></size>",
             };
             campBody.text = string.Join("\n", lines);
-            campBtn.interactable = demos >= 40 && !running;
+            campBtn.interactable = demos >= 40 && !running && Time.unscaledTime >= campCoolUntil;
             campBtn.SetLabel(running ? "In camp…" : "Start Training  \ue037");
             yield return new WaitForSecondsRealtime(running ? 3f : 10f);
         }
     }
 
-    void SendToCamp() => StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/camp", new JObject(), r => { Toast("Off to camp: fine-tuning on 0G"); OpenCamp(); }, e => Toast("Camp: " + e)));
+    // One tap per few seconds (the server allows 3 camp requests a minute), and refusals in plain words.
+    void SendToCamp()
+    {
+        campBtn.interactable = false; campCoolUntil = Time.unscaledTime + 4f;
+        StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/camp", new JObject(),
+            r => { Toast("Off to camp: fine-tuning on 0G"); OpenCamp(); },
+            e => { Toast(CampRefusal(e)); StartCoroutine(ReenableCamp(session)); }));
+    }
+
+    float campCoolUntil;
+    IEnumerator ReenableCamp(int s) { yield return new WaitForSecondsRealtime(4f); if (s == session) campBtn.interactable = true; }
+
+    string CampRefusal(string e)
+    {
+        var body = Api.LastBody;
+        string reason = (string)body?["reason"] ?? (string)body?["error"] ?? e ?? "";
+        if (Api.LastStatus == 429) return "Slow down, try again in a minute";
+        if (reason.StartsWith("camp_budget")) return "Camp is full for today, try tomorrow";
+        if (reason.StartsWith("camp_today")) return $"{a.displayName} already went to camp today";
+        if (reason.StartsWith("camp_busy")) return "Another fighter is in camp, try in a few minutes";
+        if (reason.StartsWith("not_enough_demos")) return $"Spar more first: {body?["have"] ?? "?"}/{body?["need"] ?? 40} moves";
+        return "Camp: " + e;
+    }
 
     // ---------------------------------------------------------------- capture: first-run sequence (-capture <dir> -flow [-offline])
     IEnumerator CaptureFlow(Func<string, IEnumerator> shot)
