@@ -37,7 +37,7 @@ public partial class Game : MonoBehaviour
     RectTransform[] barFill = new RectTransform[2];
     Transform ticker;
     Bubble bubA, bubB;
-    Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn; string approvalId; bool approvalOpen;
+    Text modalAction, modalCode, modalStatus, modalExplain; RawImage modalQr; Button modalBtn, modalOpenBtn; string approvalId, approvalUri; bool approvalOpen;
     Text koTitle, koSub, koLessons; Button koLedger;
     readonly List<(Text t, float born, Vector3 world)> popups = new();
     float toastUntil;
@@ -656,7 +656,7 @@ public partial class Game : MonoBehaviour
 
     void Approve(string action, string label, Action<string> onApproved) =>
         Approve("/approvals", new JObject { ["botId"] = a.botId, ["action"] = action }, label,
-            "Scan with World App on your phone. A human must OK every high-stakes action; each approval works once.", "CANCEL", onApproved, null);
+            "Tap Open World App (or scan from another phone). A human must OK every high-stakes action; each approval works once.", "CANCEL", onApproved, null);
 
     // Any World ID device-flow approval (high stakes, revive, sign-in). onClosed runs when the player closes it without approving.
     Action modalClosed;
@@ -671,6 +671,8 @@ public partial class Game : MonoBehaviour
             modalAction.text = label;
             modalExplain.text = explain;
             modalCode.text = $"Code  <b>{r["userCode"]}</b>";
+            approvalUri = Api.Offline ? null : (string)r["qrUri"];
+            modalOpenBtn.gameObject.SetActive(approvalUri != null);
             modalStatus.text = "<color=#F2A33A>Waiting for World ID approval…</color>" + (Api.Offline ? "\n<size=20>OFFLINE: placeholder code, auto-approves in a few seconds</size>" : "");
             modalBtn.SetLabel(closeLabel);
             modalQr.texture = null;
@@ -1132,7 +1134,10 @@ public partial class Game : MonoBehaviour
         modalCode = UI.Label(card.transform, "", 40, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 300, -50, 370);
         modalStatus = UI.Label(card.transform, "", 30, UI.Ink, TextAnchor.UpperLeft).At(0, 0, 1, 0, 520, 140, -50, 290);
         modalBtn = UI.Btn(card.transform, "CANCEL", UI.Steel, UI.Ink, () => CloseModal(true), 30);
-        modalBtn.At(0, 0, 1, 0, 50, 36, -50, 100);
+        // Playing on the phone that has World App: open the approval link there (World App takes it), then come back.
+        modalOpenBtn = UI.Btn(card.transform, "OPEN WORLD APP", UI.Accent, UI.Bg, () => { if (!string.IsNullOrEmpty(approvalUri)) Application.OpenURL(approvalUri); }, 30);
+        modalOpenBtn.At(0, 0, 0.5f, 0, 50, 36, -10, 100);
+        modalBtn.At(0.5f, 0, 1, 0, 10, 36, -50, 100);
         modal.SetActive(false);
     }
 
