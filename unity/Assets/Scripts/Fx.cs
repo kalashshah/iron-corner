@@ -21,6 +21,8 @@ public class Fx : MonoBehaviour
     readonly AudioClip[] music = new AudioClip[3]; readonly float[][] musicData = new float[3][];
     public float musicVolume = 0.5f;
     AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur, tick, dodge, slam, ooh, ding;
+    // Recorded impacts (Kenney "Impact Sounds", CC0) in Resources/Sfx; the synthesized ones above are the fallback.
+    AudioClip[] sfxBasic, sfxHeavy, sfxMajor; // jab/cross/body · hooks/uppercut · slow-mo specials and K.O.
 
     void Awake()
     {
@@ -52,6 +54,9 @@ public class Fx : MonoBehaviour
         srcs = new AudioSource[12];
         for (int i = 0; i < srcs.Length; i++) { srcs[i] = gameObject.AddComponent<AudioSource>(); srcs[i].playOnAwake = false; srcs[i].spatialBlend = 0; }
         BuildSounds();
+        AudioClip[] Set(string prefix) { var s = Array.FindAll(Resources.LoadAll<AudioClip>("Sfx"), c => c.name.StartsWith(prefix)); return s.Length > 0 ? s : null; }
+        sfxBasic = Set("impactPlate_light"); sfxHeavy = Set("impactSoft_heavy"); sfxMajor = Set("impactMining");
+        Debug.Log($"[sfx] basic {sfxBasic?.Length ?? 0}, heavy {sfxHeavy?.Length ?? 0}, major {sfxMajor?.Length ?? 0}");
         crowdLoop = gameObject.AddComponent<AudioSource>();
         crowdLoop.clip = murmur; crowdLoop.loop = true; crowdLoop.volume = 0f; crowdLoop.Play();
         musicA = gameObject.AddComponent<AudioSource>(); musicB = gameObject.AddComponent<AudioSource>();
@@ -103,7 +108,9 @@ public class Fx : MonoBehaviour
             Emit(sparks, at, 14 + dmg * 7); Emit(glow, at, 1);
             if (heavy) Emit(debris, at, 4 + dmg);
             Light(at, new Color(1f, 0.65f, 0.3f), 9f + dmg * 5f);
-            Play(move == "body" ? body : heavy ? punchHeavy : punch, 0.75f + dmg * 0.06f, Random.Range(0.92f, 1.08f));
+            var set = heavy ? sfxHeavy : sfxBasic;
+            if (set != null) Play(set[Random.Range(0, set.Length)], 0.85f + dmg * 0.04f, Random.Range(0.92f, 1.08f));
+            else Play(move == "body" ? body : heavy ? punchHeavy : punch, 0.75f + dmg * 0.06f, Random.Range(0.92f, 1.08f));
             shake = Mathf.Min(1f, shake + 0.22f + dmg * 0.09f);
             excite = Mathf.Min(1f, excite + 0.1f + dmg * 0.06f);
             if (dmg >= 4) Play(cheer, 0.45f, Random.Range(0.95f, 1.05f));
@@ -125,7 +132,8 @@ public class Fx : MonoBehaviour
     {
         Emit(sparks, at, 110); Emit(glow, at, 3); Emit(debris, at, 18); Emit(flashes, at, 2);
         Light(at, new Color(1f, 0.75f, 0.45f), 45f);
-        Play(slam, 1f, 1f); Play(ooh, 0.8f, 1f);
+        if (sfxMajor != null) Play(sfxMajor[Random.Range(0, sfxMajor.Length)], 1f, Random.Range(0.92f, 1.02f)); else Play(slam, 1f, 1f);
+        Play(ooh, 0.8f, 1f);
         shake = 1f; excite = 1f;
     }
 
@@ -138,7 +146,8 @@ public class Fx : MonoBehaviour
     {
         Emit(sparks, at, 60); Emit(glow, at, 2); Emit(debris, at, 14);
         Light(at, new Color(1f, 0.75f, 0.45f), 30f);
-        Play(boom, 0.9f, 1f); Play(punchHeavy, 0.9f, 0.85f);
+        Play(boom, 0.9f, 1f);
+        if (sfxMajor != null) Play(sfxMajor[Random.Range(0, sfxMajor.Length)], 1f, 0.9f); else Play(punchHeavy, 0.9f, 0.85f);
         Play(cheer, 0.8f, 1f); Invoke(nameof(Cheer2), 0.7f);
         shake = 1f; excite = 1f;
         Bell(3);
