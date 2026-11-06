@@ -29,12 +29,12 @@ public partial class Game : MonoBehaviour
     // UI
     Transform canvas;
     GameObject home, train, fight, brain, koPanel, campDot, tabs;
-    TMP_Text badge, toast, cardName, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
+    TMP_Text badge, toast, cardName, cardEns, cardMoney, cardBrain, cardAcct, cardDaily, serverStatus, brainList, trainDaily;
     TMP_InputField serverField, trainField;
     readonly List<string> counterAttacks = new(); // attacks your bot has a taught counter for; the sparring dummy throws these
     Button fightBtn, highBtn; bool aAlive = true, aNeedsRevive;
     TMP_Text trainTranscript, trainSaved, fightTranscript, fightTitle;
-    TMP_Text[] barName = new TMP_Text[2], barMoney = new TMP_Text[2];
+    TMP_Text[] barName = new TMP_Text[2], barMoney = new TMP_Text[2], barEns = new TMP_Text[2];
     RectTransform[] barFill = new RectTransform[2];
     Transform ticker;
     Bubble bubA, bubB;
@@ -429,7 +429,7 @@ public partial class Game : MonoBehaviour
         slowmoUntil = Time.unscaledTime + 1.6f; slowScale = 0.3f;
         yield return new WaitForSecondsRealtime(2.2f);
         if (s != session) yield break;
-        koTitle.color = UI.Amber; koTitle.text = "K.O."; koWin.text = $"{winner.displayName} Wins";
+        koTitle.color = UI.Amber; koTitle.text = "K.O."; koWin.text = WinLine(winner);
         koSub.text = $"{loser.displayName}'s fight budget is empty: it can't cover the next hit.";
         koLessons.text = "Saving lessons to 0G…";
         koLedger.gameObject.SetActive(!Api.Offline && !string.IsNullOrEmpty(ledgerTopic) && ledgerTopic != "offline");
@@ -449,7 +449,9 @@ public partial class Game : MonoBehaviour
         {
             var f = fs[i];
             float k = f.startBudget > 0 ? Mathf.Clamp01((float)f.budget / f.startBudget) : 0;
-            barName[i].text = f.displayName.ToUpperInvariant() + (f.down ? "  <color=#F2523F>KO</color>" : "");
+            barName[i].text = (Belt(f) && i == 1 ? BeltIcon + " " : "") + f.displayName.ToUpperInvariant() + (Belt(f) && i == 0 ? " " + BeltIcon : "") + (f.down ? "  <color=#F2523F>KO</color>" : "")
+;
+            barEns[i].text = EnsOf(f) ?? "";
             portrait[i].text = string.IsNullOrEmpty(f.displayName) ? "" : f.displayName.Substring(0, 1).ToUpperInvariant();
             barMoney[i].text = UI.Usd(f.budget);
             if (i == 0) barFill[i].anchorMax = new Vector2(k, 1); else barFill[i].anchorMin = new Vector2(1 - k, 0);
@@ -937,6 +939,7 @@ public partial class Game : MonoBehaviour
         // Bottom strip: player plate left, brain line centre, wallet + stats right.
         var plate = UI.Rt(home.transform, "plate").At(0, 0, 0, 0, 40, 26, 760, 156);
         cardName = UI.Label(plate, "Brass Knuckle", 46, UI.Ink, TextAnchor.LowerLeft, FontStyle.BoldAndItalic).At(0, 0.42f, 1, 1);
+        cardEns = UI.Label(plate, "", 22, UI.Amber, TextAnchor.LowerLeft, FontStyle.Bold).At(0, 1, 1, 1, 0, 0, 0, 30); // ENS name above the fighter name
         cardLevel = UI.Label(plate, "LV 1", 24, UI.Amber, TextAnchor.MiddleLeft, FontStyle.Bold).At(0, 0, 0, 0.42f, 0, 0, 80, 0);
         xpFill = UI.Meter(UI.Rt(plate, "xp").At(0, 0, 0, 0, 84, 20, 400, 28));
         cardXp = UI.Label(plate, "0/100 XP", 18, UI.Dim, TextAnchor.MiddleLeft).At(0, 0, 0, 0.42f, 414, 0, 640, 0);
@@ -1147,6 +1150,7 @@ public partial class Game : MonoBehaviour
             float inL = left ? 132 : 0, inR = left ? 0 : -132;
             barName[i] = UI.Label(g, "", 40, UI.Ink, left ? TextAnchor.LowerLeft : TextAnchor.LowerRight, FontStyle.BoldAndItalic).At(0, 0.5f, 1, 1, inL, 6, inR, 0);
             barMoney[i] = UI.Label(g, "", 24, UI.Brass, left ? TextAnchor.UpperRight : TextAnchor.UpperLeft, FontStyle.Bold).At(0, 0, 1, 0.5f, inL, -6, inR, -30);
+            barEns[i] = UI.Label(g, "", 20, UI.Dim, left ? TextAnchor.UpperLeft : TextAnchor.UpperRight, FontStyle.Bold).At(0, 0, 1, 0.5f, inL, -6, inR, -30); // ENS name, opposite end from the money
             var frame = UI.Box(g, new Color(0, 0, 0, 0.7f), false, "frame").At(0, 0.5f, 1, 0.5f, inL, -26, inR, 0);
             UI.Panel(frame, new Color(1, 1, 1, 0.25f));
             barTrail[i] = UI.Box(frame.transform, new Color(1f, 0.4f, 0.3f, 0.85f), false, "trail").At(0, 0, 1, 1, 3, 3, -3, -3).rectTransform;
@@ -1289,7 +1293,7 @@ public partial class Game : MonoBehaviour
         UI.Box(koPanel.transform, new Color(0.01f, 0.01f, 0.012f, 0.74f), false, "dim").At(0, 0, 1, 1, -600, -600, 600, 600); // bleeds past the safe area
         koTitle = UI.Label(koPanel.transform, "", 280, UI.Amber, TextAnchor.MiddleCenter, FontStyle.Italic).At(0, 0.5f, 1, 0.5f, 40, 70, -40, 400);
         Stroke(koTitle, 0.1f);
-        koWin = UI.Label(koPanel.transform, "", 64, UI.Ink, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0, 0.5f, 1, 0.5f, 40, -20, -40, 80);
+        koWin = UI.Label(koPanel.transform, "", 64, UI.Ink, TextAnchor.MiddleCenter, FontStyle.BoldAndItalic).At(0, 0.5f, 1, 0.5f, 40, -50, -40, 80);
         UI.Big(koPanel.transform, UI.I("refresh") + "  Fight Again", true, () => { GoHome(); FindClicked(); }, 44, pulse: true).At(0.5f, 0.5f, 0.5f, 0.5f, -560, -180, -100, -70);
         UI.Big(koPanel.transform, UI.I("home") + "  Lobby", false, GoHome, 36).At(0.5f, 0.5f, 0.5f, 0.5f, -80, -180, 200, -70);
         UI.Big(koPanel.transform, "Details", false, () => koDetails.SetActive(!koDetails.activeSelf), 36).At(0.5f, 0.5f, 0.5f, 0.5f, 220, -180, 500, -70);

@@ -141,7 +141,10 @@ public partial class Game
     {
         if (bot["paint"] is JValue pv && pv.Type == JTokenType.String) { paint = (string)pv; ApplyPaint(a, paint); }
         string hex = ColorUtility.ToHtmlStringRGB(PaintColor(paint));
-        cardName.text = a.displayName + (bot["paint"] != null ? $" <size=34><color=#{hex}>●</color></size>" : "");
+        aEns = (string)(bot["ens"] as JObject)?["name"]; aEnsApp = (string)(bot["ens"] as JObject)?["app"];
+        aBelt = (bool?)(bot["nft"] as JObject)?["holdsBelt"] == true;
+        cardName.text = a.displayName + (bot["paint"] != null ? $" <size=34><color=#{hex}>●</color></size>" : "") + (aBelt ? " " + BeltIcon : "");
+        cardEns.text = aEns ?? "";
         trained = (bool?)bot["onboarding"]?["trained"] != false;
         var parts = new List<string>();
         if (bot["rating"] != null) parts.Add($"RATING {bot["rating"]}");
@@ -218,6 +221,15 @@ public partial class Game
         UI.Label(f, "Your fighter's Hedera testnet wallet pays for every clean hit it takes. The faucet tops it up once a day.", 22, UI.Dim, TextAnchor.UpperLeft).H(58);
         UI.Big(f, UI.I("wallet") + "  Add Test Funds", true, AddFunds, 38).H(96);
         fundMsg = UI.Label(f, "", 22, UI.Ink, TextAnchor.UpperLeft).H(40);
+        // ENS name: the server writes fight records, only the fighter's own key writes its bio.
+        UI.Box(f, UI.Line, false, "rule").H(2);
+        UI.Caption(f, "ENS NAME").H(34);
+        ensBtn = UI.Big(f, "", false, () => { if (aEnsApp != null) Application.OpenURL(aEnsApp); }, 28); ensBtn.H(70);
+        UI.Label(f, "The server can only write fight results (record, rating, brain). Only your fighter's own key can write its bio and avatar.", 21, UI.Dim, TextAnchor.UpperLeft).H(56);
+        ensBio = UI.Field(f, "Your fighter's bio (140 characters)", "", 24); ensBio.characterLimit = 140; ensBio.H(70);
+        ensSave = UI.Big(f, UI.I("check") + "  Save bio", false, SaveBio, 28); ensSave.H(70);
+        ensMsg = UI.Btn(f, "", new Color(0, 0, 0, 0), UI.Ink, () => { if (ensTx != null) Application.OpenURL(ensTx); }, 22); ensMsg.H(56);
+        ensMsg.GetComponentInChildren<TMP_Text>().SetAlign(TextAnchor.MiddleLeft);
         // Your own 0G account pays for this fighter's AI calls instead of the house (linked on a Privy page in the in-app sheet).
         UI.Box(f, UI.Line, false, "rule").H(2);
         UI.Caption(f, "0G CREDITS").H(34);
@@ -340,7 +352,7 @@ public partial class Game
     IEnumerator LoadBalance()
     {
         fundBal.text = "…";
-        yield return Api.Call("GET", $"/bots/{a.botId}", null, r => { fundBal.text = Money(r); ZgShow(r); }, e => fundBal.text = "—");
+        yield return Api.Call("GET", $"/bots/{a.botId}", null, r => { fundBal.text = Money(r); ZgShow(r); EnsShow(r); }, e => fundBal.text = "—");
     }
 
     void AddFunds()
@@ -352,6 +364,75 @@ public partial class Game
             fx.Coin();
             StartCoroutine(LoadBalance());
         }, e => fundMsg.text = $"<color=#F2A33A>{e}</color>"));
+    }
+
+    // ---------------------------------------------------------------- ENS identity (kal.ironcorner.eth), scouting, title belt
+    string aEns, aEnsApp, bEns, ensTx; bool aBelt, bBelt, ensBusy;
+    Button ensBtn, ensSave, ensMsg; TMP_InputField ensBio;
+    static readonly string BeltIcon = "<color=#FFC24A>" + UI.I("trophy") + "</color>";
+    string EnsOf(Fighter f) => f == a ? aEns : f == b ? bEns : null;
+    bool Belt(Fighter f) => f == a ? aBelt : f == b && bBelt;
+    string WinLine(Fighter w) => $"{w.displayName} Wins" + (EnsOf(w) != null ? $"\n<size=30><color=#A8A399>{EnsOf(w)}</color></size>" : "");
+
+    void EnsShow(JToken bot)
+    {
+        var ens = bot?["ens"] as JObject;
+        aEns = (string)ens?["name"]; aEnsApp = (string)ens?["app"];
+        ensBtn.SetLabel(aEns != null ? $"{aEns}  <color=#A8A399>{UI.I("globe")} ENS</color>" : "<color=#A8A399>Your ENS name is on its way…</color>");
+        ensBtn.interactable = aEnsApp != null;
+        bool owner = aEns != null && a.botId != "bot_a" && !string.IsNullOrEmpty(Api.Token);
+        ensBio.gameObject.SetActive(owner); ensSave.gameObject.SetActive(owner);
+        if (owner && !ensBusy && !ensBio.isFocused) ensBio.text = (string)ens["records"]?["description"] ?? "";
+    }
+
+    void SaveBio()
+    {
+        if (ensBusy) return;
+        var bio = ensBio.text.Trim();
+        if (bio.Length > 140) bio = bio.Substring(0, 140);
+        ensBusy = true; ensSave.interactable = false; ensTx = null;
+        StartCoroutine(Spin());
+        StartCoroutine(Api.Call("PUT", $"/bots/{a.botId}/ens", new JObject { ["key"] = "description", ["value"] = bio }, r =>
+        {
+            ensBusy = false; ensSave.interactable = true;
+            ensTx = (string)r["etherscan"];
+            ensMsg.SetLabel($"<color=#5CDB85>{UI.I("check")} Signed by your fighter's own key</color>" + (ensTx != null ? $"  <color=#A8A399>· Etherscan {UI.I("chevron")}</color>" : ""));
+            fx.Coin();
+        }, e => { ensBusy = false; ensSave.interactable = true; ensMsg.SetLabel($"<color=#F2523F>Couldn't save the bio: {e}</color>"); }));
+    }
+
+    IEnumerator Spin()
+    {
+        for (int i = 0; ensBusy; i++)
+        {
+            ensMsg.SetLabel($"<color=#F2A33A>{UI.I("refresh")}</color>  Your fighter is signing on Sepolia" + new string('.', 1 + i % 3) + "  <color=#8E8E93>~15 s</color>");
+            yield return new WaitForSecondsRealtime(0.4f);
+        }
+    }
+
+    // x402 scouting: before round 1 a bot may buy a scouting report on an unknown opponent, paid from its own Hedera account.
+    Button scoutCard; string scoutLink; float scoutUntil;
+    void ShowScout(JToken e)
+    {
+        if (scoutCard == null)
+        {
+            scoutCard = UI.Btn(fight.transform, "", UI.Card, UI.Ink, () => { if (scoutLink != null) Application.OpenURL(scoutLink); }, 24);
+            scoutCard.At(0.5f, 1, 0.5f, 1, -620, -330, 620, -200);
+            UI.Panel(scoutCard.GetComponent<Image>(), new Color(1f, 0.64f, 0.24f, 0.6f));
+        }
+        var by = (string)e["by"] == a.botId ? a : b;
+        scoutLink = (string)e["hashscan"];
+        string note = (e["notes"] as JArray)?.FirstOrDefault()?.ToString();
+        scoutCard.SetLabel($"<color=#FFA33D>{UI.I("stats")}</color>  <b>{by.displayName}</b> bought a scouting report on <b>{by.opp.displayName}</b> for {e["cents"] ?? 2}¢  <color=#A8A399>(x402 on Hedera)</color>"
+            + (note != null || scoutLink != null ? $"\n<size=20><color=#A8A399>{note}{(scoutLink != null ? $"  ·  tap for HashScan {UI.I("chevron")}" : "")}</color></size>" : ""));
+        scoutCard.gameObject.SetActive(true);
+        scoutUntil = Time.unscaledTime + 6f;
+        StartCoroutine(HideScout(session));
+    }
+    IEnumerator HideScout(int s)
+    {
+        while (s == session && Time.unscaledTime < scoutUntil) yield return null;
+        if (scoutCard != null) scoutCard.gameObject.SetActive(false);
     }
 
     // ---------------------------------------------------------------- 0G credits (bring your own 0G account)
@@ -473,6 +554,7 @@ public partial class Game
         oppId0 ??= b.botId; oppName0 ??= b.displayName;
         house = (bool?)ob?["house"] == true || (bool?)fv?["house"] == true;
         b.botId = opp ?? "opponent"; b.displayName = ((string)ob?["name"] ?? b.botId) + (house ? " (House)" : "");
+        bEns = (string)(ob?["ens"] as JObject)?["name"]; bBelt = (bool?)(ob?["nft"] as JObject)?["holdsBelt"] == true;
         int start = (int?)fv?["budgets"]?[a.botId] ?? (int?)fv?["stakeCents"] ?? stakeCents;
         a.ResetFor(start); b.ResetFor((int?)fv?["budgets"]?[b.botId] ?? start);
         a.active = b.active = true; a.scripted = b.scripted = true;
@@ -481,6 +563,7 @@ public partial class Game
         foreach (Transform c in ticker) Destroy(c.gameObject);
         UpdateBars();
         Banner("FIGHT!", UI.Accent);
+        if (aEns != null && bEns != null) Toast($"{aEns}  vs  {bEns}");
         fx.FightStart();
         int s = session;
         var q = new List<JToken>();
@@ -492,7 +575,7 @@ public partial class Game
     {
         koTitle.color = UI.Red;
         if (oppId0 == null) return;
-        b.botId = oppId0; b.displayName = oppName0; oppId0 = oppName0 = null;
+        b.botId = oppId0; b.displayName = oppName0; oppId0 = oppName0 = null; bEns = null; bBelt = false;
     }
 
     IEnumerator LivePoll(int s, List<JToken> q)
@@ -559,6 +642,9 @@ public partial class Game
                         RenderTicker(livePays);
                     }
                     break;
+                case "scout":
+                    ShowScout(e);
+                    break;
                 case "ko":
                     if (!over) KO((string)e["loser"] == a.botId ? a : b);
                     break;
@@ -614,7 +700,7 @@ public partial class Game
         yield return new WaitForSecondsRealtime(1.6f);
         if (s != session) yield break;
         koTitle.color = UI.Amber;
-        koTitle.text = w == null ? "DRAW" : "TIME"; koWin.text = w == null ? "Even on budget" : $"{w.displayName} Wins";
+        koTitle.text = w == null ? "DRAW" : "TIME"; koWin.text = w == null ? "Even on budget" : WinLine(w);
         koSub.text = w == null ? "Both budgets equal after 90 s." : $"{w.displayName} wins on time: more fight budget left after 90 s.";
         koPanel.SetActive(true);
         yield return LiveEnd(s);
@@ -767,6 +853,12 @@ public partial class Game
         AddFunds();
         yield return Wait(1.5f);
         yield return shot("09_fund_done");
+        ensBio.text = "Southpaw. Learned everything from one coach and a lot of bad sparring.";
+        SaveBio();
+        yield return Wait(1.2f);
+        var sr = fund.GetComponentInChildren<ScrollRect>(); if (sr != null) sr.verticalNormalizedPosition = 0;
+        yield return Wait(0.4f);
+        yield return shot("09b_ens");
 
         FindClicked();
         PickStake(25);
@@ -779,6 +871,8 @@ public partial class Game
         yield return Until(() => mode == Mode.Fight, 60f); // house fallback after 25 s + matcher tick
         yield return Wait(0.4f);
         yield return shot("12_live_start");
+        yield return Wait(1.6f);
+        yield return shot("12b_scout");
         yield return Until(() => bubA.root.gameObject.activeSelf || bubB.root.gameObject.activeSelf, 8f);
         yield return Wait(0.5f);
         yield return shot("13_live_plan");

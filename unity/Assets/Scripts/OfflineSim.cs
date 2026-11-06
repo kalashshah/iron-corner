@@ -73,6 +73,12 @@ public static class OfflineSim
                 if (seg.Length == 3 && seg[2] == "camp") return Camp(method, seg[1]);
                 if (seg.Length >= 2) Ensure(seg[1]);
                 if (seg.Length == 1) return new JArray(bots.Values.Select(b => { var c = (JObject)b.DeepClone(); if (IsYou((string)b["botId"])) c["daily"] = Daily(false); c["progress"] = Progress((string)b["botId"]); return c; }));
+                if (seg.Length == 3 && seg[2] == "ens" && method == "PUT")
+                {
+                    var rec = (JObject)Get(bots, seg[1])["ens"]["records"];
+                    rec[(string)body["key"]] = body["value"];
+                    return new JObject { ["key"] = body["key"], ["value"] = body["value"], ["tx"] = Hex(64), ["etherscan"] = null, ["mock"] = true };
+                }
                 if (seg.Length == 3 && seg[2] == "revive") { Get(bots, seg[1])["alive"] = true; return new JObject { ["botId"] = seg[1], ["alive"] = true, ["mock"] = true }; }
                 var bot = (JObject)Get(bots, seg[1]).DeepClone();
                 bot["brain"] = new JObject
@@ -436,6 +442,9 @@ public static class OfflineSim
         b["hbar"] = 0.3; b["payAsset"] = "hbar"; b["paint"] = paint; b["owner"] = owner; b["league"] = league; b["rating"] = rating;
         b["record"] = new JObject { ["w"] = 0, ["l"] = 0 }; b["onboarding"] = new JObject { ["trained"] = false, ["funded"] = false };
         b["agentId"] = new JObject { ["tokenId"] = ++agentIds, ["contract"] = "0x4Ed79445a389C9442657773138e2ffFabb25d170", ["tx"] = Hex(64) };
+        var ens = Regex.Replace(name.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-') + ".ironcorner.eth";
+        b["ens"] = new JObject { ["name"] = ens, ["app"] = "https://sepolia.app.ens.domains/" + ens, ["records"] = new JObject { ["description"] = "" }, ["mock"] = true };
+        b["nft"] = null;
         bots[id] = b; Ensure(id);
         return b;
     }
@@ -528,6 +537,7 @@ public static class OfflineSim
         var id = NewId("fight");
         fights[id] = f;
         Emit(f, 0f, "start", new JObject { ["a"] = f.a, ["b"] = f.b, ["stakeCents"] = f.stake, ["seedHash"] = f.seedHash });
+        Emit(f, 0.2f, "scout", new JObject { ["by"] = f.a, ["of"] = f.b, ["cents"] = 2, ["notes"] = new JArray("scouted: throws hook_l often (3x, 2 landed)"), ["hashscan"] = null, ["mock"] = true });
         return id;
     }
 

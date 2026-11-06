@@ -59,7 +59,7 @@ public static class Api
         }
         req.downloadHandler = new DownloadHandlerBuffer();
         Auth(req);
-        req.timeout = path.EndsWith("/save") ? 60 : 15; // a 0G Storage upload with the demo library takes ~15-30 s
+        req.timeout = path.EndsWith("/save") || path.EndsWith("/ens") ? 60 : 15; // a 0G Storage upload takes ~15-30 s, an ENS write ~15 s on Sepolia
         yield return req.SendWebRequest();
         Finish(req, ok, fail);
     }
