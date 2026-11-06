@@ -453,4 +453,22 @@ public static class Setup
         Debug.Log($"[setup] mac build: {report.summary.result} {report.summary.totalSize / (1024 * 1024)} MB");
         if (Application.isBatchMode) EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
     }
+
+    // Xcode project for a personal-device install (automatic signing, team J99B88X7CK). Not for the App Store.
+    [MenuItem("Iron Corner/Build iOS Xcode Project")]
+    public static void BuildIOS()
+    {
+        EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
+        PlayerSettings.iOS.appleDeveloperTeamID = "J99B88X7CK";
+        PlayerSettings.iOS.appleEnableAutomaticSigning = true;
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+        {
+            scenes = new[] { "Assets/Scenes/Main.unity" },
+            locationPathName = "Builds/iOS",
+            target = BuildTarget.iOS,
+            options = BuildOptions.None,
+        });
+        Debug.Log($"[setup] ios build: {report.summary.result}");
+        if (Application.isBatchMode) EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
+    }
 }
