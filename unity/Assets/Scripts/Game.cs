@@ -1355,6 +1355,12 @@ public partial class Game : MonoBehaviour
 
     // ---------------------------------------------------------------- capture mode
     // -capture <dir> [-captureTag <prefix>]: walks every screen, saves PNGs, quits. Uses the server if it answers.
+    IEnumerator AutoPunch(int s)
+    {
+        string[] all = { "jab", "cross", "hook_l", "hook_r", "uppercut", "body" };
+        for (int i = 0; s == session; i++) { PadMove(all[i % all.Length]); yield return new WaitForSeconds(1.1f); }
+    }
+
     IEnumerator AutoDodge(int s)
     {
         string last = null;
@@ -1389,12 +1395,13 @@ public partial class Game : MonoBehaviour
         {
             yield return Connect();
             a.botId = "bot_a"; a.displayName = "Brass Knuckle"; // the offline sim's demo bot (a stored id from an older run won't exist)
-            bool dodges = Array.IndexOf(args, "-dodges") >= 0; // sparring: the dummy punches, we slip straights and weave under hooks
+            bool dodges = Array.IndexOf(args, "-dodges") >= 0 || Array.IndexOf(args, "-strikes") >= 0; // sparring (dodges: we slip; strikes: we punch every move in turn)
             if (dodges) { StartTrain(); counterAttacks.AddRange(new[] { "jab", "hook_l", "cross", "hook_r" }); }
             else { budgetUsd = 0.25f; StartFight("normal", null); }
             yield return Wait(0.5f);
             Time.captureFramerate = 30;
-            if (dodges) StartCoroutine(AutoDodge(session));
+            if (dodges && Array.IndexOf(args, "-strikes") < 0) StartCoroutine(AutoDodge(session));
+            if (Array.IndexOf(args, "-strikes") >= 0) { Fighter.logStrikes = true; StartCoroutine(AutoPunch(session)); }
             for (int i = 0; i < 30 * 14 && !(over && koPanel.activeSelf); i++)
             {
                 yield return new WaitForEndOfFrame();

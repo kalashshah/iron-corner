@@ -44,25 +44,28 @@ public class Fighter : MonoBehaviour
     // Measured from the clips with Editor/Measure.cs (samples every clip, tracks both hands):
     // which fist throws it, when it is fully out (normalized clip time), and the fighter distance at which that fist meets the target
     // (ranges tuned from the capture-mode [strike] log: clean hits land at 0.95-1.1 m).
+    // radius: how close the knuckles must pass to the target for a clean hit. Straights drive into the face; hooks and
+    // uppercuts arc past it, so they get a wider radius (measured with -record -strikes: at range a clean cross passes at
+    // ~0.5, a hook at ~0.6, an uppercut at ~0.65 knuckles-to-face).
     readonly struct Strike
     {
-        public readonly HumanBodyBones fist; public readonly float peak, range; public readonly bool body;
-        public Strike(HumanBodyBones f, float p, float r, bool b = false) { fist = f; peak = p; range = r; body = b; }
+        public readonly HumanBodyBones fist; public readonly float peak, range, radius; public readonly bool body;
+        public Strike(HumanBodyBones f, float p, float r, float rad, bool b = false) { fist = f; peak = p; range = r; radius = rad; body = b; }
     }
     static readonly Dictionary<string, Strike> Strikes = new()
     {
-        ["jab"] = new(HumanBodyBones.LeftHand, 0.28f, 1.05f),
-        ["cross"] = new(HumanBodyBones.RightHand, 0.32f, 1.05f),
-        ["hook_l"] = new(HumanBodyBones.LeftHand, 0.27f, 0.98f),
-        ["hook_r"] = new(HumanBodyBones.RightHand, 0.35f, 0.98f),
-        ["uppercut"] = new(HumanBodyBones.RightHand, 0.33f, 1.0f),
-        ["body"] = new(HumanBodyBones.LeftHand, 0.42f, 1.05f, true),
+        ["jab"] = new(HumanBodyBones.LeftHand, 0.28f, 1.05f, 0.6f),
+        ["cross"] = new(HumanBodyBones.RightHand, 0.32f, 1.05f, 0.68f),
+        ["hook_l"] = new(HumanBodyBones.LeftHand, 0.27f, 0.98f, 0.72f),
+        ["hook_r"] = new(HumanBodyBones.RightHand, 0.35f, 0.98f, 0.72f),
+        ["uppercut"] = new(HumanBodyBones.RightHand, 0.33f, 1.0f, 0.82f),
+        ["body"] = new(HumanBodyBones.LeftHand, 0.42f, 1.05f, 0.72f, true),
     };
     public static float RangeOf(string move) => Strikes.TryGetValue(move, out var s) ? s.range : Reach;
 
     // MinGap: chest-to-chest with the punch lean baked in, bodies never touch. Reach: longest punch plus a little slack.
     public const float RingHalf = 2.35f, MinGap = 0.95f, Reach = 1.4f;
-    const float HitRadius = 0.56f; // hand bone (wrist) to face/chest point; fully extended jabs bottom out at 0.38-0.53 in the strike log
+
 
     readonly Queue<string> queue = new();
     readonly Dictionary<string, float> lengths = new();
@@ -145,7 +148,14 @@ public class Fighter : MonoBehaviour
     public Transform Bone(HumanBodyBones b) => anim.GetBoneTransform(b);
     public Vector3 Head => Bone(HumanBodyBones.Head)?.position ?? transform.position + Vector3.up * 1.6f;
     public Vector3 Chest => (Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest) ?? Bone(HumanBodyBones.Spine))?.position ?? transform.position + Vector3.up * 1.25f;
-    public Vector3 Fist(string move) => Strikes.TryGetValue(move, out var s) && Bone(s.fist) != null ? Bone(s.fist).position : Head;
+    // The knuckles, not the wrist: the hand bone pushed ~9 cm further along the forearm.
+    public Vector3 Fist(string move)
+    {
+        if (!Strikes.TryGetValue(move, out var s) || Bone(s.fist) == null) return Head;
+        var hand = Bone(s.fist).position;
+        var fore = Bone(s.fist == HumanBodyBones.LeftHand ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
+        return fore != null ? hand + (hand - fore.position).normalized * 0.09f : hand;
+    }
 
     void Update()
     {
@@ -234,13 +244,13 @@ public class Fighter : MonoBehaviour
         if (Strikes.TryGetValue(current, out var s) && !hitDone)
         {
             // Wind-up: settle to this punch's range so the fist actually lands on the target instead of passing through it.
-            if (n < s.peak) Move(ToOpp * Mathf.Clamp(Distance - s.range, -1.6f * Time.deltaTime, 0.8f * Time.deltaTime));
-            if (n >= s.peak - 0.08f)
+            if (n < s.peak) Move(ToOpp * Mathf.Clamp(Distance - s.range, -1.6f * Time.deltaTime, 1.8f * Time.deltaTime));
+            if (n >= s.peak - 0.15f) // the whole closest pass of the arc, not a thin slice
             {
                 var target = s.body ? opp.Chest : opp.Head + Vector3.up * 0.08f; // head bone sits at the neck; aim at the face
                 minFist = Mathf.Min(minFist, Vector3.Distance(Fist(current), target));
             }
-            if (n >= s.peak + 0.05f) { hitDone = true; OnSwing?.Invoke(this, current); Resolve(current); }
+            if (n >= s.peak + 0.1f) { hitDone = true; OnSwing?.Invoke(this, current); Resolve(current); }
         }
         // Flow: once a punch has landed and is recovering, a queued punch comes straight out of it (a combo);
         // with nothing queued, blend back to guard before the clip's dead tail instead of snapping at the end.
@@ -340,10 +350,12 @@ public class Fighter : MonoBehaviour
         if (scripted) return;
         if (opp.down || opp.won) return;
         var toMe = Flat(transform.position - opp.transform.position).normalized;
-        if (Vector3.Angle(opp.transform.forward, toMe) > 75f) return; // defender turned away: miss
+        float facing = Vector3.Angle(opp.transform.forward, toMe);
+        if (facing > 75f) { if (logStrikes) Debug.Log($"[strike] {botId} {move} d={Distance:F2} fist={minFist:F2} -> turned away ({facing:F0}°)"); return; } // defender turned away: miss
         // Block and dodge win whenever the punch was in range; a clean hit needs the fist to have reached the target.
-        bool inRange = minFist < HitRadius + 0.2f;
-        string result = opp.IsBlocking && inRange ? "blocked" : opp.IsDodging && inRange ? "dodged" : minFist < HitRadius ? "clean" : null;
+        float radius = Strikes[move].radius;
+        bool inRange = minFist < radius + 0.2f;
+        string result = opp.IsBlocking && inRange ? "blocked" : opp.IsDodging && inRange ? "dodged" : minFist < radius ? "clean" : null;
         if (logStrikes) Debug.Log($"[strike] {botId} {move} d={Distance:F2} fist={minFist:F2} -> {result ?? "whiff"}");
         if (result == null) return; // whiff
         if (result == "clean") opp.TakeHit(move);
