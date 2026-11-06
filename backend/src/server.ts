@@ -106,11 +106,11 @@ async function botView(b: Bot) {
     progress: demos.progressView(b),
     paint: b.paint ?? null, owner: b.owner ?? null, league: leagueOf(b), rating: b.rating ?? 1000, record: b.record ?? { w: 0, l: 0 },
     onboarding: { trained: trained(b), funded: !!b.onboarding?.funded, round: !!b.onboarding?.round, coached: !!b.onboarding?.coached },
-    agentId: agentid.view(b), adapter: b.adapter ?? null, zgAccount: zgacct.view(b) };
+    agentId: agentid.view(b), adapter: b.adapter ?? null, zgAccount: zgacct.view(b), nft: hedera.nftView(b) };
 }
 
 // ---- health / bots ----
-app.get("/health", (_req, res) => void res.json({ ok: true, modes, payAsset: hedera.PAY_ASSET, ledgerTopic: hedera.ledgerTopic() }));
+app.get("/health", (_req, res) => void res.json({ ok: true, modes, payAsset: hedera.PAY_ASSET, ledgerTopic: hedera.ledgerTopic(), belt: hedera.beltView() }));
 app.get("/bots", async (_req, res) => void res.json(await Promise.all(Object.values(state.bots).map(botView))));
 app.get("/bots/:id", async (req, res) => {
   const b = bot(req.params.id), mine = !b.owner || userOf(req)?.userId === b.owner; // a player's brain is for its owner
@@ -370,6 +370,7 @@ app.get("/bots/:id/camp", (req, res) => { const b = bot(req.params.id); res.json
 
 // ---- arena (x402 paid route; the middleware above settles payment) ----
 app.post("/arena/hit", (_req, res) => void res.json({ ok: true }));
+app.get("/nft/:key", (req, res) => void res.json(hedera.nftMeta(req.params.key) ?? fail(404, "no such NFT")));
 app.post("/arena/scout", (_req, res) => void res.json({ ok: true })); // the report itself is built after payment (engine.ts scout)
 
 app.use((_req, res) => void res.status(404).json({ error: "not found" }));

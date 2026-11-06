@@ -286,6 +286,7 @@ async function end(f: Fight, s: Sim) {
   f.ratingDelta = delta;
   emit(f, { t: s.t, type: "end", winner, reason, ratingDelta: delta, budgets: { ...f.budgets } });
   sims.delete(f.fightId); save();
+  void hedera.beltAfter(f).catch((e) => console.warn(`[hts] belt after ${f.fightId}: ${e.message}`));
   await finishFight(f);
 }
 

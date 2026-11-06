@@ -46,7 +46,7 @@ export type Progress = { xp: number; day: string; rounds: number; fights: number
 export type Bot = {
   botId: string; name: string; house: boolean;
   accountId: string | null; evmAddress: string | null;
-  alive: boolean; ownerSub: string | null;
+  alive: boolean; ownerSub: string | null; nft?: { serial: number; tx: string };
   koStakes?: "normal" | "high"; koAt?: number;
   brain: Brain; daily?: Daily; demos?: Demo[]; progress?: Progress;
   brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean; level?: number; stats?: Record<string, number>; demos?: number }[];
@@ -94,7 +94,7 @@ export type Fight = {
   endReason?: string; ratingDelta?: Record<string, number>;
 };
 type State = {
-  bots: Record<string, Bot>; fights: Record<string, Fight>;
+  bots: Record<string, Bot>; fights: Record<string, Fight>; hts?: { tokenId: string; belt: { serial: number; holder: string | null; tx: string | null } };
   ledgerTopic: string | null; brainSecret: string; mockBlobs: Record<string, string>;
   users: Record<string, User>; queue: QEntry[]; camps: Record<string, Camp>; mockHbar: Record<string, number>;
 };

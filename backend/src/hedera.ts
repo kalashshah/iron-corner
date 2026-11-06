@@ -4,7 +4,7 @@ import { env, modes, state, save, fail, SELF_URL, type Bot, type Fight, type Pay
 // Hedera SDK classes come through @x402/hedera so there is exactly one SDK instance.
 import { Client, PrivateKey, AccountId, Hbar, TokenId, TransferTransaction, createClientHederaSigner } from "@x402/hedera";
 // Not re-exported by @x402/hedera; this resolves to the same single install it depends on (npm ls @hiero-ledger/sdk).
-import { AccountCreateTransaction, TopicCreateTransaction, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
+import { AccountCreateTransaction, TopicCreateTransaction, TopicMessageSubmitTransaction, TokenCreateTransaction, TokenMintTransaction, TokenType, TokenSupplyType, NftId } from "@hiero-ledger/sdk";
 import { ExactHederaScheme as ClientScheme } from "@x402/hedera/exact/client";
 import { ExactHederaScheme as ServerScheme } from "@x402/hedera/exact/server";
 import { x402Client } from "@x402/core/client";
@@ -72,6 +72,7 @@ export async function init() {
   }
   save();
   await topUp().catch((e) => console.warn("[hedera] top-up skipped:", e.message));
+  await initNfts(opKey).catch((e) => console.warn("[hts] setup failed:", e.message));
 }
 
 function addPayer(botId: string, acct: string, key: PrivateKey) {
@@ -111,6 +112,7 @@ export async function createBotAccount(bot: Bot) {
   bot.hkey = seal(bot.botId, key.toStringRaw());
   addPayer(bot.botId, bot.accountId, key);
   console.log(`[hedera] created ${bot.botId} account ${bot.accountId}`);
+  void mintFighter(bot).catch((e) => console.warn(`[hts] mint ${bot.botId} failed: ${e.message}`));
 }
 export const operatorBalance = async () => (modes.hedera === "mock" ? { hbar: 100, usdc: 0 } : balance(operatorId, true));
 // Faucet: operator → bot, testnet HBAR.
@@ -264,4 +266,73 @@ export async function payScout(buyer: Bot, ref: string): Promise<{ txId: string;
     if (!r.success) throw new Error(r.errorReason ?? "settle failed");
     return { txId: r.transaction, hashscan: hashscan(r.transaction) };
   } finally { pending.delete(ref); }
+}
+
+// ---- HTS: one NFT collection, no contracts. Serial 1 is the title belt; every other serial is a fighter's card. ----
+// Each NFT's metadata is a short URL to its HIP-412 JSON (GET /nft/belt or /nft/:botId), which points at the fighter's brain on 0G.
+// The belt changes hands on Hedera when its holder loses a ranked fight (or goes to the first winner while vacant).
+const keyOf = (b: Bot) => (KEYS[b.botId] ? PrivateKey.fromStringECDSA(KEYS[b.botId]!) : b.hkey && b.hkey !== "mock" ? PrivateKey.fromStringECDSA(unseal(b)) : null);
+let supplyKey: PrivateKey | null = null;
+const nftUrl = (key: string) => `${SELF_URL}/nft/${key}`; // "belt" or a botId; HIP-412 caps metadata at 100 bytes
+async function mint(url: string) {
+  const rc = await (await (await new TokenMintTransaction().setTokenId(state.hts!.tokenId).setMetadata([Buffer.from(url)]).freezeWith(op!)
+    .sign(supplyKey!)).execute(op!)).getReceipt(op!);
+  return Number(rc.serials[0]);
+}
+async function initNfts(opKey: PrivateKey) {
+  supplyKey = opKey;
+  if (!state.hts) {
+    const rc = await (await new TokenCreateTransaction().setTokenName("Iron Corner").setTokenSymbol("IRON").setTokenType(TokenType.NonFungibleUnique)
+      .setSupplyType(TokenSupplyType.Infinite).setTreasuryAccountId(operatorId).setSupplyKey(opKey.publicKey).setAdminKey(opKey.publicKey)
+      .setTokenMemo("Iron Corner fighters + the Mumbai belt").execute(op!)).getReceipt(op!);
+    state.hts = { tokenId: rc.tokenId!.toString(), belt: { serial: 0, holder: null, tx: null } };
+    save(); console.log(`[hts] created collection ${state.hts.tokenId}`);
+  }
+  if (!state.hts.belt.serial) { state.hts.belt.serial = await mint(nftUrl("belt")); save(); console.log(`[hts] belt is serial ${state.hts.belt.serial}`); }
+  for (const b of Object.values(state.bots)) if (!b.nft && b.accountId && !b.payAs && keyOf(b)) await mintFighter(b).catch((e) => console.warn(`[hts] mint ${b.botId}: ${e.message}`));
+}
+export async function mintFighter(b: Bot) {
+  if (b.nft || !state.hts) return;
+  if (modes.hedera === "mock") { b.nft = { serial: Object.values(state.bots).filter((x) => x.nft).length + 2, tx: "mock" }; return save(); }
+  const serial = await mint(nftUrl(b.botId));
+  const tx = await (await new TransferTransaction().addNftTransfer(new NftId(TokenId.fromString(state.hts.tokenId), serial), operatorId, b.accountId!)
+    .setTransactionMemo(`Iron Corner fighter card ${b.name}`).execute(op!));
+  await tx.getReceipt(op!);
+  b.nft = { serial, tx: tx.transactionId.toString() }; save();
+  console.log(`[hts] ${b.botId} card serial ${serial}`);
+}
+const tokenLink = (serial: number) => `https://hashscan.io/testnet/token/${state.hts!.tokenId}/${serial}`;
+export const nftView = (b: Bot) => (b.nft && state.hts ? { tokenId: state.hts.tokenId, serial: b.nft.serial, hashscan: tokenLink(b.nft.serial), holdsBelt: state.hts.belt.holder === b.botId } : null);
+export const beltView = () => (state.hts?.belt.serial ? { tokenId: state.hts.tokenId, serial: state.hts.belt.serial, holder: state.hts.belt.holder, tx: state.hts.belt.tx, hashscan: tokenLink(state.hts.belt.serial) } : null);
+export function nftMeta(key: string) {
+  const h = state.hts;
+  if (!h) return null;
+  if (key === "belt") {
+    const holder = h.belt.holder ? state.bots[h.belt.holder] : null;
+    return { name: "Iron Corner Mumbai Belt", description: "The title belt. It moves on Hedera to whoever beats its holder.", type: "application/json",
+      properties: { holder: holder ? { botId: holder.botId, name: holder.name, account: holder.accountId } : "vacant", lastTransfer: h.belt.tx } };
+  }
+  const b = state.bots[key];
+  if (!b?.nft) return null;
+  return { name: `${b.name} (Iron Corner fighter)`, description: "A robot boxer trained by voice. Its brain is encrypted on 0G Storage.", type: "application/json",
+    properties: { botId: b.botId, account: b.accountId, record: b.record ?? { w: 0, l: 0 }, rating: b.rating ?? 1000,
+      brainRoot: b.brainHistory.at(-1)?.root ?? null, agentId: b.agentId?.tokenId ?? null, paint: b.paint ?? null } };
+}
+// Called after a ranked fight with a winner. Vacant belt → winner; holder lost → the belt moves from the holder's account.
+export async function beltAfter(f: Fight) {
+  const h = state.hts, w = f.winner;
+  if (!h?.belt.serial || f.house || !w) return;
+  const loser = w === f.a ? f.b : f.a;
+  if (h.belt.holder && h.belt.holder !== loser) return;
+  const to = state.bots[w], from = h.belt.holder ? state.bots[h.belt.holder] : null;
+  if (!to.accountId || to.payAs) return;
+  if (modes.hedera === "mock") { Object.assign(h.belt, { holder: w, tx: `mock-belt-${f.fightId}` }); save(); return; }
+  const fromAcct = from?.accountId ?? operatorId;
+  let t = new TransferTransaction().addNftTransfer(new NftId(TokenId.fromString(h.tokenId), h.belt.serial), fromAcct, to.accountId)
+    .setTransactionMemo(`Iron Corner belt: ${to.name} wins ${f.fightId}`).freezeWith(op!);
+  if (from) { const k = keyOf(from); if (!k) throw new Error(`no key for ${from.botId}`); t = await t.sign(k); }
+  const resp = await t.execute(op!); await resp.getReceipt(op!);
+  Object.assign(h.belt, { holder: w, tx: resp.transactionId.toString() }); save();
+  ledger({ t: "belt", fight: f.fightId, from: from?.botId ?? "vacant", to: w, serial: h.belt.serial, tx: h.belt.tx });
+  console.log(`[hts] belt → ${w} (${h.belt.tx})`);
 }
