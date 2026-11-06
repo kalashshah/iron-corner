@@ -14,6 +14,7 @@ import * as agentid from "./agentid.ts";
 import * as match from "./match.ts";
 import * as engine from "./engine.ts";
 import * as camp from "./camp.ts";
+import * as zgacct from "./zgaccount.ts";
 import { knockout, opponent, repairIfDue, repairIn, finishFight } from "./engine.ts";
 
 const app = express();
@@ -66,11 +67,11 @@ async function form(req: express.Request) {
   if (!String(req.headers["content-type"]).startsWith("multipart/form-data")) fail(400, "expected multipart/form-data");
   return new Request("http://x", { method: "POST", headers: req.headers as any, body: Readable.toWeb(req) as any, duplex: "half" } as any).formData();
 }
-async function heard(fd: FormData) {
+async function heard(fd: FormData, b?: Bot) {
   const audio = fd.get("audio");
   if (!(audio instanceof Blob) || !audio.size) fail(400, "missing audio field");
   // mock STT has no ears: `text` field (or "block") stands in for the transcript
-  return zg.transcribe(audio as Blob, (fd.get("text") as string) || undefined);
+  return zg.transcribe(audio as Blob, (fd.get("text") as string) || undefined, b);
 }
 
 // Training coach line → instant command word (sparring drill), a known phrase, or (via 0G) a structured brain update:
@@ -82,7 +83,7 @@ async function teach(b: Bot, text: string) {
   else if (known) out = { command: known.moves[0], learned: { kind: "phrase", id: `phrase#${b.brain.phrases.indexOf(known) + 1}`, ...known },
     diff: `Drilled phrase: “${known.say}” = ${known.moves.join(", ")}`, requestId: null };
   else {
-    const r = await zg.learn(text);
+    const r = await zg.learn(text, b);
     out = { command: null, learned: null, diff: null, requestId: r.requestId, ...(r.mock ? { mock: true } : {}), ...(r.error ? { error: r.error } : {}) };
     if (r.learned) {
       const { id, diff } = applyLearn(b.brain, r.learned, text);
@@ -108,7 +109,7 @@ async function botView(b: Bot) {
     progress: demos.progressView(b),
     paint: b.paint ?? null, owner: b.owner ?? null, league: leagueOf(b), rating: b.rating ?? 1000, record: b.record ?? { w: 0, l: 0 },
     onboarding: { trained: trained(b), funded: !!b.onboarding?.funded, round: !!b.onboarding?.round, coached: !!b.onboarding?.coached },
-    agentId: agentid.view(b), adapter: b.adapter ?? null };
+    agentId: agentid.view(b), adapter: b.adapter ?? null, zgAccount: zgacct.view(b) };
 }
 
 // ---- health / bots ----
@@ -134,7 +135,7 @@ app.post("/bots/:id/revive", (req, res) => {
 // ---- training ----
 app.post("/train/:botId/coach", async (req, res) => {
   const b = ownBot(req, req.params.botId);
-  const t = await heard(await form(req));
+  const t = await heard(await form(req), b);
   const r = await teach(b, t.text);
   res.json({ text: t.text, ...r, requestId: r.requestId ?? t.requestId, sttRequestId: t.requestId, ...(t.mock ? { mock: true } : {}) });
 });
@@ -391,6 +392,15 @@ function matchTick() {
   for (const x of house) engine.startFight(state.bots[x.botId], engine.houseFor(x.level), x.stakeCents, true);
   if (pairs.length || house.length) { save(); console.log(`[match] ${pairs.length} pair(s), ${house.length} house fight(s), ${rest.length} waiting`); }
 }
+
+// ---- the owner's own 0G account (iAI credits): see zgaccount.ts ----
+app.post("/bots/:id/zg/link", limit(6, "zglink"), (req, res) => void res.json(zgacct.linkUrl(ownBot(req, req.params.id))));
+app.delete("/bots/:id/zg", (req, res) => void res.json(zgacct.unlink(ownBot(req, req.params.id))));
+app.get("/connect", (_req, res) => void res.type("html").send(zgacct.page()));
+app.post("/connect", limit(10, "connect"), async (req, res) => {
+  const { code, privyToken, apiKey, wallet } = req.body ?? {};
+  res.json(await zgacct.link(String(code ?? ""), String(privyToken ?? ""), String(apiKey ?? ""), wallet ? String(wallet) : null));
+});
 
 // ---- fight camp (LoRA on 0G Compute) ----
 app.post("/bots/:id/camp", limit(3, "camp"), async (req, res) => void res.json(camp.view(await camp.start(ownBot(req, req.params.id)))));

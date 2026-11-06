@@ -61,6 +61,8 @@ export type Bot = {
   lastOpp?: string | null; lastMatch?: { fightId: string; at: number };
   adapter?: { version: number; taskId: string; root: string | null; loss: number | null; at: string; mock?: boolean };
   campId?: string;
+  // the owner's own 0G account (zgaccount.ts): sealed sk- key, what its calls cost
+  zg?: { key: string; last4: string; wallet: string | null; privyUser: string; at: string; spentMicro: number; calls: number };
 };
 export type AgentId = {
   contract: string; tokenId: string | null; tx: string | null; version: number; // version = last brain version recorded on chain

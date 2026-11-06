@@ -5,6 +5,7 @@ import { MOVES, DAMAGE, SAFE_STOP, validatePlan, validateLearn, mockPlan, mockLe
   type Plan, type FightState, type Learned } from "./game.ts";
 import { recall, demoUsed } from "./demos.ts";
 import { adapterMoves, ADAPTER_SERVING } from "./camp.ts";
+import { clientFor, charge } from "./zgaccount.ts";
 
 const BASE = env.ZG_BASE_URL ?? "https://router-api.0g.ai/v1";
 const CHAT_MODEL = env.ZG_CHAT_MODEL ?? "qwen-flash";
@@ -17,8 +18,9 @@ function trace(body: any, headers: Headers): Trace {
   return { requestId: t.request_id ?? headers.get("x-request-id"), teeVerified: t.tee_verified ?? body?.tee_verified ?? null };
 }
 
-async function chatJson(system: string, user: string, timeoutMs: number, maxTokens = 160, temperature = 0.4): Promise<{ json: unknown; trace: Trace }> {
-  const { data, response } = await ai!.chat.completions
+// b: the bot whose owner linked their own 0G account pays for the call (zgaccount.ts); otherwise the house key does.
+async function chatJson(system: string, user: string, timeoutMs: number, maxTokens = 160, temperature = 0.4, b?: Bot): Promise<{ json: unknown; trace: Trace }> {
+  const { data, response } = await (clientFor(b) ?? ai!).chat.completions
     .create(
       // qwen-flash has no provider for response_format (503 "No available providers"), so ask for JSON in the
       // prompt and pull the object out of any ``` fences. Strict validation happens in validatePlan/validateLearn.
@@ -27,6 +29,7 @@ async function chatJson(system: string, user: string, timeoutMs: number, maxToke
       { signal: AbortSignal.timeout(timeoutMs) },
     )
     .withResponse();
+  charge(b, data);
   const text: string = (data as any).choices?.[0]?.message?.content ?? "";
   const obj = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
   return { json: JSON.parse(obj), trace: trace(data, response.headers) };
@@ -63,7 +66,7 @@ export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Pla
     (camp ? `\nYour fight-camp instincts (your own model, fine-tuned on your coach's sparring) say: ${camp.moves.join(" ")}. Use them unless a taught rule fits better.` : "");
   if (env.LOG_PROMPTS) console.log(`[decide prompt] ${bot.botId}\n${user}`);
   try {
-    const { json, trace: tr } = await chatJson(system, user, DECIDE_MS, 110);
+    const { json, trace: tr } = await chatJson(system, user, DECIDE_MS, 110, 0.4, bot);
     const plan = validatePlan(json);
     if (!plan) return { ...SAFE_STOP(`invalid plan from model: ${JSON.stringify(json).slice(0, 160)}`), requestId: tr.requestId };
     // A taught rule wins attribution; else the coach's demo if the combo plays it.
@@ -76,11 +79,11 @@ export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Pla
   }
 }
 
-export async function transcribe(audio: Blob, mockText?: string): Promise<{ text: string; requestId: string | null; mock?: boolean }> {
+export async function transcribe(audio: Blob, mockText?: string, b?: Bot): Promise<{ text: string; requestId: string | null; mock?: boolean }> {
   if (!ai) return { text: mockText || "block", requestId: null, mock: true };
   // 0G's router dropped whisper (Nov 6); qwen omni models take audio as a chat input. The provider wants a data URL.
   const b64 = Buffer.from(await audio.arrayBuffer()).toString("base64");
-  const { data, response } = await ai.chat.completions
+  const { data, response } = await (clientFor(b) ?? ai).chat.completions
     .create({
       model: env.ZG_STT_MODEL ?? "qwen3-omni-flash", max_tokens: 80, temperature: 0,
       messages: [{ role: "user", content: [
@@ -89,6 +92,7 @@ export async function transcribe(audio: Blob, mockText?: string): Promise<{ text
       ] }],
     } as any, { signal: AbortSignal.timeout(15000) })
     .withResponse();
+  charge(b, data);
   const text = String((data as any).choices?.[0]?.message?.content ?? "").trim().replace(/^["']|["']$/g, "");
   return { text, requestId: trace(data, response.headers).requestId };
 }
@@ -104,10 +108,10 @@ const LEARN_SYSTEM = `A robot boxer's coach said one line in training. ${moveShe
   `A line about reacting to the opponent ("when he throws/does X, ...", "if he jabs, ...", "after his hook ...") is ALWAYS a counter: ` +
   `"when" = the opponent's attack move (jab|cross|hook_l|hook_r|uppercut|body; "left hook"=hook_l, "right hook"=hook_r), "moves" = our response ("slip right"=dodge_r, "slip left"=dodge_l, "duck"=dodge_l).\n` +
   `Slang or a nickname for attacking ("light him up") is a phrase.`;
-export async function learn(text: string): Promise<{ learned: Learned | null; requestId: string | null; mock?: boolean; error?: string }> {
+export async function learn(text: string, b?: Bot): Promise<{ learned: Learned | null; requestId: string | null; mock?: boolean; error?: string }> {
   if (!ai) return { learned: validateLearn(mockLearn(text)), requestId: null, mock: true };
   try {
-    const { json, trace: tr } = await chatJson(LEARN_SYSTEM, `Coach said: "${text}"`, 6000, 80, 0);
+    const { json, trace: tr } = await chatJson(LEARN_SYSTEM, `Coach said: "${text}"`, 6000, 80, 0, b);
     return { learned: validateLearn(json), requestId: tr.requestId };
   } catch (e: any) {
     return { learned: null, requestId: null, error: `0G error: ${e?.message ?? e}` };
