@@ -165,7 +165,7 @@ export async function readText(name: string, key: string) {
 export const view = (b: Bot) => (b.ens?.registeredTx
   ? { name: b.ens.name, resolver: b.ens.resolver, records: b.ens.synced, ownerKeys: OWNER_KEYS, serverKeys: SERVER_KEYS,
       app: `https://sepolia.app.ens.domains/${b.ens.name}`, tx: etherscan(b.ens.registeredTx) }
-  : b.ens ? { name: b.ens.name, pending: true } : null);
+  : b.ens ? { name: null, pending: b.ens.name } : null); // name stays null until the subname is registered
 export const parentView = () => (state.ens ? { name: state.ens.parent, registry: state.ens.registry, registered: !!state.ens.registered,
   tx: state.ens.registered ? etherscan(state.ens.registered.tx) : null } : null);
 
