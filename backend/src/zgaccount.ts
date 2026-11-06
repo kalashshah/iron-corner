@@ -80,11 +80,11 @@ export function unlink(b: Bot) { delete b.zg; clients.delete(b.botId); save(); r
 // bundled file (connect/main.jsx → public/connect.js, built in the Dockerfile), served gzipped.
 export const page = () => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Iron Corner: use your 0G credits</title>
-<style>:root{color-scheme:dark}body{margin:0;font:16px/1.45 system-ui,sans-serif;background:#0d0f14;color:#e9ecf2;display:grid;place-items:center;min-height:100vh}
-main{width:min(420px,100% - 32px);padding:24px;border:1px solid #2a2f3a;border-radius:14px;background:#151922}h1{font-size:20px;margin:0 0 6px}
-p{color:#a9b0bf;margin:8px 0}button{width:100%;padding:12px;border:0;border-radius:10px;background:#f2b134;color:#111;font-weight:700;font-size:16px;margin-top:12px}
-input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2a2f3a;background:#0d0f14;color:#e9ecf2;font:14px ui-monospace,monospace}
-a{color:#f2b134}.ok{color:#5fd38d}.err{color:#ff7a7a}code{font-size:13px}</style></head><body><main id="root"><p>Loading…</p></main>
+<style>/* scoped to main: Privy's login box renders outside it and must keep its own styles */:root{color-scheme:dark}body{margin:0;font:16px/1.45 system-ui,sans-serif;background:#0d0f14;color:#e9ecf2;display:grid;place-items:center;min-height:100vh}
+main{width:min(420px,100% - 32px);padding:24px;border:1px solid #2a2f3a;border-radius:14px;background:#151922}main h1{font-size:20px;margin:0 0 6px}
+main p{color:#a9b0bf;margin:8px 0}main button{width:100%;padding:12px;border:0;border-radius:10px;background:#f2b134;color:#111;font-weight:700;font-size:16px;margin-top:12px}
+main input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2a2f3a;background:#0d0f14;color:#e9ecf2;font:14px ui-monospace,monospace}
+main a{color:#f2b134}main .ok{color:#5fd38d}main .err{color:#ff7a7a}main code{font-size:13px}</style></head><body><main id="root"><p>Loading…</p></main>
 <script>window.PRIVY_APP_ID=${JSON.stringify(PRIVY_APP_ID)}</script><script type="module" src="/connect.js"></script></body></html>`;
 
 // Self-check: `npx tsx src/zgaccount.ts` (no network)
