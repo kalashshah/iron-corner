@@ -47,6 +47,7 @@ export type Bot = {
   botId: string; name: string; house: boolean;
   accountId: string | null; evmAddress: string | null;
   alive: boolean; ownerSub: string | null; nft?: { serial: number; tx: string };
+  ens?: { label: string; name: string; resolver: string | null; registeredTx: string | null; rolesTx: string | null; synced: Record<string, string>; lastSyncTx?: string };
   koStakes?: "normal" | "high"; koAt?: number;
   brain: Brain; daily?: Daily; demos?: Demo[]; progress?: Progress;
   brainHistory: { version: number; root: string; txHash: string; at: string; mock?: boolean; level?: number; stats?: Record<string, number>; demos?: number }[];
@@ -95,6 +96,7 @@ export type Fight = {
 };
 type State = {
   bots: Record<string, Bot>; fights: Record<string, Fight>; hts?: { tokenId: string; belt: { serial: number; holder: string | null; tx: string | null } };
+  ens?: { parent: string; registry: string | null; resolver: string | null; registered: { tx: string; at: string } | null; commit: { secret: string; at: number } | null };
   ledgerTopic: string | null; brainSecret: string; mockBlobs: Record<string, string>;
   users: Record<string, User>; queue: QEntry[]; camps: Record<string, Camp>; mockHbar: Record<string, number>;
 };

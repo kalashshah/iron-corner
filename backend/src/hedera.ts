@@ -271,7 +271,7 @@ export async function payScout(buyer: Bot, ref: string): Promise<{ txId: string;
 // ---- HTS: one NFT collection, no contracts. Serial 1 is the title belt; every other serial is a fighter's card. ----
 // Each NFT's metadata is a short URL to its HIP-412 JSON (GET /nft/belt or /nft/:botId), which points at the fighter's brain on 0G.
 // The belt changes hands on Hedera when its holder loses a ranked fight (or goes to the first winner while vacant).
-const keyOf = (b: Bot) => (KEYS[b.botId] ? PrivateKey.fromStringECDSA(KEYS[b.botId]!) : b.hkey && b.hkey !== "mock" ? PrivateKey.fromStringECDSA(unseal(b)) : null);
+export const keyOf = (b: Bot) => (KEYS[b.botId] ? PrivateKey.fromStringECDSA(KEYS[b.botId]!) : b.hkey && b.hkey !== "mock" ? PrivateKey.fromStringECDSA(unseal(b)) : null);
 let supplyKey: PrivateKey | null = null;
 const nftUrl = (key: string) => `${SELF_URL}/nft/${key}`; // "belt" or a botId; HIP-412 caps metadata at 100 bytes
 async function mint(url: string) {

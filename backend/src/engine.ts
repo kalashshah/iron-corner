@@ -18,6 +18,7 @@ import { state, save, id, type Bot, type Fight, type FightEvent, type Payment } 
 import { DAMAGE, addLessons, type Plan, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import * as hedera from "./hedera.ts";
+import * as ens from "./ens.ts";
 import { loadEpisode } from "./storage.ts";
 import * as demos from "./demos.ts";
 import { saveBrain, saveEpisode } from "./storage.ts";
@@ -287,6 +288,7 @@ async function end(f: Fight, s: Sim) {
   emit(f, { t: s.t, type: "end", winner, reason, ratingDelta: delta, budgets: { ...f.budgets } });
   sims.delete(f.fightId); save();
   void hedera.beltAfter(f).catch((e) => console.warn(`[hts] belt after ${f.fightId}: ${e.message}`));
+  for (const x of [A, B]) void ens.sync(x).catch((e) => console.warn(`[ens] sync ${x.botId}: ${e.message}`));
   await finishFight(f);
 }
 

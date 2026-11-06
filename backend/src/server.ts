@@ -7,6 +7,7 @@ import { MOVES, DAMAGE, commandFor, phraseFor, applyLearn, addLessons, addDrill,
 import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
 import * as hedera from "./hedera.ts";
+import * as ens from "./ens.ts";
 import * as demos from "./demos.ts";
 import * as agentid from "./agentid.ts";
 import * as match from "./match.ts";
@@ -106,11 +107,11 @@ async function botView(b: Bot) {
     progress: demos.progressView(b),
     paint: b.paint ?? null, owner: b.owner ?? null, league: leagueOf(b), rating: b.rating ?? 1000, record: b.record ?? { w: 0, l: 0 },
     onboarding: { trained: trained(b), funded: !!b.onboarding?.funded, round: !!b.onboarding?.round, coached: !!b.onboarding?.coached },
-    agentId: agentid.view(b), adapter: b.adapter ?? null, zgAccount: zgacct.view(b), nft: hedera.nftView(b) };
+    agentId: agentid.view(b), adapter: b.adapter ?? null, zgAccount: zgacct.view(b), nft: hedera.nftView(b), ens: ens.view(b) };
 }
 
 // ---- health / bots ----
-app.get("/health", (_req, res) => void res.json({ ok: true, modes, payAsset: hedera.PAY_ASSET, ledgerTopic: hedera.ledgerTopic(), belt: hedera.beltView() }));
+app.get("/health", (_req, res) => void res.json({ ok: true, modes, payAsset: hedera.PAY_ASSET, ledgerTopic: hedera.ledgerTopic(), belt: hedera.beltView(), ens: ens.parentView() }));
 app.get("/bots", async (_req, res) => void res.json(await Promise.all(Object.values(state.bots).map(botView))));
 app.get("/bots/:id", async (req, res) => {
   const b = bot(req.params.id), mine = !b.owner || userOf(req)?.userId === b.owner; // a player's brain is for its owner
@@ -279,6 +280,7 @@ app.post("/bots", limit(10, "bots"), async (req, res) => {
     fail(502, "could not create the bot's Hedera account, try again");
   }
   save();
+  void ens.issue(b).catch((e) => console.warn(`[ens] issue ${b.botId}: ${e.message}`));
   void agentid.sync(b); // mint the Agentic ID in the background; failures land in agentId.retry
   res.json(await botView(b));
 });
@@ -370,6 +372,15 @@ app.get("/bots/:id/camp", (req, res) => { const b = bot(req.params.id); res.json
 
 // ---- arena (x402 paid route; the middleware above settles payment) ----
 app.post("/arena/hit", (_req, res) => void res.json({ ok: true }));
+// The owner sets the fighter's ENS description or avatar; the bot's own key signs it (it holds only those two keys).
+app.put("/bots/:id/ens", limit(6, "ens"), async (req, res) => {
+  const b = ownBot(req, req.params.id), k = hedera.keyOf(b) ?? fail(409, "this fighter has no key of its own");
+  const key = String(req.body?.key ?? "description"), value = String(req.body?.value ?? "").trim().slice(0, 140);
+  if (!value) fail(400, "value required");
+  const r = await ens.setOwnerText(b, key, value, "0x" + k.toStringRaw());
+  b.ens!.synced[key] = value; save();
+  res.json(r);
+});
 app.get("/nft/:key", (req, res) => void res.json(hedera.nftMeta(req.params.key) ?? fail(404, "no such NFT")));
 app.post("/arena/scout", (_req, res) => void res.json({ ok: true })); // the report itself is built after payment (engine.ts scout)
 
@@ -383,6 +394,9 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // ---- start ----
 console.log(`[modes] 0G inference=${modes.zg} 0G storage=${modes.storage} hedera=${modes.hedera} (pay in ${hedera.PAY_ASSET})`);
 await hedera.init();
+// ENS: set up ironcorner.eth once, then give every fighter without a name its own (background; ~2 min the first time).
+void ens.setup().then(async () => { for (const b of Object.values(state.bots)) await ens.issue(b).catch((e) => console.warn(`[ens] issue ${b.botId}: ${e.message}`)); })
+  .catch((e) => console.warn("[ens] setup failed:", e.message));
 console.log(`[hedera] bots ${Object.values(state.bots).map((b) => `${b.botId}=${b.accountId}`).join(" ")} ledger=${hedera.ledgerTopic()}`);
 engine.closeOrphans();
 camp.resumeAll();

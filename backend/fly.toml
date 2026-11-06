@@ -9,6 +9,7 @@ primary_region = "sin"
   PAY_ASSET = "hbar"
   CAMP_MODE = "live"
   ZG_ADAPTER_SERVING = "on"
+  ENS_MODE = "live"
 
 [http_service]
   internal_port = 8787
