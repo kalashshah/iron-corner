@@ -46,9 +46,9 @@ public partial class Game
     {
         void Base(Material m, Color c) { if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c); }
         // Backdrop: a soft slate haze instead of a black void, so the dark fighters stand out and the lit ring stays the focus.
-        var haze = new Color(0.34f, 0.37f, 0.44f);
+        var haze = new Color(0.2f, 0.22f, 0.27f);
         RenderSettings.fogColor = haze; RenderSettings.fogDensity = 0.06f;
-        RenderSettings.ambientLight = new Color(0.22f, 0.23f, 0.27f);
+        RenderSettings.ambientLight = new Color(0.18f, 0.19f, 0.23f);
         if (Camera.main != null) Camera.main.backgroundColor = haze;
         foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             foreach (var m in r.sharedMaterials)
@@ -58,8 +58,8 @@ public partial class Game
                 {
                     case "rope_mid": Base(m, new Color(0.7f, 0.7f, 0.73f)); break;
                     case "ring_logo": r.enabled = false; break;
-                    case "arena_floor": Base(m, new Color(0.16f, 0.17f, 0.2f)); break;
-                    case "arena_stands": Base(m, new Color(0.26f, 0.28f, 0.33f)); break;
+                    case "arena_floor": Base(m, new Color(0.11f, 0.12f, 0.14f)); break;
+                    case "arena_stands": Base(m, new Color(0.17f, 0.18f, 0.22f)); break;
                     case "pad_brass": case "pad_steel": Base(m, new Color(0.13f, 0.13f, 0.14f)); break;
                     case "led_brass": case "led_steel": m.SetColor("_EmissionColor", new Color(0.9f, 0.92f, 1f) * 2.2f); break;
                 }
