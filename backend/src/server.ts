@@ -285,9 +285,9 @@ app.post("/bots", limit(10, "bots"), async (req, res) => {
   res.json(await botView(b));
 });
 
-// Test funds from the house faucet: once per bot per UTC day, tops up to 0.5 HBAR, only while below 0.5.
+// Test funds from the house faucet: once per bot per UTC day, tops up to FAUCET_TARGET (0.6 HBAR: enough for the top 50-cent stake plus the 5-cent margin the queue wants).
 // Idempotency-Key: a repeat with the same key returns the first result.
-const funding = new Set<string>();
+const funding = new Set<string>(), FAUCET_TARGET = Number(env.FAUCET_TARGET_HBAR ?? 0.6);
 app.post("/bots/:id/fund", limit(6, "fund"), async (req, res) => {
   const b = ownBot(req, req.params.id), key = String(req.get("idempotency-key") ?? "").slice(0, 80) || undefined;
   if (!b.owner || !b.hkey) refuse("demo_bot");
@@ -300,7 +300,7 @@ app.post("/bots/:id/fund", limit(6, "fund"), async (req, res) => {
   funding.add(b.botId);
   try {
     const bal = await hedera.balance(b.accountId!, true);
-    const hbar = Math.floor((0.5 - (bal.hbar ?? 0)) * 100) / 100;
+    const hbar = Math.floor((FAUCET_TARGET - (bal.hbar ?? 0)) * 100) / 100;
     if (hbar < 0.01) refuse("balance_high", { hbarNow: bal.hbar });
     if ((await hedera.operatorBalance()).hbar < Number(env.FAUCET_FLOOR_HBAR ?? 1)) refuse("faucet_empty");
     const txId = await hedera.sendHbar(b, hbar);

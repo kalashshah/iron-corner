@@ -270,7 +270,7 @@ await step("first training round + coaching line (both players)", async () => {
 await step("fund: tops up once a day, idempotent", async () => {
   const p = players[0], key = `smoke-${p.botId}`;
   const r = await authed(p)("POST", `/bots/${p.botId}/fund`, {}, { "idempotency-key": key });
-  check(r.status === 200 && r.body.hbar > 0 && r.body.hbar <= 0.5 && r.body.txId, JSON.stringify(r.body));
+  check(r.status === 200 && r.body.hbar > 0 && r.body.hbar <= 0.6 && r.body.txId, JSON.stringify(r.body));
   const again = await authed(p)("POST", `/bots/${p.botId}/fund`, {}, { "idempotency-key": key });
   check(again.status === 200 && again.body.txId === r.body.txId && again.body.repeat, JSON.stringify(again.body));
   const other = await authed(p)("POST", `/bots/${p.botId}/fund`, {});
