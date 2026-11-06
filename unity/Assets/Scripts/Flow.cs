@@ -885,14 +885,14 @@ public partial class Game
         Debug.Log("[capture] ens " + aEns);
 
         FindClicked();
-        PickStake(25);
+        PickStake(int.Parse(Arg("-stake", "25"))); // the demo film fights at 50 for a longer fight
         yield return Wait(1f);
         yield return shot("10_find");
         JoinQueue();
         yield return Wait(2.2f);
         yield return shot("11_searching");
 
-        yield return Until(() => mode == Mode.Fight, 60f); // house fallback after 25 s + matcher tick
+        yield return Until(() => mode == Mode.Fight, 600f); // a human opponent may take a while to queue (demo film)
         yield return Wait(0.4f);
         yield return shot("12_live_start");
         yield return Wait(1.6f);
