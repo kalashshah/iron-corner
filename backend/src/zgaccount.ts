@@ -76,7 +76,8 @@ export async function link(code: string, privyToken: string, apiKey: string, wal
 }
 export function unlink(b: Bot) { delete b.zg; clients.delete(b.botId); save(); return view(b); }
 
-// The sign-in page: Privy (email, Google or wallet) → paste the pc.0g.ai key → done. React + Privy from esm.sh.
+// The sign-in page: Privy (email, Google or wallet) → paste the pc.0g.ai key → done. The React + Privy code is one
+// bundled file (connect/main.jsx → public/connect.js, built in the Dockerfile), served gzipped.
 export const page = () => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Iron Corner: use your 0G credits</title>
 <style>:root{color-scheme:dark}body{margin:0;font:16px/1.45 system-ui,sans-serif;background:#0d0f14;color:#e9ecf2;display:grid;place-items:center;min-height:100vh}
@@ -84,34 +85,7 @@ main{width:min(420px,100% - 32px);padding:24px;border:1px solid #2a2f3a;border-r
 p{color:#a9b0bf;margin:8px 0}button{width:100%;padding:12px;border:0;border-radius:10px;background:#f2b134;color:#111;font-weight:700;font-size:16px;margin-top:12px}
 input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2a2f3a;background:#0d0f14;color:#e9ecf2;font:14px ui-monospace,monospace}
 a{color:#f2b134}.ok{color:#5fd38d}.err{color:#ff7a7a}code{font-size:13px}</style></head><body><main id="root"><p>Loading…</p></main>
-<script type="module">
-import React,{useState} from "https://esm.sh/react@18.3.1";
-import {createRoot} from "https://esm.sh/react-dom@18.3.1/client";
-import {PrivyProvider,usePrivy} from "https://esm.sh/@privy-io/react-auth@3.51.3?deps=react@18.3.1,react-dom@18.3.1";
-const h=React.createElement, code=new URLSearchParams(location.search).get("c");
-function App(){
-  const {ready,authenticated,login,getAccessToken,user,logout}=usePrivy();
-  const [key,setKey]=useState(""),[msg,setMsg]=useState(null),[done,setDone]=useState(null),[busy,setBusy]=useState(false);
-  if(!code) return h("p",{className:"err"},"Open this page from the game.");
-  if(!ready) return h("p",null,"Loading…");
-  if(done) return h("div",null,h("h1",{className:"ok"},"Linked ✓"),h("p",null,done.name+"'s 0G calls now use your credits (key …"+done.last4+")."),h("p",null,"You can close this and go back to the game."));
-  if(!authenticated) return h("div",null,h("h1",null,"Use your own 0G credits"),
-    h("p",null,"Sign in with your 0G wallet. Your fighter's AI (fight decisions, coaching, lessons) will run on your 0G Private Computer credits, including daily iAI credits."),
-    h("button",{onClick:login},"Sign in"));
-  const wallet=user?.wallet?.address??null;
-  async function go(){setBusy(true);setMsg(null);try{
-    const r=await fetch("/connect",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,privyToken:await getAccessToken(),apiKey:key.trim(),wallet})});
-    const j=await r.json(); if(!r.ok) throw new Error(j.error||("error "+r.status)); setDone(j); location.href="ironcorner://zg?linked=1";
-  }catch(e){setMsg(e.message)}finally{setBusy(false)}}
-  return h("div",null,h("h1",null,"Link your 0G account"),
-    h("p",null,"Signed in",wallet?h("span",null," as ",h("code",null,wallet.slice(0,6)+"…"+wallet.slice(-4))):null,". ",h("a",{href:"#",onClick:(e)=>{e.preventDefault();logout()}},"Switch")),
-    h("p",null,"Open ",h("a",{href:"https://pc.0g.ai/dashboard",target:"_blank"},"pc.0g.ai → API Keys"),", create a key for Iron Corner and paste it here. It stays on our server, encrypted, and is only used for your fighter."),
-    h("input",{placeholder:"sk-…",value:key,onChange:(e)=>setKey(e.target.value),autoComplete:"off",spellCheck:false}),
-    h("button",{onClick:go,disabled:busy||!key.trim()},busy?"Checking with 0G…":"Link"),
-    msg?h("p",{className:"err"},msg):null);
-}
-createRoot(document.getElementById("root")).render(h(PrivyProvider,{appId:${JSON.stringify(PRIVY_APP_ID)},config:{loginMethods:["wallet","email","google"],appearance:{theme:"dark"},embeddedWallets:{ethereum:{createOnLogin:"users-without-wallets"}}}},h(App)));
-</script></body></html>`;
+<script>window.PRIVY_APP_ID=${JSON.stringify(PRIVY_APP_ID)}</script><script type="module" src="/connect.js"></script></body></html>`;
 
 // Self-check: `npx tsx src/zgaccount.ts` (no network)
 if (process.argv[1]?.endsWith("zgaccount.ts")) {

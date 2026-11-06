@@ -18,3 +18,4 @@ camp/adapters/
 camp/training.json
 camp/last-task.json
 camp/adapters/
+backend/public/

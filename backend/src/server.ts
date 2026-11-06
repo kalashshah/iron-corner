@@ -397,6 +397,8 @@ function matchTick() {
 app.post("/bots/:id/zg/link", limit(6, "zglink"), (req, res) => void res.json(zgacct.linkUrl(ownBot(req, req.params.id))));
 app.delete("/bots/:id/zg", (req, res) => void res.json(zgacct.unlink(ownBot(req, req.params.id))));
 app.get("/connect", (_req, res) => void res.type("html").send(zgacct.page()));
+const CONNECT_JS = new URL("../public/connect.js.gz", import.meta.url);
+app.get("/connect.js", (_req, res) => void res.set({ "content-type": "text/javascript", "content-encoding": "gzip", "cache-control": "public, max-age=3600" }).sendFile(CONNECT_JS.pathname));
 app.post("/connect", limit(10, "connect"), async (req, res) => {
   const { code, privyToken, apiKey, wallet } = req.body ?? {};
   res.json(await zgacct.link(String(code ?? ""), String(privyToken ?? ""), String(apiKey ?? ""), wallet ? String(wallet) : null));
