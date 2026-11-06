@@ -397,7 +397,9 @@ public partial class Game : MonoBehaviour
             if (combo[side] >= 2) { ShowCombo(side); fx.Combo(combo[side]); }
             if (combo[side] == 4) fx.Cheer(0.55f);
             bool big = move == "uppercut" || (dmg >= 3 && combo[side] >= 2) || combo[side] >= 3;
-            if (mode == Mode.Fight && big && !over && Time.unscaledTime - lastSpecial > 5f) Special(at, move, combo[side]);
+            // Fights: either bot's big hits. Sparring: your own big hits (the dummy's don't get the treatment).
+            bool eligible = mode == Mode.Fight || (mode == Mode.Train && att == a);
+            if (eligible && big && !over && !summary.activeSelf && Time.unscaledTime - lastSpecial > 5f) Special(at, move, combo[side]);
         }
         else if (result == "blocked") hitStopUntil = Time.unscaledTime + 0.02f;
         if (mode != Mode.Fight || over || replaying || live) return;

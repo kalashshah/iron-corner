@@ -234,12 +234,13 @@ public partial class Game
         findSearch.SetActive(false);
 
         // Camp
-        var k = Stack(Page(root, "Camp", "Fight Camp", null, out camp)).transform;
+        var kc = Page(root, "Camp", "Fight Camp", null, out camp);
+        var k = Stack(UI.Rt(kc, "text").At(0, 0, 1, 1, 0, 140, 0, 0)).transform; // text up top, the button pinned to the bottom
         UI.Label(k, "Train your fighter's own model", 40, UI.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).H(56);
         UI.Label(k, "A LoRA fine-tune on 0G Compute, built from its sparring demos. Each camp is a new adapter version on its Agentic ID.", 22, UI.Dim, TextAnchor.UpperLeft).H(70);
         campBody = UI.Label(k, "", 26, UI.Ink, TextAnchor.UpperLeft).H(170);
-        campBtn = UI.Big(k, UI.I("play") + "  Start Training", true, SendToCamp, 42);
-        campBtn.H(110);
+        campBtn = UI.Big(kc, UI.I("play") + "  Start Training", true, SendToCamp, 42);
+        campBtn.At(0, 0, 1, 0, 0, 0, 0, 110);
 
         // First-training guide, over the Train screen (right side, under the move count)
         var g = UI.Box(train.transform, UI.Card, true, "guide").At(1, 1, 1, 1, -1140, -620, -620, -260); // clear of the punch cluster
@@ -629,7 +630,6 @@ public partial class Game
             string stage = pct ? $"  {p:0}%" : pt?.Type == JTokenType.String ? $"  · {pt}" : "";
             var lines = new List<string>
             {
-                $"<color=#8E8E93>Trained from its sparring demos. Each camp makes a new adapter version, recorded on its Agentic ID.</color>\n",
                 $"<color=#F2F2F5>Demos: <b>{demos}</b>/40 needed</color>" + (demos < 40 ? "  <color=#F2A33A>· spar more rounds first</color>" : "  <color=#5CDB85>\ue5ca</color>"),
                 err != null ? $"<color=#F2523F>{err}</color>" : $"<color=#F2F2F5>Status: <b>{status}</b></color>" + (running ? stage : "")
                     + (st?["version"] != null && st["version"].Type != JTokenType.Null ? $"  ·  adapter v{st["version"]}" : "")
