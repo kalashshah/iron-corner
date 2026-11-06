@@ -8,11 +8,12 @@ primary_region = "sin"
   SELF_URL = "https://iron-corner.fly.dev"
   PAY_ASSET = "hbar"
   CAMP_MODE = "live"
+  ZG_ADAPTER_SERVING = "on"
 
 [http_service]
   internal_port = 8787
   force_https = true
-  auto_stop_machines = "suspend"
+  auto_stop_machines = "stop"  # suspend only works up to 2 GB of memory
   auto_start_machines = true
   min_machines_running = 0
 
@@ -21,6 +22,6 @@ primary_region = "sin"
   destination = "/app/data"
 
 [[vm]]
-  memory = "1gb"
+  memory = "4gb"  # camp adapter serving (Qwen 0.5B on CPU); back to 1gb after the event
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 2

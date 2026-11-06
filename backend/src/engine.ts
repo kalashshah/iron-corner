@@ -206,7 +206,7 @@ async function run(f: Fight) {
     const plans = await Promise.all([f.a, f.b].map(async (x) => {
       const st = stateFor(s, x), b = state.bots[x], p = await zg.decide(b, st, other(s, x));
       if (p.stance === "safe_stop") console.warn(`[engine] ${f.fightId} ${x} safe_stop: ${p.reason}`);
-      f.decisions.push({ botId: x, requestId: p.requestId ?? null, stance: p.stance, ...(p.used ? { used: p.used } : {}), at: new Date().toISOString(), ...(p.mock ? { mock: true } : {}) });
+      f.decisions.push({ botId: x, requestId: p.requestId ?? null, stance: p.stance, ...(p.used ? { used: p.used } : {}), ...(p.camp ? { camp: p.camp } : {}), at: new Date().toISOString(), ...(p.mock ? { mock: true } : {}) });
       demos.onDecide(b, f, st, p);
       return p;
     }));

@@ -46,11 +46,8 @@ const brainSheet = (bot: Bot, opp?: string) => {
 };
 
 export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Plan> {
-  if (ADAPTER_SERVING && bot.adapter) { // the bot's own camp adapter (off: serving needs 2 0G on the provider)
-    const moves = await adapterMoves(bot, s).catch((e) => (console.warn(`[adapter] ${bot.botId}: ${e.message}`), null));
-    if (moves) return { stance: moves.some((m) => DAMAGE[m]) ? "aggressive" : "defensive", combo: moves, trigger: "now", say: "Camp instincts.",
-      used: "adapter", usedText: `Fight camp v${bot.adapter.version}`, requestId: null };
-  }
+  // The bot's own camp model (LoRA trained on 0G from its owner's sparring) suggests; qwen-flash on 0G decides.
+  const camp = ADAPTER_SERVING && bot.adapter ? await adapterMoves(bot, s).catch((e) => (console.warn(`[adapter] ${bot.botId}: ${e.message}`), null)) : null;
   const rc = recall(bot, s); // the k nearest shadow-sparring demos for this moment
   if (!ai) {
     const p = mockPlan(bot.brain, s);
@@ -62,14 +59,18 @@ export async function decide(bot: Bot, s: FightState, opp?: string): Promise<Pla
     `stance: aggressive|defensive|counter. combo: 1-4 move NAMES. trigger: now|after_block|when_close. ` +
     `used: the rule id you follow (e.g. counter#1), "demo" if you copy your coach's moves, or "none". say: your own thought, max 8 words.`;
   const hints = ruleHints(bot.brain, s);
-  const user = `Fight state: ${JSON.stringify(s)}${hints.length ? `\nNote: ${hints.join("; ")}` : ""}${rc ? `\n${rc.block}` : ""}`;
+  const user = `Fight state: ${JSON.stringify(s)}${hints.length ? `\nNote: ${hints.join("; ")}` : ""}${rc ? `\n${rc.block}` : ""}` +
+    (camp ? `\nYour fight-camp instincts (your own model, fine-tuned on your coach's sparring) say: ${camp.moves.join(" ")}. Use them unless a taught rule fits better.` : "");
   if (env.LOG_PROMPTS) console.log(`[decide prompt] ${bot.botId}\n${user}`);
   try {
     const { json, trace: tr } = await chatJson(system, user, DECIDE_MS, 110);
     const plan = validatePlan(json);
     if (!plan) return { ...SAFE_STOP(`invalid plan from model: ${JSON.stringify(json).slice(0, 160)}`), requestId: tr.requestId };
     // A taught rule wins attribution; else the coach's demo if the combo plays it.
-    return { ...plan, ...(resolveUsed(bot.brain, (json as any).used, plan.combo!) ?? demoUsed(rc, plan.combo!)), ...tr };
+    const fromCamp = camp && plan.combo!.slice(0, camp.moves.length).join(" ") === camp.moves.join(" ");
+    return { ...plan, ...(resolveUsed(bot.brain, (json as any).used, plan.combo!) ?? demoUsed(rc, plan.combo!)),
+      ...(fromCamp ? { used: "adapter", usedText: `Fight camp v${bot.adapter!.version}: ${camp!.moves.join(" ")} (my own model)` } : {}),
+      ...(camp ? { camp: camp.moves, campMs: camp.ms } : {}), ...tr };
   } catch (e: any) {
     return SAFE_STOP(e?.name === "AbortError" || /timed? ?out|abort/i.test(String(e?.message)) ? "timeout" : `0G error: ${e?.message ?? e}`);
   }

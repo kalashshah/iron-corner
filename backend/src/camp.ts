@@ -3,12 +3,13 @@
 // the fight state in words). Real camps spend testnet 0G, so they run only with CAMP_MODE=live; otherwise a mock
 // pipeline walks the same statuses.
 //
-// Serving the adapter in fights (ZG_ADAPTER_SERVING=on) needs deployAdapter, which funds the provider with 2 0G. We
-// don't hold that, so it is off and fights stay on qwen-flash + recall. adapterMoves() is the hook zg.decide calls.
+// Serving (ZG_ADAPTER_SERVING=on): we run the adapter the way 0G's fine-tuning docs say to use one, base model + LoRA
+// on our own machine (serve_adapter.py, spawned below). 0G's own adapter hosting (deployAdapter) is undocumented and its
+// endpoint was down on 6 Nov. The adapter's answer is a suggestion: qwen-flash on 0G still makes every fight decision.
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { env, state, save, id, fail, refuse, type Bot, type Demo, type Camp } from "./state.ts";
 import { DAMAGE, cleanMoves, type FightState } from "./game.ts";
@@ -187,14 +188,34 @@ function lossFrom(zip: string): number | null {
   } catch { return null; }
 }
 
-// Hook for fights once adapter serving is funded (ZG_ADAPTER_SERVING=on). Untested end to end: serving needs 2 0G.
-export async function adapterMoves(b: Bot, s: FightState): Promise<string[] | null> {
+// The adapter server: one Python process on 127.0.0.1, started with the game server when serving is on.
+const SERVE = `http://127.0.0.1:${env.CAMP_SERVE_PORT ?? 8790}`;
+if (ADAPTER_SERVING && !process.argv[1]?.endsWith("camp.ts")) {
+  const start = () => {
+    const py = spawn(env.CAMP_PYTHON ?? "python3", [path.resolve(import.meta.dirname, "../serve_adapter.py")], { stdio: ["ignore", "inherit", "inherit"] });
+    py.on("exit", (code) => { console.warn(`[adapter] server exited (${code}), restarting in 10 s`); setTimeout(start, 10_000); });
+  };
+  start();
+}
+
+// The bot's newest camp adapter, as decrypted on this machine (data/camps/<campId>/adapter.zip).
+const adapterZip = (b: Bot) => {
+  const c = Object.values(state.camps).find((c) => c.taskId === b.adapter?.taskId && c.botId === b.botId);
+  const zip = c && path.join(DIR, c.campId, "adapter.zip");
+  return zip && fs.existsSync(zip) ? zip : null;
+};
+
+// What this bot's own fine-tuned model would do now. null when it has no adapter or the server is slow or down.
+export async function adapterMoves(b: Bot, s: FightState, timeoutMs = 1500): Promise<{ moves: string[]; ms: number } | null> {
   if (!ADAPTER_SERVING || !b.adapter || b.adapter.mock) return null;
-  const { broker: br, provider: p } = await broker();
-  const r = await br.inference.chatWithFineTunedModel(p, b.adapter.taskId, alpaca(fightLine(s)));
-  const text = String(r?.choices?.[0]?.message?.content ?? r?.content ?? r ?? "");
-  const moves = cleanMoves(text.trim().split(/\s+/)).slice(0, 3);
-  return moves.length ? moves : null;
+  const zip = adapterZip(b);
+  if (!zip) return null;
+  const r = await fetch(`${SERVE}/moves`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ zip, prompt: alpaca(fightLine(s)) }), signal: AbortSignal.timeout(timeoutMs) });
+  if (!r.ok) throw new Error(`adapter server ${r.status}: ${(await r.text()).slice(0, 160)}`);
+  const { text, ms } = await r.json() as { text: string; ms: number };
+  const moves = cleanMoves(String(text).trim().split(/\s+/)).slice(0, 3);
+  return moves.length ? { moves, ms } : null;
 }
 
 // Self-check: `npx tsx src/camp.ts` (dataset + format only; no network)

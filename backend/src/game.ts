@@ -10,6 +10,7 @@ export type Plan = {
   stance: string; combo?: string[]; trigger?: string; say?: string;
   used?: string; usedText?: string; // the taught rule this plan follows ("counter#1") and its readable form
   requestId?: string | null; teeVerified?: boolean | null; mock?: boolean; reason?: string;
+  camp?: string[]; campMs?: number; // what the bot's own camp model suggested, and how long it took
 };
 export const SAFE_STOP = (reason: string): Plan => ({ stance: "safe_stop", reason });
 
