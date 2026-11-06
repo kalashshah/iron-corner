@@ -747,6 +747,7 @@ public partial class Game : MonoBehaviour
         }
         toast.transform.parent.gameObject.SetActive(Time.unscaledTime < toastUntil && !summary.activeSelf);
         UpdateHud(); UpdateTabs();
+        if (cine) canvas.GetComponent<Canvas>().enabled = false;
     }
 
     // Time scale, post pulses and smoke from damaged bots. Hit-stop beats slow-mo beats normal.
@@ -818,6 +819,30 @@ public partial class Game : MonoBehaviour
         return h != null ? h.position : f.transform.position + Vector3.up * 1.7f;
     }
 
+    // -cine (demo film): the HUD is hidden and a director cuts between close shots every 2-3.5 s.
+    // The slow-mo impact and KO cams below still take over when they fire.
+    static readonly bool cine = Array.IndexOf(Environment.GetCommandLineArgs(), "-cine") >= 0;
+    int cineShot = -1; float cineNext;
+    bool CineShot(Vector3 pa, Vector3 pb, float tt, out Vector3 pos, out Vector3 look)
+    {
+        pos = look = default;
+        if (!cine || (mode != Mode.Fight && mode != Mode.Train)) return false;
+        if (tt >= cineNext) { cineShot = (cineShot + 1 + UnityEngine.Random.Range(0, 2)) % 5; cineNext = tt + UnityEngine.Random.Range(2.2f, 3.5f); camSnap = true; }
+        var mid = (pa + pb) * 0.5f;
+        var axis = new Vector3(pb.x - pa.x, 0, pb.z - pa.z).normalized;
+        var side = Vector3.Cross(Vector3.up, axis);
+        float u = tt - (cineNext - 3f); // time into the shot, for slow drifts
+        switch (cineShot)
+        {
+            case 0: pos = mid + side * 2.7f + Vector3.up * 0.55f + axis * (0.3f - u * 0.08f); look = mid + Vector3.up * 1.35f; break;            // low ringside, heroic
+            case 1: pos = pa - axis * 1.15f + side * 0.75f + Vector3.up * 1.75f; look = pb + Vector3.up * 1.45f; break;                           // over a's shoulder
+            case 2: pos = pb + axis * 1.15f - side * 0.75f + Vector3.up * 1.75f; look = pa + Vector3.up * 1.45f; break;                           // over b's shoulder
+            case 3: pos = mid + Quaternion.AngleAxis(tt * 14f, Vector3.up) * side * 3.0f + Vector3.up * 1.4f; look = mid + Vector3.up * 1.15f; break; // close orbit
+            default: pos = mid + side * (4.6f - u * 0.25f) + Vector3.up * 3.6f; look = mid + Vector3.up * 0.8f; break;                            // high crane, pushing in
+        }
+        return true;
+    }
+
     void UpdateCamera()
     {
         Vector3 pa = a.transform.position, pb = b.transform.position, pos, look;
@@ -843,6 +868,7 @@ public partial class Game : MonoBehaviour
             look = mid + Vector3.up * 0.95f;
         }
         float rate = 3f;
+        if (CineShot(pa, pb, tt, out var cp, out var cl)) { pos = cp; look = cl; rate = 6f; }
         if (Time.unscaledTime < impactCamUntil && koTarget == null)
         {
             // Special impact: cut in close from the camera's side of the fight, slightly low, right on the contact point.
@@ -1352,15 +1378,21 @@ public partial class Game : MonoBehaviour
         {
             yield return Connect();
             a.botId = "bot_a"; a.displayName = "Brass Knuckle"; // the offline sim's demo bot (a stored id from an older run won't exist)
-            bool dodges = Array.IndexOf(args, "-dodges") >= 0 || Array.IndexOf(args, "-strikes") >= 0; // sparring (dodges: we slip; strikes: we punch every move in turn)
-            if (dodges) { StartTrain(); counterAttacks.AddRange(new[] { "jab", "hook_l", "cross", "hook_r" }); }
+            bool coach = Array.IndexOf(args, "-coach") >= 0; // demo film: type the coaching line, then the dummy tests it
+            bool dodges = coach || Array.IndexOf(args, "-dodges") >= 0 || Array.IndexOf(args, "-strikes") >= 0; // sparring (dodges: we slip; strikes: we punch every move in turn)
+            if (dodges) { StartTrain(); if (!coach) counterAttacks.AddRange(new[] { "jab", "hook_l", "cross", "hook_r" }); }
             else { budgetUsd = 0.25f; StartFight("normal"); }
             yield return Wait(0.5f);
+            int si = Array.IndexOf(args, "-secs");
+            float secs = si >= 0 && si + 1 < args.Length ? float.Parse(args[si + 1], System.Globalization.CultureInfo.InvariantCulture) : 14f;
             Time.captureFramerate = 30;
             if (dodges && Array.IndexOf(args, "-strikes") < 0) StartCoroutine(AutoDodge(session));
             if (Array.IndexOf(args, "-strikes") >= 0) { Fighter.logStrikes = true; StartCoroutine(AutoPunch(session)); }
-            for (int i = 0; i < 30 * 14 && !(over && koPanel.activeSelf); i++)
+            int koFrame = -1;
+            for (int i = 0; i < 30 * secs && (koFrame < 0 || i < koFrame + 30 * 3); i++)
             {
+                if (koFrame < 0 && over && koPanel.activeSelf) koFrame = i; // keep the KO screen for 3 s
+                if (coach && i == 45) { trainField.text = "when he throws a left hook, slip right and uppercut"; SendTyped(trainField, trainTranscript); }
                 yield return new WaitForEndOfFrame();
                 var tex = ScreenCapture.CaptureScreenshotAsTexture();
                 File.WriteAllBytes(Path.Combine(captureDir, $"f{i:0000}.jpg"), tex.EncodeToJPG(85));
