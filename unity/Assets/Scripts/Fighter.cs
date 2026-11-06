@@ -45,7 +45,8 @@ public class Fighter : MonoBehaviour
 
     // Measured from the clips with Editor/Measure.cs (samples every clip, tracks both hands):
     // which fist throws it, when it is fully out (normalized clip time), and the fighter distance at which that fist meets the target
-    // (ranges tuned from the capture-mode [strike] log: clean hits land at 0.95-1.1 m).
+    // (ranges tuned from the capture-mode [strike] log: at 0.95-1.05 m the knuckles finished 0.1-0.35 m from the face, i.e. inside
+    // the other robot, so every range is ~15 cm longer and the fist stops at the face instead of passing through it).
     // radius: how close the knuckles must pass to the target for a clean hit. Straights drive into the face; hooks and
     // uppercuts arc past it, so they get a wider radius (measured with -record -strikes: at range a clean cross passes at
     // ~0.5, a hook at ~0.6, an uppercut at ~0.65 knuckles-to-face).
@@ -56,17 +57,17 @@ public class Fighter : MonoBehaviour
     }
     static readonly Dictionary<string, Strike> Strikes = new()
     {
-        ["jab"] = new(HumanBodyBones.LeftHand, 0.28f, 1.05f, 0.6f),
-        ["cross"] = new(HumanBodyBones.RightHand, 0.32f, 1.05f, 0.68f),
-        ["hook_l"] = new(HumanBodyBones.LeftHand, 0.27f, 0.98f, 0.72f),
-        ["hook_r"] = new(HumanBodyBones.RightHand, 0.35f, 0.98f, 0.72f),
-        ["uppercut"] = new(HumanBodyBones.RightHand, 0.33f, 1.0f, 0.82f),
-        ["body"] = new(HumanBodyBones.LeftHand, 0.42f, 1.05f, 0.72f, true),
+        ["jab"] = new(HumanBodyBones.LeftHand, 0.28f, 1.2f, 0.6f),
+        ["cross"] = new(HumanBodyBones.RightHand, 0.32f, 1.2f, 0.68f),
+        ["hook_l"] = new(HumanBodyBones.LeftHand, 0.27f, 1.13f, 0.72f),
+        ["hook_r"] = new(HumanBodyBones.RightHand, 0.35f, 1.13f, 0.72f),
+        ["uppercut"] = new(HumanBodyBones.RightHand, 0.33f, 1.15f, 0.82f),
+        ["body"] = new(HumanBodyBones.LeftHand, 0.42f, 1.2f, 0.72f, true),
     };
     public static float RangeOf(string move) => Strikes.TryGetValue(move, out var s) ? s.range : Reach;
 
     // MinGap: chest-to-chest with the punch lean baked in, bodies never touch. Reach: longest punch plus a little slack.
-    public const float RingHalf = 2.35f, MinGap = 0.95f, Reach = 1.4f;
+    public const float RingHalf = 2.35f, MinGap = 1.08f, Reach = 1.5f;
 
 
     readonly Queue<string> queue = new();
@@ -310,7 +311,7 @@ public class Fighter : MonoBehaviour
         // dodge lean: slip rolls the torso into the slip and turns the shoulders; the weave folds forward at the bottom of the U
         float dk = DodgeK;
         // x < 0 folds forward at the waist (never back), y turns the shoulders into the slip, z is a small side tilt
-        var lean = weave ? new Vector3(-30f * dk, 8f * dodgeSide * dk, 6f * dodgeSide * Mathf.Sin(Mathf.PI * N)) : new Vector3(-12f * dk, 18f * dodgeSide * dk, 9f * dodgeSide * dk);
+        var lean = weave ? new Vector3(-22f * dk, 8f * dodgeSide * dk, 6f * dodgeSide * Mathf.Sin(Mathf.PI * N)) : new Vector3(-12f * dk, 18f * dodgeSide * dk, 9f * dodgeSide * dk);
         if (spine != null) spine.rotation = J(jolt * 0.35f + new Vector3(breathe * 0.5f, 0, 0) + lean * 0.45f) * spine.rotation;
         if (chest != null) chest.rotation = J(jolt * 0.3f + new Vector3(breathe, -sway * 0.6f, 0) + lean * 0.55f) * chest.rotation;
         // eyes on the opponent: a small yaw toward his head, clamped so the clip's own head work still shows
