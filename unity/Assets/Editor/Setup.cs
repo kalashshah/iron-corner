@@ -454,6 +454,25 @@ public static class Setup
         if (Application.isBatchMode) EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
     }
 
+    // APK to share with judges (debug-signed, sideloaded; not for Play). IL2CPP + ARM64: newer phones are 64-bit only.
+    [MenuItem("Iron Corner/Build Android APK")]
+    public static void BuildAndroid()
+    {
+        EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        EditorUserBuildSettings.buildAppBundle = false;
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+        {
+            scenes = new[] { "Assets/Scenes/Main.unity" },
+            locationPathName = "Builds/IronCorner.apk",
+            target = BuildTarget.Android,
+            options = BuildOptions.None,
+        });
+        Debug.Log($"[setup] android build: {report.summary.result} {report.summary.totalSize / (1024 * 1024)} MB");
+        if (Application.isBatchMode) EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
+    }
+
     // Xcode project for a personal-device install (automatic signing, team J99B88X7CK). Not for the App Store.
     [MenuItem("Iron Corner/Build iOS Xcode Project")]
     public static void BuildIOS()

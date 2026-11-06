@@ -126,7 +126,7 @@ public partial class Game : MonoBehaviour
             aAlive = (bool?)bot["alive"] != false;
             aNeedsRevive = (bool?)bot["needsRevive"] == true;
             int repair = (int?)bot["repairIn"] ?? 0;
-            cardAcct.text = $"{bot["accountId"]}" + (bot["agentId"]?["tokenId"] != null ? $"  ·  Agentic ID #{bot["agentId"]["tokenId"]}" : "") + (aAlive ? "" : aNeedsRevive
+            cardAcct.text = $"{bot["accountId"]}" + ((bot["agentId"] is JObject ag && (ag["tokenId"]?.Type is JTokenType.Integer or JTokenType.String)) ? $"  ·  Agentic ID #{ag["tokenId"]}" : "") + (aAlive ? "" : aNeedsRevive
                 ? "  <color=#F2523F>KNOCKED OUT in a high-stakes fight — World ID revive needed</color>"
                 : $"  <color=#F2A33A>Repairing after a KO · {repair} s</color>");
             fightBtn.SetLabel(!aAlive ? (aNeedsRevive ? "REVIVE  <size=24><color=#9EA5B0>World ID</color></size>" : $"REPAIRING · {repair} s")

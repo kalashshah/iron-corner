@@ -89,7 +89,8 @@ Payments currently settle in testnet HBAR (1 cent of damage = 0.01 HBAR). Settin
 ### World: ID Agent Pass
 
 - The backend starts an OpenID Connect device-flow request on `auth.world.org` when an action needs a human: entering a high-stakes fight, or reviving a knocked-out bot.
-- The game shows the QR code and user code. The owner approves in World App while the backend polls.
+- The same request also has a same-phone path. On an iPhone, the game opens World's sign-in in an in-app sheet (Authorization Code + PKCE through our backend). World App approves, and the sheet closes itself. From a second device, the owner scans the QR code or enters the user code instead. Whichever path finishes first settles the approval.
+- The client secret and the code exchange stay on the backend. The game only polls the approval's status.
 - The backend validates the ID token itself (issuer, subject pinned to the bot's owner, `acr`, `amr` containing `pop`, fresh `auth_time`), then marks the approval used in the same step that runs the action. An approval works once.
 - Denied, expired and cancelled requests all leave the action undone. The game says "Not approved, nothing happened."
 - Integration debrief: [`docs/world-debrief.md`](docs/world-debrief.md).
