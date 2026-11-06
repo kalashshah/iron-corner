@@ -247,7 +247,7 @@ export function tapeProfile(opp: string, episodes: any[]) {
 async function scout(f: Fight, me: string) {
   const b = state.bots[me], opp = opponent(f, me);
   if (b.house || b.brain.scouting[opp]?.length) return; // house bots don't shop; a known opponent needs no report
-  const tapes = Object.values(state.fights).filter((x) => x.fightId !== f.fightId && x.episode?.root && !x.episode.mock && (x.a === opp || x.b === opp))
+  const tapes = Object.values(state.fights).filter((x) => x.fightId !== f.fightId && x.episode?.root && !x.episode.mock && x.hits.length > 0 && (x.a === opp || x.b === opp))
     .sort((x, y) => (y.createdAt > x.createdAt ? 1 : -1)).slice(0, 2);
   if (!tapes.length) return; // nothing to study, so nothing to buy
   const paid = await hedera.payScout(b, `${f.fightId}:scout:${me}`);

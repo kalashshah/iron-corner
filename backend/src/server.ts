@@ -222,7 +222,7 @@ app.get("/fights/:id", (req, res) => {
   const f = fightOf(req.params.id);
   res.json({ fightId: f.fightId, a: f.a, b: f.b, stakes: f.stakes, status: f.status, budgets: f.budgets, winner: f.winner,
     payments: f.payments, ledgerTopic: f.ledgerTopic, decisions: f.decisions, hits: f.hits.length, lessons: f.lessons ?? null,
-    episode: f.episode ?? null,
+    episode: f.episode ?? null, scouts: f.scouts ?? [],
     ...(f.engine ? { engine: true, house: !!f.house, stakeCents: f.stakeCents, seedHash: f.seedHash, seed: f.status === "over" ? f.seed : null,
       endReason: f.endReason ?? null, ratingDelta: f.ratingDelta ?? null } : {}) });
 });
