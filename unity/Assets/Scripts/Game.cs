@@ -131,8 +131,10 @@ public partial class Game : MonoBehaviour
 
     IEnumerator RefreshHome()
     {
-        yield return Api.Call("GET", $"/bots/{a.botId}", null, bot =>
+        string id = a.botId;
+        yield return Api.Call("GET", $"/bots/{id}", null, bot =>
         {
+            if (a.botId != id) return; // a late reply for the previous fighter must not repaint the new one
             a.displayName = (string)bot["name"] ?? a.displayName;
             ShowCorner(bot); // Flow.cs: paint, league, rating, record, training lock
             cardMoney.text = Money(bot);
