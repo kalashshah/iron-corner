@@ -105,7 +105,7 @@ const fightKeys = (b: Bot): Record<string, string> => ({
 });
 
 export async function issue(b: Bot) {
-  if (!ENS_LIVE || b.ens?.registeredTx || b.house || !b.evmAddress || !state.ens?.registered) return;
+  if (!ENS_LIVE || b.ens?.registeredTx || b.payAs || !b.evmAddress || !state.ens?.registered) return;
   const label = b.ens?.label ?? labelFor(b.name, Object.values(state.bots).map((x) => x.ens?.label).filter(Boolean) as string[]);
   const name = `${label}.${state.ens.parent}`, n = dns(name), me = ops!.address;
   b.ens = { label, name, resolver: b.ens?.resolver ?? null, registeredTx: null, rolesTx: null, synced: {} }; save();
