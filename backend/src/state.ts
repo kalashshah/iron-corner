@@ -21,7 +21,6 @@ export const modes = {
   zg: mode("ZG_MODE", !!env.ZG_API_KEY),
   storage: mode("ZG_STORAGE_MODE", !!env.OG_OPS_PRIVATE_KEY),
   hedera: mode("HEDERA_MODE", !!(env.HEDERA_OPERATOR_PRIVATE_KEY && env.BOT_A_PRIVATE_KEY && env.BOT_B_PRIVATE_KEY)),
-  world: mode("WORLD_MODE", !!env.WORLD_CLIENT_ID),
 };
 export const PORT = Number(env.PORT ?? 8787);
 export const SELF_URL = env.SELF_URL ?? `http://127.0.0.1:${PORT}`;
@@ -68,7 +67,7 @@ export type AgentId = {
   contract: string; tokenId: string | null; tx: string | null; version: number; // version = last brain version recorded on chain
   records: { version: number; tx: string; at: string }[]; retry: "mint" | "record" | null; error?: string; mock?: boolean;
 };
-export type User = { userId: string; tokenHash: string; createdAt: string; worldSub: string | null; worldVerified: boolean; botId: string | null };
+export type User = { userId: string; tokenHash: string; createdAt: string; botId: string | null };
 export type QEntry = { botId: string; ownerId: string; league: string; rating: number; level: number; stakeCents: number; joinedAt: number };
 export type FightEvent = { seq: number; t: number; type: string; [k: string]: unknown };
 export type Camp = {
@@ -93,13 +92,8 @@ export type Fight = {
   engine?: boolean; house?: boolean; stakeCents?: number; seed?: string; seedHash?: string; events?: FightEvent[];
   endReason?: string; ratingDelta?: Record<string, number>;
 };
-export type Approval = {
-  approvalId: string; botId: string; action: "high_stakes" | "revive" | "cash_out" | "sign_in"; userId?: string; mockSub?: string;
-  status: "pending" | "approved" | "denied" | "expired" | "cancelled" | "used";
-  qrUri: string; appUri?: string; userCode: string; expiresAt: string; startedAt: number; sub?: string; error?: string; mock?: boolean;
-};
 type State = {
-  bots: Record<string, Bot>; fights: Record<string, Fight>; approvals: Record<string, Approval>;
+  bots: Record<string, Bot>; fights: Record<string, Fight>;
   ledgerTopic: string | null; brainSecret: string; mockBlobs: Record<string, string>;
   users: Record<string, User>; queue: QEntry[]; camps: Record<string, Camp>; mockHbar: Record<string, number>;
 };
@@ -119,7 +113,7 @@ function seed(): State {
   });
   return {
     bots: { bot_a: bot("bot_a", "Brass Knuckle", false, 0.6, 0.5), bot_b: bot("bot_b", "Rustbucket", true, 0.4, 0.6) },
-    fights: {}, approvals: {}, ledgerTopic: null, users: {}, queue: [], camps: {}, mockHbar: {},
+    fights: {}, ledgerTopic: null, users: {}, queue: [], camps: {}, mockHbar: {},
     brainSecret: crypto.randomBytes(32).toString("hex"), mockBlobs: {},
   };
 }

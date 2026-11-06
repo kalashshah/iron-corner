@@ -29,7 +29,7 @@ function wav(seconds = 0.5) { // 16 kHz mono 16-bit silence
   return new Blob([b], { type: "audio/wav" });
 }
 
-let health: any, fightId = "", rootA = "", approvalId = "";
+let health: any, fightId = "", rootA = "";
 const ROUND = `smoke_${Date.now()}`;
 let roundStart = 0, energy0 = -1;
 // Shadow-sparring demos: the owner's moves on the pad with what happened. hook_r → slip left → cross worked; jab at range whiffed.
@@ -184,39 +184,9 @@ await step("end fight (lessons + brain save queued)", async () => {
   check(f.body.decisions.every((d: any) => d.outcome || d.stance === "safe_stop"), "decisions not settled into fight experience");
   return `winner=${r.body.winner} xp=${JSON.stringify(r.body.xp)} lessons=${JSON.stringify(r.body.lessons)}`;
 });
-await step("approval create", async () => {
-  const r = await call("POST", "/approvals", { botId: "bot_a", action: "high_stakes" });
-  check(r.body.approvalId && r.body.qrUri && r.body.userCode, JSON.stringify(r.body)); approvalId = r.body.approvalId;
-  return `${approvalId} code=${r.body.userCode} qr=${r.body.qrUri}`;
-});
-await step("approval qr.png", async () => {
-  const r = await call("GET", `/approvals/${approvalId}/qr.png`);
-  check(r.status === 200 && Buffer.isBuffer(r.body) && r.body.subarray(1, 4).toString() === "PNG", "not a PNG");
-});
-await step("high stakes refused before approval", async () => {
-  const r = await call("POST", "/fights", { stakes: "high", approvalId });
-  check(r.status === 403, `status ${r.status}`);
-});
-await step("approval poll → approved", async () => {
-  for (let i = 0; i < 20; i++) {
-    const r = await call("GET", `/approvals/${approvalId}`);
-    if (r.body.status !== "pending") { check(r.body.status === "approved", r.body.status); return; }
-    await sleep(500);
-  }
-  throw new Error("still pending (live World mode needs a human)");
-});
-await step("high stakes fight uses approval once", async () => {
-  const r = await call("POST", "/fights", { stakes: "high", approvalId, budgetUsd: 0.05 });
+await step("high stakes fight needs no extra approval", async () => {
+  const r = await call("POST", "/fights", { stakes: "high", budgetUsd: 0.05 });
   check(r.status === 200, JSON.stringify(r.body));
-  const again = await call("POST", "/fights", { stakes: "high", approvalId });
-  check(again.status === 403, "approval reused");
-  const s = await call("GET", `/approvals/${approvalId}`);
-  check(s.body.status === "used", s.body.status);
-});
-await step("approval cancel", async () => {
-  const c = await call("POST", "/approvals", { botId: "bot_a", action: "revive" });
-  const r = await call("POST", `/approvals/${c.body.approvalId}/cancel`);
-  check(r.body.status === "cancelled", r.body.status);
 });
 await step("home shows growth", async () => {
   const r = await call("GET", "/bots");
@@ -240,7 +210,7 @@ for (const [i, name] of ["Smoke Alpha", "Smoke Bravo"].entries()) {
     check(r.status === 200 && r.body.token?.length >= 40 && r.body.userId, JSON.stringify(r.body));
     players.push({ name: `${name} ${Date.now() % 1000}`, token: r.body.token, userId: r.body.userId, botId: "" });
     const m = await call("GET", "/me", undefined, r.body.token);
-    check(m.status === 200 && m.body.botId === null && m.body.worldVerified === false && m.body.league === "open", JSON.stringify(m.body));
+    check(m.status === 200 && m.body.botId === null && m.body.league === "open", JSON.stringify(m.body));
     return r.body.userId;
   });
 }
@@ -281,30 +251,6 @@ await step("owner checks (401 no token, 403 other player)", async () => {
 await step("queue refuses an untrained bot", async () => {
   const r = await authed(players[0])("POST", "/queue", { botId: players[0].botId, stakeCents: 10 });
   check(r.status === 409 && r.body.reason === "needs_training", JSON.stringify(r.body));
-});
-const signIn = async (p: P, mockSub: string) => {
-  const r = await authed(p)("POST", "/auth/world/start", { mockSub });
-  check(r.status === 200 && r.body.approvalId && r.body.qrUri && r.body.userCode && r.body.action === "sign_in", JSON.stringify(r.body));
-  for (let k = 0; k < 40; k++) {
-    const s = await call("GET", `/approvals/${r.body.approvalId}`);
-    if (s.body.status !== "pending") return s.body;
-    await sleep(500);
-  }
-  throw new Error("sign-in still pending (live World needs a human)");
-};
-for (const [i, p] of players.entries()) {
-  await step(`World sign-in player ${i + 1}`, async () => {
-    const s = await signIn(p, `smoke-human-${p.userId}`);
-    check(s.status === "approved", JSON.stringify(s));
-    const m = await authed(p)("GET", "/me");
-    check(m.body.worldVerified === true && m.body.league === "verified" && m.body.botId === p.botId, JSON.stringify(m.body));
-    return `league=${m.body.league}`;
-  });
-}
-await step("one verified fighter per World subject", async () => {
-  const u = await call("POST", "/users"), p3: P = { name: "", token: u.body.token, userId: u.body.userId, botId: "" };
-  const s = await signIn(p3, `smoke-human-${players[0].userId}`);
-  check(s.status === "denied" && s.error === "world_already_used", JSON.stringify(s));
 });
 await step("first training round + coaching line (both players)", async () => {
   await Promise.all(players.map(async (p) => {

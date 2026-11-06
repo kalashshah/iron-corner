@@ -1,4 +1,4 @@
-// Live latency check for zg.decide/learn with a trained brain. Usage: ZG_MODE=live ZG_STORAGE_MODE=mock HEDERA_MODE=mock WORLD_MODE=mock STATE_FILE=bench.json npx tsx scripts/bench-decide.ts
+// Live latency check for zg.decide/learn with a trained brain. Usage: ZG_MODE=live ZG_STORAGE_MODE=mock HEDERA_MODE=mock STATE_FILE=bench.json npx tsx scripts/bench-decide.ts
 import * as zg from "../src/zg.ts";
 import type { Bot } from "../src/state.ts";
 const bot = { botId: "bot_a", name: "Brass Knuckle", house: false, brain: { botId: "bot_a", version: 1, lessons: ["uppercuts keep missing"], scouting: { bot_b: ["drops guard after a hook"] },

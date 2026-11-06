@@ -2,13 +2,11 @@
 import express from "express";
 import crypto from "node:crypto";
 import { Readable } from "node:stream";
-import QRCode from "qrcode";
 import { env, modes, state, save, id, fail, refuse, newBrain, HttpError, PORT, SELF_URL, type Bot, type Fight, type Payment, type User } from "./state.ts";
 import { MOVES, DAMAGE, commandFor, phraseFor, applyLearn, addLessons, addDrill, dailyView, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
 import * as hedera from "./hedera.ts";
-import * as world from "./world.ts";
 import * as demos from "./demos.ts";
 import * as agentid from "./agentid.ts";
 import * as match from "./match.ts";
@@ -55,11 +53,10 @@ function ownBot(req: express.Request, botId: string): Bot {
   if (b.owner) { const u = me(req); if (u.userId !== b.owner) fail(403, "not your bot"); }
   return b;
 }
-const leagueOf = (b: Bot) => (b.owner && state.users[b.owner]?.worldVerified ? "verified" : "open");
+const leagueOf = (_b: Bot) => "open"; // one league since World ID was removed
 const trained = (b: Bot) => !b.owner || !!(b.onboarding?.round && b.onboarding.coached);
 const onboard = (b: Bot) => (b.onboarding ??= { round: false, coached: false, funded: false });
 const fightOf = (fid: string): Fight => state.fights[fid] ?? fail(404, "unknown fight");
-const owned = (f: { a: string; b: string }) => (state.bots[f.a].house ? f.b : f.a);
 
 // multipart without a dependency: hand the stream to the web Request parser.
 async function form(req: express.Request) {
@@ -97,7 +94,7 @@ async function teach(b: Bot, text: string) {
   return { ...out, daily: { ...dailyView(b), justDone: goalHit } };
 }
 
-// A normal-fight KO repairs itself after REPAIR_MS (engine.ts); a high-stakes KO needs a World ID revive.
+// A normal-fight KO repairs itself after REPAIR_MS (engine.ts); a high-stakes KO waits for its owner to revive it.
 
 async function botView(b: Bot) {
   repairIfDue(b);
@@ -127,7 +124,6 @@ app.get("/bots/:id/brain", async (req, res) => {
 });
 app.post("/bots/:id/revive", (req, res) => {
   const b = ownBot(req, req.params.id);
-  world.consume(req.body?.approvalId, b.botId, "revive");
   b.alive = true; save();
   res.json({ botId: b.botId, alive: true });
 });
@@ -156,7 +152,7 @@ app.post("/train/:botId/save", limit(20, "save"), async (req, res) => void res.j
 
 // ---- fights ----
 app.post("/fights", async (req, res) => {
-  const { a = "bot_a", b = "bot_b", stakes = "normal", budgetUsd = 0.5, approvalId } = req.body ?? {};
+  const { a = "bot_a", b = "bot_b", stakes = "normal", budgetUsd = 0.5 } = req.body ?? {};
   ownBot(req, String(a)); ownBot(req, String(b));
   if (a === b) fail(400, "a bot cannot fight itself");
   if (!["normal", "high"].includes(stakes)) fail(400, "stakes must be normal or high");
@@ -164,9 +160,8 @@ app.post("/fights", async (req, res) => {
   if (!(cents >= 5 && cents <= 500)) fail(400, "budgetUsd must be 0.05..5");
   for (const x of [a, b]) {
     const kb = state.bots[x]; repairIfDue(kb);
-    if (!kb.alive) fail(409, kb.koStakes === "high" ? `${x} was knocked out in a high-stakes fight; revive needs a World ID approval` : `${x} is repairing (${repairIn(kb)} s)`);
+    if (!kb.alive) fail(409, kb.koStakes === "high" ? `${x} was knocked out in a high-stakes fight; its owner can revive it` : `${x} is repairing (${repairIn(kb)} s)`);
   }
-  if (stakes === "high") world.consume(approvalId, owned({ a, b }), "high_stakes"); // marks it used in this same step
   const f: Fight = { fightId: id("f"), a, b, stakes, status: "live", budgets: { [a]: cents, [b]: cents }, startBudget: cents,
     winner: null, payments: [], decisions: [], hits: [], ledgerTopic: hedera.ledgerTopic(), createdAt: new Date().toISOString() };
   state.fights[f.fightId] = f; save();
@@ -251,51 +246,17 @@ app.post("/fights/:id/end", async (req, res) => {
   res.json(await finishFight(f));
 });
 
-// ---- approvals ----
-const approvalView = (a: ReturnType<typeof world.get>) =>
-  ({ approvalId: a.approvalId, botId: a.botId, action: a.action, status: a.status, qrUri: a.qrUri, ...(a.appUri ? { appUri: a.appUri } : {}), userCode: a.userCode, expiresAt: a.expiresAt,
-    ...(a.error ? { error: a.error } : {}), ...(a.mock ? { mock: true } : {}) });
-app.post("/approvals", limit(20, "ap"), async (req, res) => {
-  if (req.body?.action === "sign_in") fail(400, "use POST /auth/world/start");
-  ownBot(req, String(req.body?.botId));
-  res.json(approvalView(await world.create(String(req.body?.botId), req.body?.action)));
-});
-app.get("/approvals/:id", (req, res) => void res.json(approvalView(world.get(req.params.id))));
-app.get("/approvals/:id/qr.png", async (req, res) => {
-  res.type("png").send(await QRCode.toBuffer(world.get(req.params.id).qrUri, { width: 512, margin: 2 }));
-});
-// Same-phone approval: in-app browser sheet → World → /world/callback (the HTTPS redirect registered for the app).
-app.get("/world/go/:id", limit(20, "worldgo"), async (req, res) => void res.redirect(await world.authorizeUrl(req.params.id, req.query.p === "sheet")));
-app.get("/world/callback", limit(20, "worldcb"), async (req, res) => {
-  const { a, sheet } = await world.callback(SELF_URL + req.originalUrl);
-  const status = a?.status ?? "expired";
-  const back = `ironcorner://world?approval=${encodeURIComponent(a?.approvalId ?? "")}&status=${status}`;
-  if (sheet) return void res.redirect(back); // closes the in-app sheet
-  const msg = status === "approved" ? "Approved ✓" : status === "pending" ? "Still waiting…" : `Not approved (${status})`;
-  res.type("html").send(`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Iron Corner</title>` +
-    `<body style="font:18px system-ui;background:#0d0e12;color:#f2f2f5;text-align:center;padding:60px 20px"><h2>${msg}</h2>` +
-    `<p><a style="color:#ff9421" href="${back}">Back to Iron Corner</a></p><script>location.replace(${JSON.stringify(back)})</script>`);
-});
-app.post("/approvals/:id/cancel", (req, res) => void res.json(approvalView(world.cancel(req.params.id))));
-
 // ---- players (docs/flow-spec.md) ----
 app.post("/users", limit(5, "users"), (_req, res) => {
   const token = crypto.randomBytes(32).toString("base64url"), userId = id("u");
-  state.users[userId] = { userId, tokenHash: sha256(token), createdAt: new Date().toISOString(), worldSub: null, worldVerified: false, botId: null };
+  state.users[userId] = { userId, tokenHash: sha256(token), createdAt: new Date().toISOString(), botId: null };
   save();
   res.json({ userId, token });
 });
 app.get("/me", (req, res) => {
   const u = me(req), b = u.botId ? state.bots[u.botId] : null;
-  res.json({ userId: u.userId, worldVerified: u.worldVerified, league: u.worldVerified ? "verified" : "open", botId: b?.botId ?? null });
+  res.json({ userId: u.userId, league: "open", botId: b?.botId ?? null });
 });
-// World ID sign-in (device flow, action sign_in). Approved → user.worldSub; a subject behind another fighter → denied, error world_already_used.
-app.post("/auth/world/start", limit(10, "world"), async (req, res) => {
-  const u = me(req);
-  const mockSub = modes.world === "mock" && typeof req.body?.mockSub === "string" ? req.body.mockSub.slice(0, 60) : undefined; // tests only
-  res.json(approvalView(await world.create("", "sign_in", u.userId, mockSub)));
-});
-
 export const PAINTS = ["brass", "gunmetal", "crimson", "cobalt", "jade", "bone"];
 const MAX_PLAYER_BOTS = Number(env.MAX_PLAYER_BOTS ?? 8); // each costs the operator 0.3 testnet HBAR
 app.post("/bots", limit(10, "bots"), async (req, res) => {
@@ -306,8 +267,7 @@ app.post("/bots", limit(10, "bots"), async (req, res) => {
   const paint = String(req.body?.paint ?? "");
   if (!PAINTS.includes(paint)) fail(400, `paint: one of ${PAINTS.join(", ")}`);
   if (Object.values(state.bots).filter((b) => b.owner).length >= MAX_PLAYER_BOTS) refuse("arena_full", { error: "The arena is full for this testnet build. Try the demo bots." });
-  if (u.worldVerified && Object.values(state.users).some((x) => x.userId !== u.userId && x.worldSub === u.worldSub && x.botId)) refuse("world_already_used");
-  const b: Bot = { botId: id("bot"), name, house: false, accountId: null, evmAddress: null, alive: true, ownerSub: u.worldSub,
+  const b: Bot = { botId: id("bot"), name, house: false, accountId: null, evmAddress: null, alive: true, ownerSub: null,
     brain: newBrain("", 0.5, 0.5), brainHistory: [], owner: u.userId, paint, rating: 1000, record: { w: 0, l: 0 },
     onboarding: { round: false, coached: false, funded: false } };
   b.brain.botId = b.botId;
@@ -419,8 +379,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // ---- start ----
-for (const a of Object.values(state.approvals)) if (a.status === "pending") a.status = "cancelled"; // their pollers died with the old process
-console.log(`[modes] 0G inference=${modes.zg} 0G storage=${modes.storage} hedera=${modes.hedera} (pay in ${hedera.PAY_ASSET}) world=${modes.world}`);
+console.log(`[modes] 0G inference=${modes.zg} 0G storage=${modes.storage} hedera=${modes.hedera} (pay in ${hedera.PAY_ASSET})`);
 await hedera.init();
 console.log(`[hedera] bots ${Object.values(state.bots).map((b) => `${b.botId}=${b.accountId}`).join(" ")} ledger=${hedera.ledgerTopic()}`);
 engine.closeOrphans();
