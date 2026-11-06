@@ -20,6 +20,7 @@ First real device code from `auth.world.org`: about 2 h 10 min after hacking sta
 6. Creating the app showed "We could not create the client. The service may be temporarily unavailable", but the app had been created. Its first secret was never displayed, so we added a second one.
 7. There is no nullifier in the OIDC flow, so making each approval single-use is entirely the app's job.
 8. No same-phone path for native apps. Our game runs on the same iPhone as World App, so a QR code is useless there. Opening `verification_uri_complete` goes game → Safari → World App, and then the player switches back to the game by hand. The docs list no mobile SDK, universal link or return-to-app parameter for Agent Pass. IDKit's Swift/Kotlin SDKs do have a direct deep link with `return_to`.
+9. The portal offers "Selfie Check" as an accepted-account level, but World App shows Selfie Check ("Proof of presence") as "coming soon", and production discovery lists only `orb` and `orb-face`. Without an Orb visit, a team can't complete a single production approval during the event.
 
 ## Missing capability or documentation
 
