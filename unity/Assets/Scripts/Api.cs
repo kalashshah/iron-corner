@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -16,11 +17,15 @@ public static class Api
     public static string Token;
     static void Auth(UnityWebRequest req) { if (!string.IsNullOrEmpty(Token)) req.SetRequestHeader("Authorization", "Bearer " + Token); }
 
+    // Command-line flags. Declared before ArgUrl: static fields initialise in source order. iOS doesn't pass launch arguments through to Unity, so the iOS Simulator gets them from the
+    // IC_ARGS environment variable instead (simctl launch with SIMCTL_CHILD_IC_ARGS), separated by "|" so a value can hold spaces.
+    public static readonly string[] Args = Environment.GetCommandLineArgs()
+        .Concat((Environment.GetEnvironmentVariable("IC_ARGS") ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries)).ToArray();
     // `-server <url>` on the command line wins for this run only (captures against a local backend); never saved.
     static readonly string ArgUrl = ArgAfter("-server");
     static string ArgAfter(string flag)
     {
-        var a = Environment.GetCommandLineArgs();
+        var a = Args;
         int i = Array.IndexOf(a, flag);
         return i >= 0 && i + 1 < a.Length ? a[i + 1] : null;
     }

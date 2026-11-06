@@ -102,7 +102,7 @@ public partial class Game
     // Identity is per server: a token from one backend means nothing to another (or to the offline sim).
     string Key(string k) => k + "@" + (Api.Offline ? "offline" : Api.BaseUrl);
     void Remember(string k, string v) { PlayerPrefs.SetString(Key(k), v); PlayerPrefs.Save(); }
-    void ForgetPlayer() { PlayerPrefs.DeleteKey(Key("token")); PlayerPrefs.DeleteKey(Key("botId")); PlayerPrefs.Save(); Api.Token = null; }
+    void ForgetPlayer() { PlayerPrefs.DeleteKey(Key("token")); PlayerPrefs.DeleteKey(Key("botId")); PlayerPrefs.Save(); Api.Token = null; a.botId = "bot_a"; } // a late reply for the old fighter then fails RefreshHome's check
 
     // After Connect: returning players go straight Home, everyone else starts at Welcome.
     IEnumerator Enter()
@@ -805,8 +805,18 @@ public partial class Game
     // ---------------------------------------------------------------- capture: first-run sequence (-capture <dir> -flow [-offline])
     IEnumerator CaptureFlow(Func<string, IEnumerator> shot)
     {
-        IEnumerator Wait(float s) { yield return new WaitForSecondsRealtime(s); }
+        // -demo (the demo film): human pace. Waits run 1.6x longer, the name and the coaching line are typed out,
+        // the paint swatches are tried one by one, and the training round runs 30 s.
+        bool demo = Array.IndexOf(Api.Args, "-demo") >= 0;
+        float pace = demo ? 1.6f : 1f;
+        IEnumerator Wait(float s) { yield return new WaitForSecondsRealtime(s * pace); }
         IEnumerator Until(Func<bool> c, float max) { float u = Time.realtimeSinceStartup + max; while (!c() && Time.realtimeSinceStartup < u) yield return null; }
+        IEnumerator Type(TMP_InputField f, string text, float per)
+        {
+            if (!demo) { f.text = text; yield break; }
+            f.text = "";
+            foreach (var ch in text) { f.text += ch; yield return new WaitForSecondsRealtime(per * UnityEngine.Random.Range(0.6f, 1.5f)); }
+        }
 
         yield return Connect();
         ForgetPlayer();
@@ -815,9 +825,11 @@ public partial class Game
         yield return shot("01_welcome");
 
         OpenCreate();
-        var args = Environment.GetCommandLineArgs();
+        var args = Api.Args;
         string Arg(string k, string d) { int i = Array.IndexOf(args, k); return i >= 0 && i + 1 < args.Length ? args[i + 1] : d; }
-        createName.text = Arg("-name", "Copper Kid");
+        yield return Wait(0.6f);
+        yield return Type(createName, Arg("-name", "Copper Kid"), 0.11f);
+        if (demo) foreach (var p in Paints) { PickPaint(p.id); yield return new WaitForSecondsRealtime(0.55f); }
         PickPaint(Arg("-paint", "cobalt"));
         yield return Wait(1.2f);
         yield return shot("02_create");
@@ -833,10 +845,10 @@ public partial class Game
         StartTrainGuided();
         yield return Wait(1.5f);
 
-        trainField.text = "when he throws a left hook, slip right and uppercut";
+        yield return Type(trainField, "when he throws a left hook, slip right and uppercut", 0.05f);
         SendTyped(trainField, trainTranscript);
-        roundSeconds = 16f;
-        float rEnd = Time.realtimeSinceStartup + 16.5f; bool mid = false;
+        roundSeconds = demo ? 30f : 16f;
+        float rEnd = Time.realtimeSinceStartup + roundSeconds + 0.5f; bool mid = false;
         string[] punches = { "jab", "cross", "uppercut", "hook_r", "body" };
         while (Time.realtimeSinceStartup < rEnd)
         {

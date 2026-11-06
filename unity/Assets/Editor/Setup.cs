@@ -524,7 +524,11 @@ public static class Setup
 
     // Xcode project for a personal-device install (automatic signing, team J99B88X7CK). Not for the App Store.
     [MenuItem("Iron Corner/Build iOS Xcode Project")]
-    public static void BuildIOS()
+    public static void BuildIOS() => BuildIOSFor(false);
+    // The iOS Simulator (the demo film is recorded there with simctl): an unsigned simulator SDK build in Builds/iOS-sim.
+    public static void BuildIOSSim() => BuildIOSFor(true);
+
+    static void BuildIOSFor(bool sim)
     {
         Crowd();
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
@@ -537,13 +541,16 @@ public static class Setup
             wa.SaveAndReimport();
         }
         PlayerSettings.iOS.iOSUrlSchemes = new[] { "ironcorner" }; // the 0G credits page hands the player back here
+        PlayerSettings.iOS.sdkVersion = sim ? iOSSdkVersion.SimulatorSDK : iOSSdkVersion.DeviceSDK;
+        if (sim) PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.ARM64; // Apple-silicon simulators
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/Main.unity" },
-            locationPathName = "Builds/iOS",
+            locationPathName = sim ? "Builds/iOS-sim" : "Builds/iOS",
             target = BuildTarget.iOS,
             options = BuildOptions.None,
         });
+        PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK; // never leave the project on the simulator SDK
         Debug.Log($"[setup] ios build: {report.summary.result}");
         if (Application.isBatchMode) EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
     }

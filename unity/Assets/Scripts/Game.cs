@@ -109,9 +109,9 @@ public partial class Game : MonoBehaviour
         BuildUI();
         ResetFighters();
         Show(Mode.Home);
-        var args = Environment.GetCommandLineArgs();
+        var args = Api.Args;
         int i = Array.IndexOf(args, "-capture");
-        if (i >= 0 && i + 1 < args.Length) { captureDir = args[i + 1]; StartCoroutine(Capture()); }
+        if (i >= 0 && i + 1 < args.Length) { captureDir = args[i + 1]; if (!Path.IsPathRooted(captureDir)) captureDir = Path.Combine(Application.persistentDataPath, captureDir); StartCoroutine(Capture()); } // relative: inside the app sandbox (iOS Simulator)
         int fi = Array.IndexOf(args, "-film");
         if (fi >= 0 && fi + 1 < args.Length) StartCoroutine(Film(args[fi + 1]));
         else StartCoroutine(Connect());
@@ -121,7 +121,7 @@ public partial class Game : MonoBehaviour
     IEnumerator Connect()
     {
         serverStatus.text = "Connecting to " + Api.BaseUrl + " …";
-        if (Array.IndexOf(Environment.GetCommandLineArgs(), "-offline") >= 0) Api.Offline = true; // captures: force the local sim
+        if (Array.IndexOf(Api.Args, "-offline") >= 0) Api.Offline = true; // captures: force the local sim
         else yield return Api.Probe(null);
         serverStatus.text = Api.Offline ? $"<color=#F2A33A>Can't reach {Api.BaseUrl} — running the local OFFLINE sim</color>" : $"<color=#5CDB85>Connected</color> · {Api.BaseUrl}";
         badge.text = Api.Offline ? "OFFLINE · local sim, no real payments" : "LIVE · " + Api.BaseUrl.Replace("http://", "").Replace("https://", "");
@@ -825,7 +825,7 @@ public partial class Game : MonoBehaviour
 
     // -cine (demo film): the HUD is hidden and a director cuts between close shots every 2-3.5 s.
     // The slow-mo impact and KO cams below still take over when they fire.
-    static readonly bool cine = Array.IndexOf(Environment.GetCommandLineArgs(), "-cine") >= 0;
+    static readonly bool cine = Array.IndexOf(Api.Args, "-cine") >= 0;
     int cineShot = -1; float cineNext;
     bool CineShot(Vector3 pa, Vector3 pb, float tt, out Vector3 pos, out Vector3 look)
     {
@@ -1343,7 +1343,7 @@ public partial class Game : MonoBehaviour
     IEnumerator AutoPunch(int s)
     {
         string[] all = { "jab", "cross", "hook_l", "hook_r", "uppercut", "body" };
-        var args = Environment.GetCommandLineArgs(); int gi = Array.IndexOf(args, "-tapgap");
+        var args = Api.Args; int gi = Array.IndexOf(args, "-tapgap");
         float gap = gi >= 0 && gi + 1 < args.Length && float.TryParse(args[gi + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var g) ? g : 1.1f;
         for (int i = 0; s == session; i++) { PadMove(all[i % all.Length]); yield return new WaitForSeconds(gap); }
     }
@@ -1388,7 +1388,7 @@ public partial class Game : MonoBehaviour
 
     IEnumerator Capture()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = Api.Args;
         int ti = Array.IndexOf(args, "-captureTag");
         string tag = ti >= 0 && ti + 1 < args.Length ? args[ti + 1] + "_" : "";
         Directory.CreateDirectory(captureDir);
