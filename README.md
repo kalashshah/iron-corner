@@ -21,13 +21,13 @@ flowchart LR
   B -- bot agent pays via x402 --> X[POST /arena/hit]
   X -- settle --> H[Hedera testnet]
   B -- hit + payment log --> L[HCS ledger topic]
-  B -- high stakes / revive --> W[World ID Agent Pass]
+  B -- fighter names + records --> E[ENS: kal.ironcorner.eth]
 ```
 
 1. Spar: on the move pad you box the sparring dummy yourself. Every move is saved as a demo with the moment it happened in (range, guards, what the dummy just threw) and how it went: landed, blocked, slipped, missed or got you hit. A round is 30 seconds. In fights the bot looks up the 6 demos closest to the moment and 0G picks its plan with them in the prompt, so it fights the way you showed it. The bubble then says "Like your coach: slip right then uppercut (worked 6/6)". Its own fights add low-weight demos too.
 2. Coach: you hold the mic and coach ("when he throws a left hook, slip right and uppercut"). 0G's `qwen3-omni-flash` transcribes it, and `qwen-flash` on 0G turns it into one brain rule: a counter, an opener or finisher combo, a style nudge, or a catchphrase. The game shows what it learned ("Learned counter: hook_l → dodge_r, uppercut") with the 0G request id. The sparring dummy then throws that left hook so you can watch the counter land. Three drills a day keeps a streak going.
 3. Remember: saving the brain encrypts it with a per-bot AES-256 key and stores it on 0G Storage. Each save is a new version with its own root hash.
-4. Approve: entering a high-stakes fight or reviving a knocked-out bot needs a fresh World ID approval from the owner. A denied, expired or cancelled request means the action does not happen.
+4. Scout: before meeting an opponent it knows nothing about, the bot decides by itself to buy a scouting report on that opponent's past fights (its 0G Storage tapes) for 2 cents, paid over x402 from its own Hedera account. The notes go into its brain.
 5. Fight: you can't coach during a fight. Every 1.5 s each bot sends the fight state to the backend, and 0G picks a stance and a combo from that bot's brain, naming the rule it followed. The bubble shows "Using: counter: hook_l → dodge_r, uppercut (learned in training)". The server resolves every exchange (so nobody can cheat from their phone) and Unity plays the result. Each clean hit makes the defender's agent pay the attacker through an x402-protected endpoint that settles on Hedera.
 6. Learn: after the fight, 0G writes 1 to 3 lessons per bot into its brain. The whole fight (every decision with its 0G request id, every hit and payment) is uploaded to 0G Storage as an episode log, and the game can replay the fight from that log.
 
@@ -42,10 +42,10 @@ Your bot gets better the more you train it, and it shows on the home screen as a
 ## A new player's first session
 
 1. **Create** a fighter: a name and one of six paint schemes. The server gives it its own Hedera testnet account and mints it a 0G Agentic ID (ERC-7857-style token on Galileo, contract `0x4Ed79445a389C9442657773138e2ffFabb25d170`).
-2. **Connect World ID**, or skip. Verified humans fight in the Verified league, where each person owns at most one fighter. Skipping puts you in the Open league.
+2. **Get a name.** The fighter is registered as `<name>.ironcorner.eth` on ENSv2 (Sepolia), owned by the fighter's own key.
 3. **Train one round first.** The queue refuses untrained fighters. Spar a 30-second round on the move pad and teach at least one line.
 4. **Add test funds** (testnet HBAR from the house faucet, capped once a day).
-5. **Find a fight**: pick a stake and join the queue. Every 2 seconds the matcher pairs fighters in the same league and stake, never two fighters of the same owner, inside a rating window that widens the longer you wait. It picks at random (`crypto.randomInt`) among the 3 closest ratings, so the pairing is fair but not predictable. After 25 seconds with no human opponent you get a house sparring bot of your level.
+5. **Find a fight**: pick a stake and join the queue. Every 2 seconds the matcher pairs fighters with the same stake, never two fighters of the same owner, inside a rating window that widens the longer you wait. It picks at random (`crypto.randomInt`) among the 3 closest ratings, so the pairing is fair but not predictable. After 25 seconds with no human opponent you get a house sparring bot of your level.
 6. **Watch the fight.** The server runs it: both bots decide on 0G every 1.5 seconds, every random roll comes from a seed whose SHA-256 is published when the fight starts and whose value is revealed when it ends, so anyone can replay the fight from its 0G episode log and check it. Ratings use Elo.
 
 A live matched fight between two newly created fighters, `f_1e4257a3d1`: seed hash `c7cae7b6…455c` published at the start, seed `06412dde…ddcd` revealed at the end, 5 settled x402 payments (e.g. `0.0.9185802@1793914960.945634213`), episode root on 0G Storage `0x998af99e…73fe`, ratings 984 / 1016.
@@ -75,7 +75,7 @@ Example ids from our test runs:
 
 - `POST /arena/hit` is x402-protected (`exact` scheme, `hedera:testnet`, facilitator `https://x402.org/facilitator`). Price and `payTo` are set per hit: damage in cents, paid to the attacking bot.
 - Each bot has its own Hedera account and its own x402 client. The defender's agent pays on its own; no human approves anything. Payments run in a background queue so the fight never waits (settlement takes 2 to 6 s).
-- Spending controls: each bot enters a fight with a budget (its health). The client caps each payment, and the bot is knocked out instead of paying past its budget. High-stakes fights need a human approval through World ID first.
+- Spending controls: each bot enters a fight with a budget (its health). The client caps each payment, and the bot is knocked out instead of paying past its budget.
 - Audit log: every fight start, hit, payment, KO and episode root goes to HCS topic [`0.0.11326019`](https://hashscan.io/testnet/topic/0.0.11326019).
 
 | What | Id |
@@ -84,16 +84,26 @@ Example ids from our test runs:
 | Settled x402 payment | [`0.0.9185802@1793892026.824260886`](https://hashscan.io/testnet/transaction/0.0.9185802-1793892026-824260886) |
 | Fight ledger (HCS) | [`0.0.11326019`](https://hashscan.io/testnet/topic/0.0.11326019) |
 
+- Scouting: `POST /arena/scout` is a second x402 route. A bot buys a report on its next opponent only when it has no notes on them and there are tapes to study, so nobody tells it to spend. Example purchase: [`0.0.9185802@1793980146.210053593`](https://hashscan.io/testnet/transaction/0.0.9185802-1793980146-210053593).
+- Tokens (HTS, no Solidity): one `IRON` NFT collection. Every fighter gets a card NFT in its own account, with HIP-412 metadata at `/nft/<botId>` pointing to its 0G brain. Serial 1 is the Mumbai Belt, which moves on Hedera from its holder to whoever beats them in a ranked fight.
+
 Payments currently settle in testnet HBAR (1 cent of damage = 0.01 HBAR). Setting `PAY_ASSET=usdc` switches to testnet USDC (`0.0.429274`) once the operator holds some.
 
-### World: ID Agent Pass
+### ENS: every fighter is a name (ENSv2 on Sepolia)
 
-- The backend starts an OpenID Connect device-flow request on `auth.world.org` when an action needs a human: entering a high-stakes fight, or reviving a knocked-out bot.
-- The same request also has a same-phone path. On an iPhone, the game opens World's sign-in in an in-app sheet (Authorization Code + PKCE through our backend). World App approves, and the sheet closes itself. From a second device, the owner scans the QR code or enters the user code instead. Whichever path finishes first settles the approval.
-- The client secret and the code exchange stay on the backend. The game only polls the approval's status.
-- The backend validates the ID token itself (issuer, subject pinned to the bot's owner, `acr`, `amr` containing `pop`, fresh `auth_time`), then marks the approval used in the same step that runs the action. An approval works once.
-- Denied, expired and cancelled requests all leave the action undone. The game says "Not approved, nothing happened."
-- Integration debrief: [`docs/world-debrief.md`](docs/world-debrief.md).
+- `ironcorner.eth` is registered on ENSv2 with its own UserRegistry. Each fighter gets a subname such as [`kal.ironcorner.eth`](https://sepolia.app.ens.domains/kal.ironcorner.eth), owned by the fighter's own key (the same key as its Hedera account). The subname is registered with no roles, so the fighter can't point it at another resolver.
+- Each name has its own PermissionedResolver, and Enhanced Access Control splits who may write which keys. The arena's wallet may write only the fight keys: `ironcorner.record`, `rating`, `brain` (0G root), `agentid`, `hedera` and `nft`. The fighter's key may write only `description` and `avatar`. Neither side can write the other's keys. We checked all four cases against the live resolver.
+- The arena updates the record after every fight. The owner edits the bio from the game (`PUT /bots/:id/ens`), and the fighter's own key signs that transaction.
+- Any ENS client resolves it through the Universal Resolver: `getEnsText({ name: "kal.ironcorner.eth", key: "ironcorner.record" })`.
+
+| What | Id |
+|---|---|
+| ironcorner.eth registration | [`0x0eefe045…5e47`](https://sepolia.etherscan.io/tx/0x0eefe045dd84964a7a8588e2a2460b995d2b46ddbedb70701f1b5357ba2e5e47) |
+| UserRegistry | `0xAaba88effc53B7eADd51C4D11eB5821b6a7a95EE` |
+| kal.ironcorner.eth | [`0x02f3eeab…186d`](https://sepolia.etherscan.io/tx/0x02f3eeab20a67af7c83e5908c34b557861762b44a81c02d351a07963dfdd186d), resolver `0x78c53530206B3E94176AAdbe09FC700551ccafeB` |
+| Bio signed by the fighter's own key | [`0xb0954e0a…ac22`](https://sepolia.etherscan.io/tx/0xb0954e0a923bcc851ec760478d098dfee345bee69c1400a9830192eca43dac22) |
+
+Notes from building it: [`docs/ens-feedback.md`](docs/ens-feedback.md).
 
 ## Run it
 
