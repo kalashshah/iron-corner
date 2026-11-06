@@ -30,6 +30,11 @@ What we hit while building Iron Corner on 0G at ETHGlobal Mumbai (5 to 7 Nov 202
 
 - Serving the adapter with `deployAdapter` + `chatWithFineTunedModel`, and its latency. On 5 Nov the provider's inference endpoint failed the TLS handshake.
 
+## Adapter serving, second try (6 Nov)
+
+21. **The fine-tuning provider's serving endpoint still fails the TLS handshake.** With 2.1 0G deposited, `deployAdapter` funded the provider sub-account with 2 0G (tx `0x4dc61d06ba9f8f879afed1091f6e686864f9e98afe4b8ac6015cdc6740cf5223`) and then polled for 300 s with "adapter not found". `listAdapters` fails with "Client network socket disconnected before secure TLS connection was established". Provider `0xA02b95Aa6886b1116C4f334eDe00381511E31A09`, endpoint `https://cc05c4570b455b7e5f085906f2f5e51e2b5ca431-3083.dstack-pha-in2.phala.network`. It fails the same way from a Mac in Mumbai (curl: `SSL_ERROR_SYSCALL`) and from a Fly machine in Singapore (`ECONNRESET`), so it is not our network. `deployAdapter` swallows the connection error as "not found", which hides the real cause for 5 minutes. Helpful: surface network errors in the poll loop, and a status page or health field for providers.
+22. **The fine-tuning provider isn't listed as an inference service.** `inference.listService()` returns two chatbots (glm-5.3, qwen3.8-omni-flash), not `0xA02b…`, yet serving goes through `inference.deployAdapter` on that address. Helpful: say in the docs which provider serves adapters, and list it.
+
 ## Agentic ID + camp API in the game server (6 Nov)
 
 18. **Two signers on one key collide on nonces.** Our Agentic ID mint (ethers) and a 0G Storage upload (`Indexer.upload`) from the same wallet at the same moment gave "replacement fee too low". We retry after 5 s. Helpful: let `upload()` take an ethers `NonceManager`, or document that the storage SDK picks its own nonce.
