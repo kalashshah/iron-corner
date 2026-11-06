@@ -88,6 +88,7 @@ export type Fight = {
   hits: { hitNo: number; attacker: string; defender: string; move: string; result: string; cents: number; at: string }[];
   ledgerTopic: string | null; lessons?: Record<string, string[]>; createdAt: string;
   episode?: { root: string; txHash: string; mock?: boolean };
+  scouts?: { by: string; of: string; cents: number; tapes: string[]; notes: string[]; txId: string; hashscan: string | null; mock?: boolean }[];
   // server-authoritative (engine) fights only
   engine?: boolean; house?: boolean; stakeCents?: number; seed?: string; seedHash?: string; events?: FightEvent[];
   endReason?: string; ratingDelta?: Record<string, number>;

@@ -370,6 +370,7 @@ app.get("/bots/:id/camp", (req, res) => { const b = bot(req.params.id); res.json
 
 // ---- arena (x402 paid route; the middleware above settles payment) ----
 app.post("/arena/hit", (_req, res) => void res.json({ ok: true }));
+app.post("/arena/scout", (_req, res) => void res.json({ ok: true })); // the report itself is built after payment (engine.ts scout)
 
 app.use((_req, res) => void res.status(404).json({ error: "not found" }));
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

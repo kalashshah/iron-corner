@@ -1,6 +1,6 @@
 // Hedera: bot accounts, x402 arena route + per-bot payers, HCS fight ledger. Mock mode fakes all of it.
 import crypto from "node:crypto";
-import { env, modes, state, save, SELF_URL, type Bot, type Fight, type Payment } from "./state.ts";
+import { env, modes, state, save, fail, SELF_URL, type Bot, type Fight, type Payment } from "./state.ts";
 // Hedera SDK classes come through @x402/hedera so there is exactly one SDK instance.
 import { Client, PrivateKey, AccountId, Hbar, TokenId, TransferTransaction, createClientHederaSigner } from "@x402/hedera";
 // Not re-exported by @x402/hedera; this resolves to the same single install it depends on (npm ls @hiero-ledger/sdk).
@@ -190,6 +190,14 @@ export function arenaMiddleware() {
       }],
       description: "Iron Corner: damage for one clean hit", mimeType: "application/json",
     },
+    "POST /arena/scout": {
+      accepts: [{
+        scheme: "exact", network: NET,
+        price: (ctx) => ({ asset: "0.0.0", amount: String(hitFor(ctx).cents * TINYBAR_PER_CENT) }),
+        payTo: (ctx) => hitFor(ctx).to,
+      }],
+      description: "Iron Corner: a scouting report on the next opponent", mimeType: "application/json",
+    },
   }, server);
 }
 
@@ -239,5 +247,21 @@ async function settle(fight: Fight, p: Payment) {
       } catch (e) { lastErr = e; await new Promise((r) => setTimeout(r, 1000)); }
     }
     throw lastErr;
+  } finally { pending.delete(ref); }
+}
+
+// ---- x402 scouting: a bot buys a report on its next opponent from the arena (the operator) ----
+export const SCOUT_CENTS = Number(env.SCOUT_CENTS ?? 2);
+export async function payScout(buyer: Bot, ref: string): Promise<{ txId: string; hashscan: string | null; mock?: boolean }> {
+  if (modes.hedera === "mock") return { txId: `mock-scout-${ref}`, hashscan: null, mock: true };
+  const pay = payers[buyer.botId] ?? payers[buyer.payAs ?? ""] ?? fail(500, `no payer for ${buyer.botId}`);
+  pending.set(ref, { to: operatorId, cents: SCOUT_CENTS });
+  try {
+    const res = await pay(`${SELF_URL}/arena/scout`, { method: "POST", headers: { "content-type": "application/json", "x-hit-ref": ref }, body: JSON.stringify({ ref }) });
+    const hdr = res.headers.get("payment-response");
+    if (!res.ok || !hdr) throw new Error(`scout ${res.status}: ${(await res.text()).slice(0, 150)}`);
+    const r = decodePaymentResponseHeader(hdr);
+    if (!r.success) throw new Error(r.errorReason ?? "settle failed");
+    return { txId: r.transaction, hashscan: hashscan(r.transaction) };
   } finally { pending.delete(ref); }
 }

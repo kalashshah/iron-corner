@@ -18,6 +18,7 @@ import { state, save, id, type Bot, type Fight, type FightEvent, type Payment } 
 import { DAMAGE, addLessons, type Plan, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import * as hedera from "./hedera.ts";
+import { loadEpisode } from "./storage.ts";
 import * as demos from "./demos.ts";
 import { saveBrain, saveEpisode } from "./storage.ts";
 import { elo } from "./match.ts";
@@ -149,7 +150,7 @@ async function finish(f: Fight) {
   // 0G uploads take ~15 s each: save in the background, results land in GET /bots/:id brainHistory.
   (async () => {
     const ep = { fightId: f.fightId, a: f.a, b: f.b, stakes: f.stakes, winner: f.winner, budgets: f.budgets, startBudget: f.startBudget,
-      decisions: f.decisions, hits: f.hits, payments: f.payments, ledgerTopic: f.ledgerTopic, lessons: f.lessons,
+      decisions: f.decisions, hits: f.hits, payments: f.payments, scouts: f.scouts, ledgerTopic: f.ledgerTopic, lessons: f.lessons,
       ...(f.engine ? { seed: f.seed, seedHash: f.seedHash, events: f.events, endReason: f.endReason, ratingDelta: f.ratingDelta } : {}) };
     await saveEpisode(ep).then((r) => { f.episode = r; save(); hedera.ledger({ t: "episode", fight: f.fightId, root: r.root }); })
       .catch((e) => console.warn(`[0g-storage] episode ${f.fightId} failed:`, e.message));
@@ -201,6 +202,7 @@ async function run(f: Fight) {
   const s = newSim(f.a, f.b, f.budgets), rng = makeRng(f.seed!);
   sims.set(f.fightId, s);
   emit(f, { t: 0, type: "start", a: f.a, b: f.b, budgets: { ...f.budgets }, seedHash: f.seedHash, stakeCents: f.stakeCents, house: !!f.house });
+  await Promise.race([Promise.all([f.a, f.b].map((x) => scout(f, x).catch((e) => console.warn(`[scout] ${x}: ${e.message}`)))), sleep(SCOUT_WAIT_MS)]);
   while (!s.over) {
     const t0 = Date.now();
     const plans = await Promise.all([f.a, f.b].map(async (x) => {
@@ -228,6 +230,34 @@ async function run(f: Fight) {
     if (!s.over) await sleep(Math.max(0, EXCHANGE_MS - (Date.now() - t0)));
   }
   await end(f, s);
+}
+
+// ---- scouting (x402): before meeting an opponent it knows nothing about, a bot buys a report on that opponent's tapes ----
+// The bot decides on its own: it buys only when it has no notes on this opponent and there are tapes to study, and it
+// pays from its own Hedera account (x402 spend controls cap each payment). The notes go into its brain for every later fight.
+const SCOUT_WAIT_MS = 12_000;
+export function tapeProfile(opp: string, episodes: any[]) {
+  const moves: Record<string, number> = {}, landed: Record<string, number> = {};
+  for (const ep of episodes) for (const h of ep?.hits ?? []) if (h.attacker === opp) {
+    moves[h.move] = (moves[h.move] ?? 0) + 1; if (h.result === "clean") landed[h.move] = (landed[h.move] ?? 0) + 1;
+  }
+  return Object.entries(moves).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([m, n]) => `scouted: throws ${m} often (${n}x, ${landed[m] ?? 0} landed)`);
+}
+async function scout(f: Fight, me: string) {
+  const b = state.bots[me], opp = opponent(f, me);
+  if (b.house || b.brain.scouting[opp]?.length) return; // house bots don't shop; a known opponent needs no report
+  const tapes = Object.values(state.fights).filter((x) => x.fightId !== f.fightId && x.episode?.root && !x.episode.mock && (x.a === opp || x.b === opp))
+    .sort((x, y) => (y.createdAt > x.createdAt ? 1 : -1)).slice(0, 2);
+  if (!tapes.length) return; // nothing to study, so nothing to buy
+  const paid = await hedera.payScout(b, `${f.fightId}:scout:${me}`);
+  const eps = (await Promise.all(tapes.map((t) => loadEpisode(t.episode!.root).catch(() => null)))).filter(Boolean);
+  const notes = tapeProfile(opp, eps);
+  if (notes.length) { b.brain.scouting[opp] = notes; }
+  const rec = { by: me, of: opp, cents: hedera.SCOUT_CENTS, tapes: tapes.map((t) => t.episode!.root), notes, ...paid };
+  (f.scouts ??= []).push(rec);
+  emit(f, { t: 0, type: "scout", ...rec });
+  hedera.ledger({ t: "scout", fight: f.fightId, by: me, of: opp, cents: rec.cents, tx: paid.txId, tapes: rec.tapes });
+  save();
 }
 
 // "A bot whose payment fails is knocked out."
@@ -297,5 +327,7 @@ if (process.argv[1]?.endsWith("engine.ts")) {
   assert.equal(fight("22".repeat(32)), fight("22".repeat(32)));
   assert.deepEqual(movesOf({ stance: "safe_stop" }, 2), ["block"]);
   assert.deepEqual(movesOf({ stance: "aggressive", combo: ["jab", "cross", "hook_l"], trigger: "when_close" }, 2), ["step_in", "jab", "cross"]);
+  const tp = tapeProfile("o", [{ hits: [{ attacker: "o", move: "hook_l", result: "clean" }, { attacker: "o", move: "hook_l", result: "blocked" }, { attacker: "me", move: "jab", result: "clean" }, { attacker: "o", move: "jab", result: "clean" }] }]);
+  assert.deepEqual(tp, ["scouted: throws hook_l often (2x, 1 landed)", "scouted: throws jab often (1x, 1 landed)"]);
   console.log("engine.ts self-check ok (300 fights terminate, budgets ≥ 0, replay identical)");
 }
