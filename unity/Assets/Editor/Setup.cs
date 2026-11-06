@@ -461,6 +461,13 @@ public static class Setup
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
         PlayerSettings.iOS.appleDeveloperTeamID = "J99B88X7CK";
         PlayerSettings.iOS.appleEnableAutomaticSigning = true;
+        if (AssetImporter.GetAtPath("Assets/Plugins/iOS/WorldAuth.mm") is PluginImporter wa) // in-app World sheet
+        {
+            wa.SetCompatibleWithPlatform(BuildTarget.iOS, true);
+            wa.SetPlatformData(BuildTarget.iOS, "FrameworkDependencies", "AuthenticationServices;");
+            wa.SaveAndReimport();
+        }
+        PlayerSettings.iOS.iOSUrlSchemes = new[] { "ironcorner" }; // World approval pages hand the player back here
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/Main.unity" },

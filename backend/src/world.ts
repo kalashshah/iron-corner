@@ -1,5 +1,6 @@
 // World ID approvals via the World IdP OIDC device flow. Mock mode auto-approves after a short delay.
-import { env, modes, state, save, id, fail, type Approval } from "./state.ts";
+import crypto from "node:crypto";
+import { env, modes, state, save, id, fail, SELF_URL, type Approval } from "./state.ts";
 
 // Production issuer: World mocks proofs for the hackathon, so the sandbox app is no longer needed.
 const ISSUER = env.WORLD_ISSUER ?? "https://auth.world.org";
@@ -9,6 +10,10 @@ const ACR = env.WORLD_ACR || null;
 const ACCEPT = (env.WORLD_ACCEPT_ACR ?? "https://world.org/oidc/acr/orb,https://world.org/oidc/acr/orb-face,https://world.org/oidc/acr/selfie,https://world.org/oidc/acr/selfie-face").split(",");
 const MOCK_APPROVE_MS = Number(env.MOCK_APPROVE_MS ?? 3000);
 const running = new Map<string, AbortController>();
+// Same-phone path (Authorization Code + PKCE): the app opens /world/go/:id in an in-app browser sheet, World redirects
+// to the registered callback, and the sheet closes on the ironcorner:// redirect. Lives beside the device flow; first result wins.
+const REDIRECT = `${SELF_URL}/world/callback`;
+const web = new Map<string, { approvalId: string; verifier: string; nonce: string; sheet: boolean }>(); // keyed by state
 
 let cfg: Promise<any> | null = null;
 async function config() {
@@ -47,7 +52,8 @@ export async function create(botId: string, action: Approval["action"], userId?:
       ...(ACR ? { claims: JSON.stringify({ id_token: { acr: { essential: true, values: [ACR] } } }) } : {}),
     });
     a = { approvalId, botId, action, status: "pending", qrUri: da.verification_uri_complete ?? da.verification_uri,
-      userCode: da.user_code, expiresAt: new Date(Date.now() + da.expires_in * 1000).toISOString(), startedAt, ...(userId ? { userId } : {}) };
+      userCode: da.user_code, expiresAt: new Date(Date.now() + da.expires_in * 1000).toISOString(), startedAt,
+      appUri: `${SELF_URL}/world/go/${approvalId}`, ...(userId ? { userId } : {}) };
     const ctl = new AbortController();
     running.set(approvalId, ctl);
     poll(a, oc, c, da, ctl.signal).finally(() => { running.delete(approvalId); save(); });
@@ -60,27 +66,65 @@ export async function create(botId: string, action: Approval["action"], userId?:
 async function poll(a: Approval, oc: any, c: any, da: any, signal: AbortSignal) {
   try {
     const tokens = await oc.pollDeviceAuthorizationGrant(c, da, undefined, { signal });
-    const cl = tokens.claims();
-    const bot = state.bots[a.botId];
-    const amr: string[] = Array.isArray(cl?.amr) ? cl.amr : [];
-    const problem =
-      !cl ? "no id_token" :
-      cl.iss !== c.serverMetadata().issuer ? "wrong issuer" :
-      (ACR ? cl.acr !== ACR : !ACCEPT.includes(String(cl.acr))) ? `acr ${cl.acr ?? "missing (unverified account)"}` :
-      !amr.includes("pop") ? "amr lacks pop" :
-      typeof cl.auth_time !== "number" || cl.auth_time < a.startedAt - 5 ? "stale auth_time" :
-      bot?.ownerSub && bot.ownerSub !== cl.sub ? "not this bot's owner" : null;
-    if (a.status !== "pending") return; // cancelled meanwhile
-    if (problem) { a.status = "denied"; a.error = problem; return; }
-    if (a.action === "sign_in") return signIn(a, cl.sub);
-    bot.ownerSub ??= cl.sub; // first approval pins the owner
-    a.sub = cl.sub; a.status = "approved";
+    accept(a, tokens.claims(), c.serverMetadata().issuer);
   } catch (e: any) {
     if (a.status !== "pending") return;
     const code = e?.error ?? e?.code ?? e?.name;
     a.status = code === "access_denied" ? "denied" : code === "expired_token" ? "expired" : code === "AbortError" || signal.aborted ? "cancelled" : "denied";
     a.error = String(e?.error_description ?? e?.message ?? e).slice(0, 200);
   }
+}
+
+// Shared by both flows: fresh proof of personhood, right issuer and level, pinned to the bot's owner.
+function accept(a: Approval, cl: any, issuer: string) {
+  if (a.status !== "pending") return; // cancelled, expired or settled by the other flow meanwhile
+  const bot = state.bots[a.botId];
+  const amr: string[] = Array.isArray(cl?.amr) ? cl.amr : [];
+  const problem =
+    !cl ? "no id_token" :
+    cl.iss !== issuer ? "wrong issuer" :
+    (ACR ? cl.acr !== ACR : !ACCEPT.includes(String(cl.acr))) ? `acr ${cl.acr ?? "missing (unverified account)"}` :
+    !amr.includes("pop") ? "amr lacks pop" :
+    typeof cl.auth_time !== "number" || cl.auth_time < a.startedAt - 5 ? "stale auth_time" :
+    bot?.ownerSub && bot.ownerSub !== cl.sub ? "not this bot's owner" : null;
+  if (problem) { a.status = "denied"; a.error = problem; return; }
+  if (a.action === "sign_in") return signIn(a, cl.sub);
+  bot.ownerSub ??= cl.sub; // first approval pins the owner
+  a.sub = cl.sub; a.status = "approved";
+}
+
+// GET /world/go/:id → World's authorize URL (fresh login forced). Each open gets its own PKCE verifier, state and nonce.
+export async function authorizeUrl(approvalId: string, sheet: boolean) {
+  const a = get(approvalId);
+  if (a.status !== "pending" || a.mock) fail(409, `approval is ${a.status}`);
+  const { oc, c } = await config();
+  const verifier = oc.randomPKCECodeVerifier(), st = crypto.randomBytes(16).toString("base64url"), nonce = oc.randomNonce();
+  web.set(st, { approvalId, verifier, nonce, sheet });
+  return oc.buildAuthorizationUrl(c, {
+    redirect_uri: REDIRECT, scope: "openid", state: st, nonce, prompt: "login", max_age: "0",
+    code_challenge: await oc.calculatePKCECodeChallenge(verifier), code_challenge_method: "S256",
+    ...(ACR ? { claims: JSON.stringify({ id_token: { acr: { essential: true, values: [ACR] } } }) } : {}),
+  }).href;
+}
+
+// GET /world/callback: exchange the code on the server (client secret never leaves it), validate, settle the approval.
+export async function callback(fullUrl: string) {
+  const u = new URL(fullUrl), w = web.get(u.searchParams.get("state") ?? "");
+  if (!w) return { a: null, sheet: false };
+  web.delete(u.searchParams.get("state")!);
+  const a = get(w.approvalId);
+  if (a.status === "pending") {
+    const err = u.searchParams.get("error");
+    if (err) { a.status = err === "access_denied" ? "denied" : "cancelled"; a.error = (u.searchParams.get("error_description") ?? err).slice(0, 200); }
+    else try {
+      const { oc, c } = await config();
+      const tokens = await oc.authorizationCodeGrant(c, u, { pkceCodeVerifier: w.verifier, expectedState: u.searchParams.get("state")!, expectedNonce: w.nonce });
+      accept(a, tokens.claims(), c.serverMetadata().issuer);
+    } catch (e: any) { if (a.status === "pending") { a.status = "denied"; a.error = String(e?.error_description ?? e?.message ?? e).slice(0, 200); } }
+    if (a.status !== "pending") running.get(a.approvalId)?.abort(); // device-flow poller no longer needed
+    save();
+  }
+  return { a, sheet: w.sheet };
 }
 
 // One verified human, one verified fighter: a World subject already behind another player's fighter is refused.

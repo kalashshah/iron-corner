@@ -3,7 +3,7 @@ import express from "express";
 import crypto from "node:crypto";
 import { Readable } from "node:stream";
 import QRCode from "qrcode";
-import { env, modes, state, save, id, fail, refuse, newBrain, HttpError, PORT, type Bot, type Fight, type Payment, type User } from "./state.ts";
+import { env, modes, state, save, id, fail, refuse, newBrain, HttpError, PORT, SELF_URL, type Bot, type Fight, type Payment, type User } from "./state.ts";
 import { MOVES, DAMAGE, commandFor, phraseFor, applyLearn, addLessons, addDrill, dailyView, type FightState } from "./game.ts";
 import * as zg from "./zg.ts";
 import { saveBrain, loadBrain, saveEpisode, loadEpisode } from "./storage.ts";
@@ -252,7 +252,7 @@ app.post("/fights/:id/end", async (req, res) => {
 
 // ---- approvals ----
 const approvalView = (a: ReturnType<typeof world.get>) =>
-  ({ approvalId: a.approvalId, botId: a.botId, action: a.action, status: a.status, qrUri: a.qrUri, userCode: a.userCode, expiresAt: a.expiresAt,
+  ({ approvalId: a.approvalId, botId: a.botId, action: a.action, status: a.status, qrUri: a.qrUri, ...(a.appUri ? { appUri: a.appUri } : {}), userCode: a.userCode, expiresAt: a.expiresAt,
     ...(a.error ? { error: a.error } : {}), ...(a.mock ? { mock: true } : {}) });
 app.post("/approvals", limit(20, "ap"), async (req, res) => {
   if (req.body?.action === "sign_in") fail(400, "use POST /auth/world/start");
@@ -262,6 +262,18 @@ app.post("/approvals", limit(20, "ap"), async (req, res) => {
 app.get("/approvals/:id", (req, res) => void res.json(approvalView(world.get(req.params.id))));
 app.get("/approvals/:id/qr.png", async (req, res) => {
   res.type("png").send(await QRCode.toBuffer(world.get(req.params.id).qrUri, { width: 512, margin: 2 }));
+});
+// Same-phone approval: in-app browser sheet → World → /world/callback (the HTTPS redirect registered for the app).
+app.get("/world/go/:id", limit(20, "worldgo"), async (req, res) => void res.redirect(await world.authorizeUrl(req.params.id, req.query.p === "sheet")));
+app.get("/world/callback", limit(20, "worldcb"), async (req, res) => {
+  const { a, sheet } = await world.callback(SELF_URL + req.originalUrl);
+  const status = a?.status ?? "expired";
+  const back = `ironcorner://world?approval=${encodeURIComponent(a?.approvalId ?? "")}&status=${status}`;
+  if (sheet) return void res.redirect(back); // closes the in-app sheet
+  const msg = status === "approved" ? "Approved ✓" : status === "pending" ? "Still waiting…" : `Not approved (${status})`;
+  res.type("html").send(`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Iron Corner</title>` +
+    `<body style="font:18px system-ui;background:#0d0e12;color:#f2f2f5;text-align:center;padding:60px 20px"><h2>${msg}</h2>` +
+    `<p><a style="color:#ff9421" href="${back}">Back to Iron Corner</a></p><script>location.replace(${JSON.stringify(back)})</script>`);
 });
 app.post("/approvals/:id/cancel", (req, res) => void res.json(approvalView(world.cancel(req.params.id))));
 

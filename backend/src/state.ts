@@ -94,7 +94,7 @@ export type Fight = {
 export type Approval = {
   approvalId: string; botId: string; action: "high_stakes" | "revive" | "cash_out" | "sign_in"; userId?: string; mockSub?: string;
   status: "pending" | "approved" | "denied" | "expired" | "cancelled" | "used";
-  qrUri: string; userCode: string; expiresAt: string; startedAt: number; sub?: string; error?: string; mock?: boolean;
+  qrUri: string; appUri?: string; userCode: string; expiresAt: string; startedAt: number; sub?: string; error?: string; mock?: boolean;
 };
 type State = {
   bots: Record<string, Bot>; fights: Record<string, Fight>; approvals: Record<string, Approval>;

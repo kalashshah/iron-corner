@@ -19,6 +19,7 @@ First real device code from `auth.world.org`: about 2 h 10 min after hacking sta
 5. `invalid_client` on the first real request, although the client ID and secret were right. The app is registered for `client_secret_basic`, and `openid-client` v6 sends `client_secret_post` when you pass the secret as a plain string. Passing `ClientSecretBasic(secret)` fixed it. The error text ("check the environment, registered authentication method, and credentials") lists three causes without saying which one.
 6. Creating the app showed "We could not create the client. The service may be temporarily unavailable", but the app had been created. Its first secret was never displayed, so we added a second one.
 7. There is no nullifier in the OIDC flow, so making each approval single-use is entirely the app's job.
+8. No same-phone path for native apps. Our game runs on the same iPhone as World App, so a QR code is useless there. Opening `verification_uri_complete` goes game → Safari → World App, and then the player switches back to the game by hand. The docs list no mobile SDK, universal link or return-to-app parameter for Agent Pass. IDKit's Swift/Kotlin SDKs do have a direct deep link with `return_to`.
 
 ## Missing capability or documentation
 
