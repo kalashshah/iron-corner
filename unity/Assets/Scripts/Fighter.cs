@@ -186,7 +186,7 @@ public class Fighter : MonoBehaviour
             Begin(queue.Dequeue()); return;
         }
         if (d > Reach + 0.25f) { BeginStep(Reach); return; }
-        if (d < MinGap + 0.05f) { Begin("step_back"); return; }
+        if (d < MinGap + 0.05f) { Begin("step_back", record: false); return; }
         if (Time.time >= nextFootwork) { Footwork(); return; }
         if (!idle) { Play("idle_boxing_bounce", 1f, 0.2f); idle = true; }
         guard = Mathf.Min(1f, guard + Time.deltaTime * 0.08f);
@@ -211,7 +211,9 @@ public class Fighter : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 1f - Mathf.Exp(-10f * Time.deltaTime));
     }
 
-    void BeginStep(float target) { Begin("step_in"); stepTarget = target; }
+    // Automatic spacing (closing to punch range, backing off when too close) isn't a decision, so it isn't recorded in
+    // lastMoves: the state other code reads should show real moves (punches, defence, steps that were asked for).
+    void BeginStep(float target) { Begin("step_in", record: false); stepTarget = target; }
 
     void Begin(string move, bool record = true)
     {
@@ -224,8 +226,8 @@ public class Fighter : MonoBehaviour
             weave = incoming is "hook_l" or "hook_r";
             anim.SetFloat(Spd, 1f); anim.CrossFadeInFixedTime("idle_boxing_bounce", 0.1f); // the normal guard; the dodge is layered on top
             current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue; // same timing window as before
+            OnBegin?.Invoke(this, move, ++ThrowId); // before it's recorded: listeners snapshot the state this move answers
             lastMoves.Add(move); if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
-            OnBegin?.Invoke(this, move, ++ThrowId);
             return;
         }
         // Attacks out of another attack chain quickly; everything else blends a touch longer so it never pops.
@@ -234,9 +236,9 @@ public class Fighter : MonoBehaviour
         current = move; t = 0; dur = Len(state, speed); hitDone = false; idle = false; minFist = float.MaxValue;
         stepTarget = MinGap + 0.1f;
         if (!record) return;
+        OnBegin?.Invoke(this, move, ++ThrowId); // before it's recorded: listeners snapshot the state this move answers
         lastMoves.Add(move);
         if (lastMoves.Count > 6) lastMoves.RemoveAt(0);
-        OnBegin?.Invoke(this, move, ++ThrowId);
     }
 
     void Tick()

@@ -545,7 +545,7 @@ public partial class Game : MonoBehaviour
         var o1 = (string)(d.state["oppLastMoves"] as JArray)?.LastOrDefault();
         if (!atk && Fighter.IsAttack(o1)) { drilling.Add(o1); if (drilling.Count > 8) drilling.RemoveAt(0); }
         roundMoves++;
-        if (Fighter.logStrikes) Debug.Log($"[demo] {d.action} {d.outcome} d={(float?)d.state?["distance"] ?? 0:F2}");
+        if (Fighter.logStrikes) Debug.Log($"[demo] {d.action} {d.outcome} d={(float?)d.state?["distance"] ?? 0:F2} my_last={(string)(d.state?["selfLastMoves"] as JArray)?.LastOrDefault() ?? "-"} opp_last={(string)(d.state?["oppLastMoves"] as JArray)?.LastOrDefault() ?? "-"}");
         string mark = ok ? "<color=#5CDB85>\ue5ca</color>" : d.outcome == "got_hit" ? "<color=#F2523F>\ue5cd</color>" : "<color=#8E8E93>·</color>";
         padFeed.text = $"{mark} {char.ToUpperInvariant(UI.Nice(d.action)[0])}{UI.Nice(d.action).Substring(1)} · {d.outcome.Replace('_', ' ')}   <color=#8E8E93>demo recorded</color>";
         roundInfo.text = $"{roundMoves} moves";
