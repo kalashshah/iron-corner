@@ -23,6 +23,9 @@ public class Fx : MonoBehaviour
     AudioClip punch, punchHeavy, body, clank, whoosh, bell, cheer, boom, murmur, tick, dodge, slam, ooh, ding;
     // Recorded impacts (Kenney "Impact Sounds", CC0) in Resources/Sfx; the synthesized ones above are the fallback.
     AudioClip[] sfxBasic, sfxHeavy, sfxMajor; // jab/cross/body · hooks/uppercut · slow-mo specials and K.O.
+    AudioClip[] sfxMeat, sfxBlock;           // punch body layered under every hit · forearm-guard clank
+    AudioClip jingle, coin, whoomp;          // round complete · test funds arrive · slow-mo starts
+    float duck;                              // music dip after hits (side-chain feel), decays here
 
     void Awake()
     {
@@ -56,6 +59,7 @@ public class Fx : MonoBehaviour
         BuildSounds();
         AudioClip[] Set(string prefix) { var s = Array.FindAll(Resources.LoadAll<AudioClip>("Sfx"), c => c.name.StartsWith(prefix)); return s.Length > 0 ? s : null; }
         sfxBasic = Set("impactPlate_light"); sfxHeavy = Set("impactSoft_heavy"); sfxMajor = Set("impactMining");
+        sfxMeat = Set("impactPunch_medium"); sfxBlock = Set("impactMetal_light");
         Debug.Log($"[sfx] basic {sfxBasic?.Length ?? 0}, heavy {sfxHeavy?.Length ?? 0}, major {sfxMajor?.Length ?? 0}");
         crowdLoop = gameObject.AddComponent<AudioSource>();
         crowdLoop.clip = murmur; crowdLoop.loop = true; crowdLoop.volume = 0f; crowdLoop.Play();
@@ -90,8 +94,9 @@ public class Fx : MonoBehaviour
             (musicA, musicB) = (musicB, musicA); // A is always the one fading in
             musicA.clip = want; musicA.volume = 0; musicA.Play();
         }
-        float target = musicVolume * (musicWant == Music.Kind.Fight ? 0.75f : musicWant == Music.Kind.Train ? 0.55f : 0.45f);
-        musicA.volume = Mathf.MoveTowards(musicA.volume, musicOn ? target : 0, dt * 0.8f);
+        duck = Mathf.Max(0, duck - dt * 2.2f); // the dip lasts about a quarter second
+        float target = musicVolume * (musicWant == Music.Kind.Fight ? 0.75f : musicWant == Music.Kind.Train ? 0.55f : 0.45f) * (1f - duck);
+        musicA.volume = duck > 0.01f ? Mathf.Lerp(musicA.volume, musicOn ? target : 0, dt * 25f) : Mathf.MoveTowards(musicA.volume, musicOn ? target : 0, dt * 0.8f);
         musicB.volume = Mathf.MoveTowards(musicB.volume, 0, dt * 0.8f);
         if (musicB.isPlaying && musicB.volume <= 0) musicB.Stop();
     }
@@ -108,9 +113,14 @@ public class Fx : MonoBehaviour
             Emit(sparks, at, 14 + dmg * 7); Emit(glow, at, 1);
             if (heavy) Emit(debris, at, 4 + dmg);
             Light(at, new Color(1f, 0.65f, 0.3f), 9f + dmg * 5f);
-            var set = heavy ? sfxHeavy : sfxBasic;
-            if (set != null) Play(set[Random.Range(0, set.Length)], 0.85f + dmg * 0.04f, Random.Range(0.92f, 1.08f));
-            else Play(move == "body" ? body : heavy ? punchHeavy : punch, 0.75f + dmg * 0.06f, Random.Range(0.92f, 1.08f));
+            float pan = PanAt(at), pr = Random.Range(0.92f, 1.08f);
+            var top = Pick(heavy ? sfxHeavy : sfxBasic);
+            if (top != null) Play(top, 0.85f + dmg * 0.04f, pr, pan);
+            else Play(move == "body" ? body : heavy ? punchHeavy : punch, 0.75f + dmg * 0.06f, pr, pan);
+            // layers: a meaty punch body under every hit, and a sub thump plus a crowd "ooh" under the heavy ones
+            Play(Pick(sfxMeat), heavy ? 0.6f : 0.45f, heavy ? 0.8f * pr : pr, pan);
+            if (heavy) { Play(boom, 0.35f + dmg * 0.05f, 1.6f, pan * 0.5f); Play(ooh, 0.3f + dmg * 0.04f, Random.Range(0.95f, 1.06f)); }
+            Duck(heavy ? 0.55f : 0.3f);
             shake = Mathf.Min(1f, shake + 0.22f + dmg * 0.09f);
             excite = Mathf.Min(1f, excite + 0.1f + dmg * 0.06f);
             if (dmg >= 4) Play(cheer, 0.45f, Random.Range(0.95f, 1.05f));
@@ -118,22 +128,37 @@ public class Fx : MonoBehaviour
         else if (result == "blocked")
         {
             Emit(blockSparks, at, 10); Light(at, new Color(0.5f, 0.7f, 1f), 6f);
-            Play(clank, 0.55f, Random.Range(0.95f, 1.12f));
+            float pan = PanAt(at);
+            if (sfxBlock != null) { Play(Pick(sfxBlock), 0.7f, Random.Range(0.95f, 1.1f), pan); Play(clank, 0.25f, Random.Range(0.95f, 1.12f), pan); }
+            else Play(clank, 0.55f, Random.Range(0.95f, 1.12f), pan);
+            Duck(0.2f);
             shake = Mathf.Min(1f, shake + 0.1f);
         }
-        else { Play(dodge, 0.6f, Random.Range(0.95f, 1.1f)); Play(ooh, 0.3f, Random.Range(0.95f, 1.08f)); }
+        else { Play(dodge, 0.6f, Random.Range(0.95f, 1.1f), PanAt(at)); Play(ooh, 0.3f, Random.Range(0.95f, 1.08f)); }
     }
 
     // Combo counter: a ding that climbs a step with every hit in the run.
-    public void Combo(int n) => Play(ding, 0.35f, Mathf.Pow(1.122f, Mathf.Min(n, 8) - 2));
+    public void Combo(int n)
+    {
+        Play(ding, 0.35f, Mathf.Pow(1.122f, Mathf.Min(n, 8) - 2));
+        if (n == 3) Play(cheer, 0.45f, Random.Range(0.98f, 1.06f)); // the crowd gets into a run
+        if (n >= 4) Play(cheer, 0.6f, Random.Range(1.0f, 1.08f));
+    }
+
+    public void Jingle() => Play(jingle, 0.55f, 1f); // round complete
+    public void Coin() => Play(coin, 0.6f, 1f);     // test funds arrived
+    public void FightStart() { Bell(1); Play(cheer, 0.55f, 1f); }
 
     // Special impact (slow-mo close-up): a big spark burst, a white-hot flash, the slam and the crowd's "ooh".
     public void Special(Vector3 at)
     {
         Emit(sparks, at, 110); Emit(glow, at, 3); Emit(debris, at, 18); Emit(flashes, at, 2);
         Light(at, new Color(1f, 0.75f, 0.45f), 45f);
-        if (sfxMajor != null) Play(sfxMajor[Random.Range(0, sfxMajor.Length)], 1f, Random.Range(0.92f, 1.02f)); else Play(slam, 1f, 1f);
-        Play(ooh, 0.8f, 1f);
+        Play(whoomp, 0.9f, 1f); // a deep swell as time slows (played before Play() starts pitching things down)
+        if (sfxMajor != null) Play(Pick(sfxMajor), 1f, Random.Range(0.92f, 1.02f), PanAt(at)); else Play(slam, 1f, 1f);
+        Play(Pick(sfxMeat), 0.7f, 0.7f, PanAt(at));
+        Play(ooh, 0.8f, 1f); Play(cheer, 0.7f, 1f); // the crowd roars
+        Duck(0.8f);
         shake = 1f; excite = 1f;
     }
 
@@ -325,12 +350,17 @@ public class Fx : MonoBehaviour
     }
 
     // ---------------------------------------------------------------- audio
-    void Play(AudioClip c, float vol, float pitch)
+    // pan: -1 left .. 1 right. In slow motion every effect drops in pitch with it.
+    void Play(AudioClip c, float vol, float pitch, float pan = 0f)
     {
         if (c == null) return;
         var s = srcs[si]; si = (si + 1) % srcs.Length;
-        s.pitch = pitch; s.PlayOneShot(c, vol);
+        s.pitch = pitch * (Time.timeScale < 0.5f ? 0.72f : 1f); s.panStereo = pan; s.PlayOneShot(c, vol);
     }
+
+    static AudioClip Pick(AudioClip[] set) => set == null || set.Length == 0 ? null : set[Random.Range(0, set.Length)];
+    static float PanAt(Vector3 world) { var cam = Camera.main; if (cam == null) return 0; return Mathf.Clamp((cam.WorldToViewportPoint(world).x - 0.5f) * 1.4f, -0.8f, 0.8f); }
+    public void Duck(float amount) => duck = Mathf.Max(duck, amount);
 
     const int SR = 44100;
     static readonly System.Random Rng = new(7);
@@ -485,6 +515,24 @@ public class Fx : MonoBehaviour
         // combo ding: two bright partials with a quick tick on the front (pitched up per hit in the run)
         { var th = Thump(900, 700, 60); ding = Clip("ding", Synth(0.5f, t => Mathf.Sin(2 * Mathf.PI * 1320 * t) * Mathf.Exp(-t * 7) + Mathf.Sin(2 * Mathf.PI * 1980 * t) * 0.4f * Mathf.Exp(-t * 11) + th(t) * 0.4f)); }
         cheer = Clip("cheer", Synth(2.6f, CrowdWash(2.6f, true)));
+        // round-complete jingle: a quick rising arpeggio (A C E A) of bell-ish tones
+        {
+            float[] notes = { 440f, 523.25f, 659.25f, 880f };
+            jingle = Clip("jingle", Synth(1.1f, t =>
+            {
+                float v = 0;
+                for (int i = 0; i < notes.Length; i++)
+                {
+                    float st = i * 0.09f; if (t < st) continue; float u = t - st;
+                    v += (Mathf.Sin(2 * Mathf.PI * notes[i] * u) + 0.35f * Mathf.Sin(2 * Mathf.PI * notes[i] * 2.01f * u)) * Mathf.Exp(-u * (i == 3 ? 3.5f : 9f));
+                }
+                return v;
+            }));
+        }
+        // coin: two bright partials, the second a fourth up
+        coin = Clip("coin", Synth(0.5f, t => (t < 0.07f ? Mathf.Sin(2 * Mathf.PI * 1568 * t) : Mathf.Sin(2 * Mathf.PI * 2093 * t)) * Mathf.Exp(-(t < 0.07f ? t : t - 0.07f) * 9f)));
+        // whoomp: a low sine dropping in pitch under a darkening noise swell
+        { var sub = Thump(140, 38, 2.2f); var hs = Hiss(500, 3f); whoomp = Clip("whoomp", Synth(1.2f, t => (sub(t) + hs(t) * 1.2f) * Mathf.Clamp01(t / 0.05f))); }
         { float[] f = { 1850, 3120, 4700 }, dk = { 60, 80, 110 }; var th = Thump(420, 180, 70); tick = Clip("tick", Synth(0.09f, t => th(t) * 0.6f + Ring(t, f, dk, 0.8f))); }
         murmur = Clip("murmur", Loop(Synth(8f, CrowdWash(8f, false)), 1f));
     }

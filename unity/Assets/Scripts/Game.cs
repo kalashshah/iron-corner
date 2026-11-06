@@ -255,7 +255,7 @@ public partial class Game : MonoBehaviour
             foreach (Transform c in ticker) Destroy(c.gameObject);
             UpdateBars();
             Banner("FIGHT!", UI.Accent);
-            fx.Bell(1); fx.Cheer(0.5f);
+            fx.FightStart();
             StartCoroutine(DecideLoop(session, a));
             StartCoroutine(DecideLoop(session, b));
             StartCoroutine(PollLoop(session));
@@ -581,6 +581,7 @@ public partial class Game : MonoBehaviour
         if (rd == null) { summaryTitle.text = "Round over"; summaryXp.text = ""; summaryBody.text = "<color=#F2523F>Couldn't send the round: " + err + "</color>"; return; }
         int xp = (int?)rd["xpGained"] ?? 0;
         summaryTitle.text = "Round Complete"; summaryXp.text = xp > 0 ? $"+{xp} XP" : "";
+        fx.Jingle();
         var lines = new List<string> { $"<b>{rd["moves"]} moves recorded</b>" + (rd["highlight"]?.Type == JTokenType.String ? $"  ·  {rd["highlight"]}" : "") };
         if (rd["reason"]?.Type == JTokenType.String) lines.Add($"<color=#F2A33A>{rd["reason"]}</color>");
         lines.Add($"<size=24><color=#8E8E93>Energy {r["energy"]?["left"]}/{r["energy"]?["max"]}  ·  level {r["xp"]?["level"]}  ·  {r["total"]} demos in the brain</color></size>");

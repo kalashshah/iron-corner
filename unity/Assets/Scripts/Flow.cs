@@ -161,10 +161,20 @@ public partial class Game
         return UI.Rt(card.transform, "content").At(0, 0, 1, 1, 40, 36, -40, -160);
     }
 
+    // A column that scrolls when it's taller than the card (short phones, big safe areas), and sits still otherwise.
     static VerticalLayoutGroup Stack(Transform content, float gap = 16)
     {
-        var col = UI.Column(content, gap).At(0, 0, 1, 1);
+        var view = UI.Rt(content, "view").At(0, 0, 1, 1);
+        view.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0); // catches drags between the controls
+        view.gameObject.AddComponent<RectMask2D>();
+        var col = UI.Column(view, gap);
+        var rt = (RectTransform)col.transform;
+        rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 1); rt.offsetMin = rt.offsetMax = Vector2.zero;
         col.childAlignment = TextAnchor.UpperLeft;
+        col.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        var sr = view.gameObject.AddComponent<ScrollRect>();
+        sr.horizontal = false; sr.vertical = true; sr.viewport = view; sr.content = rt;
+        sr.movementType = ScrollRect.MovementType.Elastic; sr.scrollSensitivity = 30; sr.inertia = true;
         return col;
     }
 
@@ -200,15 +210,15 @@ public partial class Game
         // Wallet
         var f = Stack(Page(root, "Fund", "Wallet", null, out fund)).transform;
         UI.Caption(f, "FIGHT BUDGET").H(30);
-        fundBal = UI.Label(f, "—", 76, UI.Ink, TextAnchor.MiddleLeft, FontStyle.BoldAndItalic).H(100);
-        UI.Label(f, "Your fighter's Hedera testnet wallet pays for every clean hit it takes. The faucet tops it up once a day.", 24, UI.Dim, TextAnchor.UpperLeft).H(70);
-        UI.Big(f, UI.I("wallet") + "  Add Test Funds", true, AddFunds, 40).H(108);
-        fundMsg = UI.Label(f, "", 22, UI.Ink, TextAnchor.UpperLeft).H(54);
+        fundBal = UI.Label(f, "—", 70, UI.Ink, TextAnchor.MiddleLeft, FontStyle.BoldAndItalic).H(86);
+        UI.Label(f, "Your fighter's Hedera testnet wallet pays for every clean hit it takes. The faucet tops it up once a day.", 22, UI.Dim, TextAnchor.UpperLeft).H(58);
+        UI.Big(f, UI.I("wallet") + "  Add Test Funds", true, AddFunds, 38).H(96);
+        fundMsg = UI.Label(f, "", 22, UI.Ink, TextAnchor.UpperLeft).H(40);
         // Your own 0G account pays for this fighter's AI calls instead of the house (linked on a Privy page in the in-app sheet).
         UI.Box(f, UI.Line, false, "rule").H(2);
         UI.Caption(f, "0G CREDITS").H(34);
-        zgLine = UI.Label(f, "", 24, UI.Ink, TextAnchor.UpperLeft).H(64);
-        zgBtn = UI.Big(f, "", false, ZgClicked, 30); zgBtn.H(80);
+        zgLine = UI.Label(f, "", 23, UI.Ink, TextAnchor.UpperLeft).H(58);
+        zgBtn = UI.Big(f, "", false, ZgClicked, 30); zgBtn.H(78);
 
         // Find a fight: stake picker, then the searching panel
         var q = Page(root, "Find", "Find a Fight", null, out find);
@@ -352,6 +362,7 @@ public partial class Game
         StartCoroutine(Api.Call("POST", $"/bots/{a.botId}/fund", new JObject(), r =>
         {
             fundMsg.text = $"<color=#5CDB85>Test funds sent \ue5ca</color>  <color=#8E8E93>tx {r["txId"]}</color>";
+            fx.Coin();
             StartCoroutine(LoadBalance());
         }, e => fundMsg.text = $"<color=#F2A33A>{e}</color>"));
     }
@@ -485,7 +496,7 @@ public partial class Game
         foreach (Transform c in ticker) Destroy(c.gameObject);
         UpdateBars();
         Banner("FIGHT!", UI.Accent);
-        fx.Bell(1); fx.Cheer(0.5f);
+        fx.FightStart();
         int s = session;
         var q = new List<JToken>();
         StartCoroutine(LivePlay(s, q));
