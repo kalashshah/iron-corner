@@ -56,6 +56,8 @@ A live matched fight between two newly created fighters, `f_1e4257a3d1`: seed ha
 
 ## Sponsor integrations
 
+Every place each sponsor's tech is used, with links to the exact lines: [0G](docs/integrations/0g.md), [Hedera](docs/integrations/hedera.md), [ENS](docs/integrations/ens.md).
+
 ### 0G: Private Computer and Storage
 
 - Inference through the 0G router (`https://router-api.0g.ai/v1`, OpenAI-compatible): `qwen3-omni-flash` for coaching audio (speech-to-text), `qwen-flash` for turning coaching into rules and for fight plans (about 1.2 s median measured), lessons after each fight. Every response's `x_0g_trace.request_id` is shown in the game next to the bot's plan.
