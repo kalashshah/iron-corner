@@ -831,7 +831,7 @@ public partial class Game : MonoBehaviour
     {
         pos = look = default;
         if (!cine || (mode != Mode.Fight && mode != Mode.Train)) return false;
-        if (tt >= cineNext) { cineShot = (cineShot + 1 + UnityEngine.Random.Range(0, 2)) % 5; cineNext = tt + UnityEngine.Random.Range(2.2f, 3.5f); camSnap = true; }
+        if (tt >= cineNext && koTarget == null && Time.unscaledTime >= impactCamUntil) { cineShot = (cineShot + 1 + UnityEngine.Random.Range(0, 2)) % 5; cineNext = tt + UnityEngine.Random.Range(2.2f, 3.5f); camSnap = true; }
         var mid = (pa + pb) * 0.5f;
         var axis = new Vector3(pb.x - pa.x, 0, pb.z - pa.z).normalized;
         var side = Vector3.Cross(Vector3.up, axis);
@@ -1268,6 +1268,13 @@ public partial class Game : MonoBehaviour
     // ---------------------------------------------------------------- replay
     // Rebuilds the fight from the episode log stored on 0G Storage (GET /fights/:id/episode), not from local memory:
     // each recorded hit is replayed with its recorded result, and the 0G request id of the attacker's plan is shown.
+    // Real time normally; game time while a capture fixes the frame rate, so a recorded replay keeps its pacing.
+    static IEnumerator Hold(float s)
+    {
+        if (Time.captureFramerate <= 0) { yield return new WaitForSecondsRealtime(s); yield break; }
+        float u = Time.unscaledTime + s; while (Time.unscaledTime < u) yield return null;
+    }
+
     IEnumerator Replay(string id)
     {
         if (string.IsNullOrEmpty(id)) yield break;
@@ -1282,8 +1289,8 @@ public partial class Game : MonoBehaviour
         }
         if (ep == null) { Toast("Episode not on 0G yet: " + err); koPanel.SetActive(true); yield break; }
 
+        Show(Mode.Fight); // first: Show bumps the session, and the replay must hold the newest one or it stops before the first hit
         int s = ++session; replaying = true; over = true; fightStart = Time.time;
-        Show(Mode.Fight);
         ResetFighters();
         int start = (int?)ep["startBudget"] ?? 50;
         a.ResetFor(start); b.ResetFor(start);
@@ -1302,19 +1309,26 @@ public partial class Game : MonoBehaviour
             var at = (DateTime?)h["at"];
             float gap = prev.HasValue && at.HasValue ? Mathf.Clamp((float)(at.Value - prev.Value).TotalSeconds, 0.5f, 1.6f) : 0.6f;
             prev = at;
-            yield return new WaitForSecondsRealtime(gap);
+            if (Time.captureFramerate > 0) Debug.Log($"[replay] hit {h["hitNo"]} gap {gap:F2} t {Time.unscaledTime:F2} rt {Time.realtimeSinceStartup:F2}");
+            yield return Hold(gap);
             var att = (string)h["attacker"] == a.botId ? a : b;
             string move = (string)h["move"], result = (string)h["result"];
             var plan = decisions.LastOrDefault(d => (string)d["botId"] == att.botId && (DateTime?)d["at"] <= at);
             if (plan != null) Say(att, $"{(string)plan["stance"]} · {move}", "0G " + UI.Short((string)plan["requestId"] ?? "—", 8), UI.Ink);
             yield return PlayHit(att, move, result, (int?)h["cents"] ?? 0);
         }
-        yield return new WaitForSecondsRealtime(1f);
+        yield return Hold(0.15f); // the KO lands on the final punch, as it did live
         if (s != session) yield break;
         var w = (string)ep["winner"];
-        if (!string.IsNullOrEmpty(w)) { var winner = w == a.botId ? a : b; winner.opp.KnockOut(); winner.Victory(); UpdateBars(); fx.KO(winner.opp.Chest); Banner("K.O.", UI.Red); }
+        if (!string.IsNullOrEmpty(w))
+        {
+            var winner = w == a.botId ? a : b; var loser = winner.opp;
+            loser.KnockOut(); winner.Victory(); UpdateBars(); fx.KO(loser.Chest);
+            koTarget = loser; koCamUntil = Time.unscaledTime + 2.4f; slowmoUntil = Time.unscaledTime + 1.6f; slowScale = 0.3f; pulse = 1.2f; fovKick = 5f;
+            Banner("K.O.", UI.Red);
+        }
         Toast($"Replay done · {hits.Count} hits · {decisions.Count} 0G decisions");
-        yield return new WaitForSecondsRealtime(1.5f);
+        yield return Hold(2.6f); // let the KO camera play out
         if (s == session) koPanel.SetActive(true); // the result screen is the way out of a replay
         a.scripted = b.scripted = false; replaying = false;
     }
@@ -1408,6 +1422,44 @@ public partial class Game : MonoBehaviour
 
         if (Array.IndexOf(args, "-flow") >= 0) { yield return CaptureFlow(Shot); Debug.Log("[capture] done"); Application.Quit(); yield break; }
         // -record: an offline fight as a 30 fps frame sequence (fixed timestep, so motion is judged, not frame drops).
+        int rpi = Array.IndexOf(args, "-replay");
+        bool rec = Array.IndexOf(args, "-record") >= 0, film = Array.IndexOf(args, "-film") >= 0;
+        if ((rec || film) && rpi >= 0 && rpi + 1 < args.Length)
+        {
+            string fid = args[rpi + 1];
+            yield return Connect();
+            JToken fv = null; yield return Api.Call("GET", $"/fights/{fid}", null, r => fv = r);
+            if (fv == null) { Debug.Log("[capture] no such fight"); Application.Quit(); yield break; }
+            foreach (var (f, key) in new[] { (a, "a"), (b, "b") })
+            {
+                f.botId = (string)fv[key];
+                JToken bot = null; yield return Api.Call("GET", $"/bots/{f.botId}", null, r => bot = r);
+                f.displayName = (string)bot?["name"] ?? f.botId;
+                ApplyPaint(f, (string)(bot?["paint"] as JValue));
+                if (f == a) aEns = (string)(bot?["ens"] as JObject)?["name"]; else bEns = (string)(bot?["ens"] as JObject)?["name"];
+            }
+            int fpsi = Array.IndexOf(args, "-fps"); int fps = fpsi >= 0 ? int.Parse(args[fpsi + 1]) : 60;
+            StartCoroutine(Replay(fid));
+            while (!replaying) yield return null;
+            if (!rec) // -film: real time, exactly as on a phone; the -film recorder is already writing frames
+            {
+                while (!koPanel.activeSelf) yield return null;
+                yield return new WaitForSecondsRealtime(3f);
+                Debug.Log("[capture] done"); Application.Quit(); yield break;
+            }
+            Time.captureFramerate = fps;
+            int end = -1;
+            for (int i = 0; end < 0 || i < end; i++)
+            {
+                if (end < 0 && koPanel.activeSelf) end = i + fps * 2; // 2 s of the result screen
+                yield return new WaitForEndOfFrame();
+                var tex = ScreenCapture.CaptureScreenshotAsTexture();
+                File.WriteAllBytes(Path.Combine(captureDir, $"f{i:00000}.jpg"), tex.EncodeToJPG(92));
+                Destroy(tex);
+                if (fps > 0 && i > fps * 240) break;
+            }
+            Debug.Log("[capture] done"); Application.Quit(); yield break;
+        }
         if (Array.IndexOf(args, "-record") >= 0)
         {
             yield return Connect();
