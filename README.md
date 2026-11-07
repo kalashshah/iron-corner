@@ -52,7 +52,7 @@ A live matched fight between two newly created fighters, `f_1e4257a3d1`: seed ha
 
 ## Fight camp: each fighter gets its own fine-tuned model
 
-"Send to camp" turns a fighter's sparring demos into a training set (the moves that worked, weighted up) and runs a real LoRA fine-tune of Qwen2.5-0.5B on 0G Compute. Each camp is a new adapter version, recorded on the fighter's Agentic ID. On 24 fight situations it never saw, the base model matched the coach 0/24 times; our third camp matched 17/24, including 10/10 on hook counters. Task ids, fees and what made the difference are in [`camp/RESULTS.md`](camp/RESULTS.md). Serving the adapter inside fights needs a larger 0G balance than we had, so fights currently use 0G's `qwen-flash` with recall of the owner's demos.
+"Send to camp" turns a fighter's sparring demos into a training set (the moves that worked, weighted up) and runs a real LoRA fine-tune of Qwen2.5-0.5B on 0G Compute. Each camp is a new adapter version, recorded on the fighter's Agentic ID. On 24 fight situations it never saw, the base model matched the coach 0/24 times; our third camp matched 17/24, including 10/10 on hook counters. Task ids, fees and what made the difference are in [`camp/RESULTS.md`](camp/RESULTS.md). In fights, the server loads the fighter's newest adapter on top of the base model (the way 0G's fine-tuning docs describe) and puts its suggested moves in the prompt. `qwen-flash` on 0G makes the final call, and the bubble says when a move came from the fighter's own model.
 
 ## Sponsor integrations
 
